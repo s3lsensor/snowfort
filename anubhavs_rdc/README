@@ -1,0 +1,12 @@
+Copy files to contiki:
+cp tdma_rdc.h ~/contiki/core/net/mac/tdma_rdc.h
+cp Makefile.mac ~/contiki/core/net/mac/Makefile.mac 
+
+Access Point compile example:
+cp tdma_rdc_ap.c ~/contiki/core/net/mac/tdma_rdc.c
+make nullApp.upload
+
+Sensor Node compile example:
+cp tdma_rdc_sn.c ~/contiki/core/net/mac/tdma_rdc.c
+make nullApp.upload BASH_CONST=-DSN_ID=23
+
