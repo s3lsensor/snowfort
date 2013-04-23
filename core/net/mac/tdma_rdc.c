@@ -14,58 +14,52 @@
 #define PRINTF(...) do {} while (0)
 #endif
 
-
 #define RTIMER_MS (RTIMER_SECOND/1000.0)
 
 static uint16_t beacon_period=500; // Beacon period in ms
 static uint16_t slot_period=50; // Slot duration in ms
-static uint16_t beacon_duration=50; //duration of Beacon Transmission
+static uint16_t rt_slot_duration; //slot_duration in RTIMER units
+static uint16_t beacon_duration=50; //duration of Beacon transmission
+static uint16_t rt_ref;
 static uint8_t num_slots;
 static uint8_t pkt_sz;
-static uint8_t my_slot;
-
 
 #define NODE_INDEX 7
 #define SEQ_INDEX 8
-#define PKT_SZ 9
 #define PKT_HDR_SZ 9
-static char pkt[] = {65, -120, -120, -51, -85, -1, -1, SN_ID, 0};
+static char pkt_hdr[] = {65, -120, -120, -51, -85, -1, -1, 255, 0};
+static char* pkt;
 
 static struct rtimer beaconTimer;
-static struct rtimer slotTimer;
-static struct rtimer sleepModeTimer;
 
+/*---------------------------------------------------------------------------*/
+char seq=0;
+static void
+send_beacon(void)
+{
+  int i=0;
+  tic(RTIMER_NOW(), "beacon");
+  toc();
+  tic(RTIMER_NOW(), "beacon");
+  rt_ref = RTIMER_NOW()+RTIMER_MS*beacon_duration;
+  rtimer_set(&beaconTimer, RTIMER_TIME(&beaconTimer)+RTIMER_MS*beacon_period,0, send_beacon, NULL);
+  pkt[SEQ_INDEX] = seq++;
+  if(NETSTACK_RADIO.send(pkt, pkt_sz) == RADIO_TX_OK ) {
+    // no error
+  } else {
+    PRINTF("tdma_rdc.c:In send_beacon - BEACON NOT SENT\n");
+  }
+  // reseting the allocation
+  memset(&(pkt[PKT_HDR_SZ]), 0xff, num_slots);
+  // print tics for previous beacon
+  print_tics(); 
+  printf("Beacon Sent: %d\n", pkt[SEQ_INDEX]);
+}
 
 /*---------------------------------------------------------------------------*/
 static void
 send_packet(mac_callback_t sent, void *ptr)
 {
-}
-char seq=0;
-static void
-simple_send()
-{
-  tic(RTIMER_NOW(), "send");
-  // Set Timer for next expected Beacon RTIMER_MS must be before the slot_period
-  //  uint16_t time =  RTIMER_NOW()+RTIMER_MS*(beacon_period-beacon_duration-(slot_period*SN_ID));
-  uint16_t time =  RTIMER_NOW()+RTIMER_MS*(beacon_period-beacon_duration-(slot_period*my_slot));
-  rtimer_set(&beaconTimer,time, 0, NETSTACK_RADIO.on, NULL);
-
-  int ret;
-  pkt[SEQ_INDEX] = seq++;
-  if(NETSTACK_RADIO.on()){
-    if(NETSTACK_RADIO.send(pkt, PKT_SZ) == RADIO_TX_OK) {
-      ret = MAC_TX_OK;
-    } else {
-      ret =  MAC_TX_ERR;
-    }
-    NETSTACK_RADIO.off();
-    printf("Sensor Sent: %d\n", pkt[SEQ_INDEX]);
-  }
-  else {
-    // Error 
-  }
-  // Return ret
 }
 /*---------------------------------------------------------------------------*/
 static void
@@ -77,67 +71,29 @@ send_list(mac_callback_t sent, void *ptr, struct rdc_buf_list *buf_list)
 static void
 packet_input(void)
 {
+  tic(RTIMER_NOW(), "pkt_in");
   char *rx_data = (char *)packetbuf_dataptr();
-  // Ignore if not a beacon
-  if (rx_data[NODE_INDEX] != (char)255) return;
-
-  tic(RTIMER_NOW(), "pkt_in");
-  toc();
-  tic(RTIMER_NOW(), "pkt_in");
-  
-  NETSTACK_RADIO.off();
-
-  uint8_t free_slots = 0;
-  uint8_t alloc = 0;
-
-  my_slot = 0xff; //don't have a slot yet
-  // count number of free slots
-  // or slot already allocated to me
-  int i=0;
-  for (i=0; i<num_slots; i++) {
-    alloc = rx_data[PKT_HDR_SZ+i];
-    if (alloc == 0xff) {
-      free_slots++;
-    } else if (alloc == SN_ID) {
-      my_slot = i;
-    }
-  }
-
-  //I don't have a slot yet, select a random free slot
-  uint8_t my_slot_index = RTIMER_NOW()%free_slots;
-  if (my_slot == 0xff) {
-    // not allocated yet
-    // loop for all free slots
-    for (i=0; i<num_slots; i++) {
-      alloc = rx_data[PKT_HDR_SZ+i];
-      if (alloc == 0xff && my_slot_index==0) {
-	my_slot=i;
-	//	printf("Selected a random slot: %d\n", my_slot);
-	break;
-      } else if (alloc == 0xff) {
-	my_slot_index--;
-      }
-    }
-  }
-
-  // Set Timer for the timeslot - This must be scheduled before beacon
-  //  uint16_t time = RTIMER_NOW()+RTIMER_MS*(beacon_duration-2+(SN_ID*slot_period));
-  uint16_t time = RTIMER_NOW()+RTIMER_MS*(beacon_duration-2+(my_slot*slot_period));
-  rtimer_set(&slotTimer, time, 0, simple_send, NULL);
-  printf("Beacon: %d\n", rx_data[SEQ_INDEX]);
-  print_tics();
+  char slot_id = (RTIMER_NOW()-rt_ref)/rt_slot_duration;
+  char sensor_id = rx_data[NODE_INDEX];
+  pkt[PKT_HDR_SZ+slot_id] = sensor_id; 
+  printf("[Sensor: %d]  [Slot: %d]  [Seq: %d] \n", rx_data[NODE_INDEX], slot_id, rx_data[SEQ_INDEX]);
 }
 /*---------------------------------------------------------------------------*/
 static int
 on(void)
 {
   printf("RDC just got ON \n");
+  rt_slot_duration=RTIMER_MS*slot_period;
+  rtimer_set(&beaconTimer, RTIMER_NOW()+RTIMER_MS*beacon_period,0, send_beacon, NULL);
   return NETSTACK_RADIO.on();
 }
 /*---------------------------------------------------------------------------*/
 static int
 off(int keep_radio_on)
 {
+  printf("RDC: off\n");
+  rtimer_set(&beaconTimer, RTIMER_NOW(),0, NULL, NULL);
+
   if(keep_radio_on) {
     return NETSTACK_RADIO.on();
   } else {
@@ -154,8 +110,16 @@ channel_check_interval(void)
 static void
 init(void)
 {
+  // initialize the allocation
   num_slots = (beacon_period-beacon_duration)/slot_period ;
   pkt_sz = num_slots + PKT_HDR_SZ;
+  pkt = malloc(pkt_sz);
+  // free all slots
+  memset(&(pkt[PKT_HDR_SZ]), 0xff, num_slots);
+  memcpy(pkt, pkt_hdr, PKT_HDR_SZ);
+  int i=0;
+  for (i=0; i<pkt_sz; i++) { printf(" i:%d pkt[i]:%d ", i, pkt[i]); }
+  printf("\n");
   on();
 }
 /*---------------------------------------------------------------------------*/

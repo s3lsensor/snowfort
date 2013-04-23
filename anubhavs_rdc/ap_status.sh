@@ -1,4 +1,6 @@
 #!/bin/bash
+
+
 tail -F log_ap.txt | \
 awk \
 '{
