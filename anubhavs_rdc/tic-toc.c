@@ -15,6 +15,8 @@ char *tags_copy[MAX_TICS];
 uint8_t num_tics_copy = 0;
 
 
+
+
 void tic(uint16_t time, const char* tag)
 {
   tics[num_tics]=time;
