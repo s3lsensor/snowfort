@@ -19,3 +19,12 @@
 # Target objects
 *.sky
 *.d
+*.ihex
+*.data
+contiki*.a
+*.ce
+*.co
+*.map
+
+# Log files
+log*
