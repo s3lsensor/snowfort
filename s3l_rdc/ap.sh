@@ -3,17 +3,17 @@
 source ./test.cfg
 
 if [ "$1" = "make" ]; then
-	cp tdma-rdc.h $CONTIKI_HOME/core/net/mac/tdma-rdc.h
+	cp tdmardc.h $CONTIKI_HOME/core/net/mac/tdmardc.h
 	cp Makefile.mac $CONTIKI_HOME/core/net/mac/Makefile.mac
-	cp tdma-rdc.c $CONTIKI_HOME/core/net/mac/tdma-rdc.c
+	cp tdmardc.c $CONTIKI_HOME/core/net/mac/tdmardc.c
 
 	make nullApp.upload MOTE=1 BASH_CONST=-DSN_ID=$2
 fi
 
 if [ "$1" = "test" ]; then
-	cp tdma-rdc.h $CONTIKI_HOME/core/net/mac/tdma-rdc.h
+	cp tdmardc.h $CONTIKI_HOME/core/net/mac/tdmardc.h
 	cp Makefile.mac $CONTIKI_HOME/core/net/mac/Makefile.mac
-	cp tdma-rdc.c $CONTIKI_HOME/core/net/mac/tdma-rdc.c
+	cp tdmardc.c $CONTIKI_HOME/core/net/mac/tdmardc.c
 
 	make nullApp.mspsim MOTE=1 BASH_CONST=-DSN_ID=$2
 fi
