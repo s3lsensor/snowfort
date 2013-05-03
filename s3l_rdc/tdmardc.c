@@ -45,6 +45,9 @@ static char *pkt;
 static uint8_t pkt_size;
 char seq_num = 0;
 
+// BS global variable
+static uint16_t BS_TX_start_time;
+
 
 //Timer -- BS
 static struct rtimer BSTimer;
@@ -58,6 +61,7 @@ static void TDMA_BS_send(void)
    // set timer for next BS send
    // right now, rtimer_timer does not consider drifting. For long time experiment, may have problem
    rtimer_set(&BSTimer,RTIMER_TIME(&BSTimer)+RTIMER_MS*segment_period,0,TDMA_BS_send,NULL);
+   BS_TX_start_time = RTIMER_NOW();
 
    pkt[SEQ_INDEX] = seq_num++;
 
@@ -110,6 +114,16 @@ static void input(void)
     char *rx_pkt = (char *)packetbuf_dataptr();
     PRINTF("RX packet, size %d\n",strlen(rx_pkt));
 
+    //debug
+    /*
+    short j = 0;
+    for(j = 0; j < pkt_size; j++)
+    {
+        PRINTF("%d ",rx_pkt[j]);
+    }
+    PRINTF("\n");
+    */
+
     /*-------------SN CODE----------------------*/
     if (SN_ID != 0) // sensor node -- decide timeslot & schedule for TX
     {
@@ -127,7 +141,7 @@ static void input(void)
 
         my_slot = 4;
         //first, check if BS assigns a slot
-/*
+
         char i = 0;
         char free_slot = 0;
         for(i = PKT_HDR_SIZE; i < pkt_size; i++)
@@ -148,24 +162,45 @@ static void input(void)
 
         if (my_slot == -1 && free_slot != 0) //do not allocate a slot & there is a free slot
         {
-            
+            uint8_t rnd_num = RTIMER_NOW() % free_slot;
+            for(i = PKT_HDR_SIZE; i<pkt_size; i++)
+            {
+                if(rx_pkt[i] == 125)
+                {
+                    if (rnd_num == 0)
+                    {
+                        my_slot = i-PKT_HDR_SIZE;
+                        break;
+                    }
+                    else
+                        rnd_num--;
+                }
+            }            
         }
-*/
+
         //schedule for TX -- 5ms for guarding period (open radio earlier)
+        PRINTF("Schedule for TX\n");
         uint16_t SN_TX_time = RTIMER_NOW() + RTIMER_MS*(BS_period + TS_period * my_slot - 5); 
         rtimer_set(&SNTimer,SN_TX_time,0,TDMA_SN_send,NULL);
     }
-    else //BS
+    else if(SN_ID == 0) //BS
     /*-----------------BS CODE---------------*/
     {
         //debug for collision
+        /*
         short i = 0;
         for(i = 0; i < pkt_size; i++)
         {
             PRINTF("%d ",rx_pkt[i]);
         }
         PRINTF("\n");
+        */
+        //set flag in pkt for TS occupancy
+        uint8_t current_TS = (uint8_t) (RTIMER_NOW()-BS_TX_start_time-BS_period*RTIMER_MS)/(TS_period*RTIMER_MS);
+        pkt[PKT_HDR_SIZE+current_TS] = rx_pkt[NODE_INDEX]; 
+        PRINTF("[Sensor: %d] [Slot: %d] [Seq: %d]\n",rx_pkt[NODE_INDEX],current_TS,rx_pkt[SEQ_INDEX]);
     }
+
 
 }
 /*-----------------------------------------------*/
