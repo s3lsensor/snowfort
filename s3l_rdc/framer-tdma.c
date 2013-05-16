@@ -51,25 +51,25 @@ static int create(void)
     //frame_type
     /*TODO: cmd frame*/
     if(packetbuf_attr(PACKETBUF_ATTR_PACKET_TYPE) == PACKETBUF_ATTR_PACKET_TYPE_DATA) //data
-        hdr.frame_type = FRAME_TDMA_DATAFRAME;
+        memcpy(hdr->frame_type,FRAME_TDMA_DATAFRAME,sizeof(FRAME_TDMA_DATAFRAME));
     else if(packetbuf_attr(PACKETBUF_ATTR_PACKET_TYPE) == PACKETBUF_ATTR_PACKET_TYPE_STREAM) //beacon
-        hdr.frame_type = FRAME_TDMA_BEACONFRAME;
+        memcpy(hdr->frame_type,FRAME_TDMA_BEACONFRAME,sizeof(FRAME_TDMA_BEACONFRAME));
 
     //seq_no
-    hdr.seq_no = packetbuf_attr(PACKETBUF_ATTR_MAC_SEQNO);
+    memcpy(hdr->seq_no,packetbuf_attr(PACKETBUF_ATTR_MAC_SEQNO),sizeof(uint8_t));
 
     //dst_node_id
-    if(hdr.frame_type == FRAME_TDMA_BEACONFRAME)
-        hdr.dst_node_id = FRAME_TDMA_BEACON_DST;
-    else if(hdr.frame_type == FRAME_TDMA_DATAFRAME)
-        hdr.dst_node_id = 0;    // data frame only sends to BS (node_id = 0)
+    if(&(hdr->frame_type) == FRAME_TDMA_BEACONFRAME)
+        memcpy(hdr->dst_node_id,FRAME_TDMA_BEACON_DST,sizeof(FRAME_TDMA_BEACON_DST));
+    else if(&(hdr->frame_type) == FRAME_TDMA_DATAFRAME)
+        memcpy(hdr->dst_node_id,0x00,sizeof(0x00));    // data frame only sends to BS (node_id = 0)
     
     //src_node_id
-    hdr.src_node_id = SN_ID;
+    mempcy(hdr->src_node_id,SN_ID,sizeof(SN_ID));
 
 
     //payload_len
-    hdr.payload_len = packetbuf_datalen();
+    memcpy(hdr->payload_len,packetbuf_datalen(),sizeof(uint8_t));
 
     //TODO:add checksum
     
@@ -104,7 +104,7 @@ static int parse(void)
 
             return sizeof(struct tdma_hdr);
     }
-    return FRAME_FAILED;
+    return FRAMER_FAILED;
 }
 /*-------------------------------------------------------------*/
 const struct framer framer_tdma = 

@@ -13,7 +13,7 @@
 #ifndef __FRAMER_TDMAMAC_H__
 #define __FRAMER_TDMAMAC_H__
 
-#include "net/mac/framer/h"
+#include "net/mac/framer.h"
 
 extern const struct framer framer_tdma;
 
