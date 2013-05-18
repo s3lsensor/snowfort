@@ -65,7 +65,7 @@ static int create(void)
         memcpy(hdr->dst_node_id,0x00,sizeof(0x00));    // data frame only sends to BS (node_id = 0)
     
     //src_node_id
-    mempcy(hdr->src_node_id,SN_ID,sizeof(SN_ID));
+    memcpy(hdr->src_node_id,SN_ID,sizeof(SN_ID));
 
 
     //payload_len
