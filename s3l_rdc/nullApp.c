@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include "contiki.h"
 #include "net/packetbuf.h"
-#include "sys/timer.h"
-#include "contiki-conf.h"
+//#include "sys/timer.h"
+//#include "contiki-conf.h"
 #include "net/netstack.h"
 
 #define DEBUG 1

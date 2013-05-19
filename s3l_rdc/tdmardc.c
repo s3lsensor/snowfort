@@ -259,7 +259,7 @@ static void TDMA_SN_send(void)
 
 /*-----------------------------------------------*/
 // send packet -- not used in TDMA
-static void send(mac_callback_t sent_callback, void *ptr)
+static void send(mac_callback_t sent_callback, void *ptr_callback)
 {
     //copy sent data from packetbuf to local buffer. use circular buffer to manage
     //always return MAC_TX_OK
@@ -300,7 +300,7 @@ static void send(mac_callback_t sent_callback, void *ptr)
     
 
     //callback
-    mac_call_sent_callback(sent_callback,ptr,MAC_TX_OK,1);
+    mac_call_sent_callback(sent_callback,ptr_callback,MAC_TX_OK,1);
    
 }
 /*-----------------------------------------------*/
@@ -312,7 +312,7 @@ static void send_list(mac_callback_t sent_callback, void *ptr, struct rdc_buf_li
 // receives packet -- called in radio.c,radio.h
 static void input(void)
 {
-    PRINTF("in input\n");
+    printf("in input\n");
     //parse frame
     uint8_t *rx_pkt = (uint8_t *)packetbuf_dataptr();
     //PRINTF("RX packet, size %d\n",strlen(rx_pkt));
@@ -328,7 +328,7 @@ static void input(void)
       return;
     
     uint8_t rx_buffer[MAC_PL_SIZE];
-    memcpy(rx_buffer,rx_pkt+MAC_HDR_SIZE,sizeof(uint8_t)*MAC_PL_SIZE);
+    memcpy(rx_buffer,rx_pkt+MAC_HDR_SIZE,sizeof(uint8_t)*rx_hdr.payload_len);
     
     //TODO:do checksum
     
@@ -453,6 +453,10 @@ static int on(void)
     {
         rtimer_set(&BSTimer,RTIMER_NOW()+RTIMER_MS*segment_period,0,TDMA_BS_send,NULL);
     }
+    
+    //debug
+    //TDMA_SN_send();
+    
     return NETSTACK_RADIO.on();
 }
 /*-----------------------------------------------*/
