@@ -46,6 +46,8 @@ static char *pkt;
 static uint8_t pkt_size;
 char seq_num = 0;
 
+struct tdma_hdr header;
+
 // BS global variable
 static rtimer_clock_t BS_TX_start_time = 0;
 static rtimer_clock_t BS_RX_start_time = 0;
@@ -123,6 +125,11 @@ static void TDMA_SN_send(void)
 
     //slot number
     pkt[PKT_HDR_SIZE+1] = my_slot;
+    
+    //copy header
+    header.seq_num = seq_num;
+    
+    memcpy(pkt+PKT_HDR_SIZE,&header,sizeof(struct tdma_hdr));
 
     // send packet -- pushed to radio layer
     if(NETSTACK_RADIO.on())
@@ -271,6 +278,9 @@ static void input(void)
 	{
 	  //pkt[PKT_HDR_SIZE+current_TS] = rx_pkt[NODE_INDEX];
 	  node_list[current_TS] = rx_pkt[NODE_INDEX];
+	  struct tdma_hdr rx_hdr;
+	  memcpy(&rx_hdr,rx_pkt+PKT_HDR_SIZE,sizeof(struct tdma_hdr));
+	  PRINTF("HDR: From node %d, seq_num %d\n",rx_hdr.src_node_id,rx_hdr.seq_num);
 	}
         PRINTF("[Sensor: %d] [Slot: %d] [Seq: %d]\n",
 	       rx_pkt[NODE_INDEX],current_TS,rx_pkt[SEQ_INDEX]);
@@ -326,12 +336,24 @@ static void init(void)
         memset(pkt+PKT_HDR_SIZE,FREE_SLOT_CONST,total_slot_num); //set free slot
     else
         memset(pkt+PKT_HDR_SIZE,-1,total_slot_num); //free payload for SN
-/*    
-    short i = 0;
-    for(i = 0; i < pkt_size; i++)
-        PRINTF("%d ",pkt[i]);
-    PRINTF("\n");
-*/
+    
+    if (SN_ID == 0)
+    {
+      header.frame_type = FRAME_TDMA_BEACONFRAME;
+      header.seq_num = 0;
+      header.dst_node_id = FRAME_TDMA_BEACON_DST;
+      header.src_node_id = 0;
+      header.payload_len = 0;
+    }
+    else
+    {
+      header.frame_type = FRAME_TDMA_DATAFRAME;
+      header.seq_num = 0;
+      header.dst_node_id = 0;
+      header.src_node_id = SN_ID;
+      header.payload_len = 0;
+    }
+	
     printf("Init RDC layer,packet size\n");
 
     on();
