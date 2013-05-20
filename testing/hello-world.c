@@ -41,6 +41,17 @@
 #include "contiki.h"
 #include "i2c.h"
 #include <stdio.h> /* For printf() */
+
+///////////////////////////////////////////////////////////////////////////////
+#define SDA_0()   (I2C_PxDIR |=  BV(SDA))		/* SDA Output */
+#define SDA_1()   (I2C_PxDIR &= ~BV(SDA))		/* SDA Input */
+#define SDA_IS_1  (I2C_PxIN & BV(SDA))
+
+#define SCL_0()   (I2C_PxDIR |=  BV(SCL))		/* SCL Output */
+#define SCL_1()   (I2C_PxDIR &= ~BV(SCL))		/* SCL Input */
+#define SCL_IS_1  (I2C_PxIN & BV(SCL))
+///////////////////////////////////////////////////////////////////////////////
+
 /*---------------------------------------------------------------------------*/
 PROCESS(hello_world_process, "Hello world process");
 AUTOSTART_PROCESSES(&hello_world_process);
@@ -48,23 +59,45 @@ AUTOSTART_PROCESSES(&hello_world_process);
 PROCESS_THREAD(hello_world_process, ev, data)
 {
   PROCESS_BEGIN();
- printf("process starts");
- unsigned op;
 
-//P2.0 -> 0, out
-P2DIR |= 0b10000000;
-P2OUT &= 0b01111111;
-//P2.1 -> 1, out
-P2DIR |= 0b01000000;
-P2OUT |= 0b01000000;
+ unsigned rv;
+ printf("process starts\n");
+
 //check and receive
 i2c_enable();
-//if(!i2c_start())
-	printf("i2c working");
-//display data recieved
-op = i2c_read(0);
-	
-  printf("%d", op);
+	printf("i2c enabled\n");
+/*-------I2C:	read data for X1----------------------------------------------*/
+//start
+i2c_start();
+//slave address-write
+if(!i2c_write(0x0A))
+	printf("write slave address first byte transmit fail!\n");
+if(!i2c_write(0x03))
+	printf("write slave address second byte transmit fail!\n");
+//register address
+if(i2c_write(0x03))
+	printf("register first byte transmit fail\n");
+if(!i2c_write(0x03))
+	printf("register second byte transmit fail\n");
+//stop-start
+i2c_stop();
+i2c_start();
+//slave address-read
+if(!i2c_write(0x0B))
+	printf("read slave address second byte transmit fail!\n");
+if(!i2c_write(0x03))
+	printf("read slave address second byte transmit fail!\n");
+//read data
+rv = i2c_read(0);
+//NACK
+
+//stop
+i2c_stop();
+
+//disable
+i2c_disable();
+
+  printf("%d", rv);
   
   PROCESS_END();
 }
