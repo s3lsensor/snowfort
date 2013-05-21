@@ -61,32 +61,30 @@ PROCESS_THREAD(hello_world_process, ev, data)
   PROCESS_BEGIN();
 
  unsigned rv;
+ unsigned id;
  printf("process starts\n");
 
 //check and receive
-i2c_enable();
-	printf("i2c enabled\n");
+for (id=0;id<=255;id++){
 /*-------I2C:	read data for X1----------------------------------------------*/
+i2c_enable();
+printf("i2c enabled for id: %d\n", id);
 //start
 i2c_start();
 //slave address-write
-if(!i2c_write(0x0A))
-	printf("write slave address first byte transmit fail!\n");
-if(!i2c_write(0x03))
-	printf("write slave address second byte transmit fail!\n");
+if(!i2c_write(id))
+	printf("write slave address transmit fail!\n");
 //register address
-if(i2c_write(0x03))
-	printf("register first byte transmit fail\n");
-if(!i2c_write(0x03))
-	printf("register second byte transmit fail\n");
+if(!i2c_write(0x33))
+	printf("register address transmit fail\n");
+
 //stop-start
 i2c_stop();
 i2c_start();
 //slave address-read
-if(!i2c_write(0x0B))
-	printf("read slave address second byte transmit fail!\n");
-if(!i2c_write(0x03))
-	printf("read slave address second byte transmit fail!\n");
+if(!i2c_write(id+1))
+	printf("read slave address transmit fail!\n");
+
 //read data
 rv = i2c_read(0);
 //NACK
@@ -97,8 +95,8 @@ i2c_stop();
 //disable
 i2c_disable();
 
-  printf("%d", rv);
-  
+  printf("%d\n", rv);
+}
   PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
