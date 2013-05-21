@@ -28,7 +28,7 @@
 // Global Variables
 
 // Scheudling
-static uint16_t segment_period = 1000;   //one round time in ms
+static uint16_t segment_period = 1100;   //one round time in ms
 static uint16_t TS_period = 100;         //one time-slot duration in ms
 static uint16_t BS_period = 100;         //BS broadcasts duration in ms
 
@@ -46,7 +46,7 @@ static char *pkt;
 static uint8_t pkt_size;
 char seq_num = 0;
 
-struct tdma_hdr header;
+//struct tdma_hdr header;
 
 // BS global variable
 static rtimer_clock_t BS_TX_start_time = 0;
@@ -55,6 +55,10 @@ static char *node_list;		//record all the input node
 
 // SN global variable
 static rtimer_clock_t SN_RX_start_time = 0;
+static char buffer[10] = {0};
+static uint8_t buf_ptr = 0;
+static uint8_t buf_send_ptr = 0;
+static uint8_t buf_full_flg = 0;
 
 
 //Timer -- BS
@@ -127,9 +131,25 @@ static void TDMA_SN_send(void)
     pkt[PKT_HDR_SIZE+1] = my_slot;
     
     //copy header
-    header.seq_num = seq_num;
+    //header.seq_num = seq_num;
     
-    memcpy(pkt+PKT_HDR_SIZE,&header,sizeof(struct tdma_hdr));
+    //memcpy(pkt+PKT_HDR_SIZE,&header,sizeof(struct tdma_hdr));
+    
+    if (buf_full_flg == 0)
+      memcpy(pkt+PKT_HDR_SIZE,buffer,sizeof(uint8_t)*buf_ptr);
+    else
+    {
+      uint8_t temp_len = 10 - buf_send_ptr;
+      memcpy(pkt+PKT_HDR_SIZE,buffer+buf_send_ptr,sizeof(uint8_t)*temp_len);
+      memcpy(pkt+PKT_HDR_SIZE+temp_len,buffer,sizeof(uint8_t)*buf_send_ptr);
+    }
+
+ //   memcpy(pkt+PKT_HDR_SIZE,buffer,sizeof(uint8_t)*10);
+    //reset payload
+    //memset(buffer,0,10);
+//    buf_full_flg = 0;
+//    buf_ptr = 0;
+//    buf_send_ptr = 0;
 
     // send packet -- pushed to radio layer
     if(NETSTACK_RADIO.on())
@@ -151,8 +171,41 @@ static void TDMA_SN_send(void)
 
 /*-----------------------------------------------*/
 // send packet -- not used in TDMA
-static void send(mac_callback_t sent_callback, void *ptr)
+static void send(mac_callback_t sent_callback, void *ptr_callback)
 {
+  
+  uint8_t data_len = packetbuf_datalen();
+  uint8_t *ptr;
+  ptr = (uint8_t *)packetbuf_dataptr();
+  
+  if((data_len+buf_ptr) <= 10)
+  {
+    memcpy(buffer+buf_ptr,ptr,data_len*sizeof(uint8_t));
+    buf_ptr = buf_ptr + data_len;
+  }
+  else
+  {
+    uint8_t temp_len = 10-buf_ptr;
+    memcpy(buffer+buf_ptr,ptr,temp_len*sizeof(uint8_t));
+    buf_full_flg = 1;
+    buf_ptr = 0;
+    memcpy(buffer+buf_ptr,ptr+temp_len,(data_len-temp_len)*sizeof(uint8_t));
+    buf_ptr = buf_ptr + data_len - temp_len;
+    
+  }
+  
+  if(buf_full_flg == 1)
+    buf_send_ptr = buf_ptr;
+  
+ /* 
+  int i = 0;
+  for(i = 0; i < 10; i++)
+  {
+    PRINTF("%d ",buffer[i]);
+  }
+  PRINTF("\n");
+  */
+ 
 }
 /*-----------------------------------------------*/
 // send packet list -- not used in TDMA
@@ -278,9 +331,18 @@ static void input(void)
 	{
 	  //pkt[PKT_HDR_SIZE+current_TS] = rx_pkt[NODE_INDEX];
 	  node_list[current_TS] = rx_pkt[NODE_INDEX];
-	  struct tdma_hdr rx_hdr;
-	  memcpy(&rx_hdr,rx_pkt+PKT_HDR_SIZE,sizeof(struct tdma_hdr));
-	  PRINTF("HDR: From node %d, seq_num %d\n",rx_hdr.src_node_id,rx_hdr.seq_num);
+	  //struct tdma_hdr rx_hdr;
+	  //memcpy(&rx_hdr,rx_pkt+PKT_HDR_SIZE,sizeof(struct tdma_hdr));
+	  //PRINTF("HDR: From node %d, seq_num %d\n",rx_hdr.src_node_id,rx_hdr.seq_num);
+	  
+	  uint8_t i = 0;
+	  PRINTF("DATA:");
+	  for(i = 0; i < 10; i++)
+	  {
+	    PRINTF("%d ",rx_pkt[PKT_HDR_SIZE+i]);
+	  }
+	  PRINTF("\n");
+	  
 	}
         PRINTF("[Sensor: %d] [Slot: %d] [Seq: %d]\n",
 	       rx_pkt[NODE_INDEX],current_TS,rx_pkt[SEQ_INDEX]);
@@ -336,7 +398,7 @@ static void init(void)
         memset(pkt+PKT_HDR_SIZE,FREE_SLOT_CONST,total_slot_num); //set free slot
     else
         memset(pkt+PKT_HDR_SIZE,-1,total_slot_num); //free payload for SN
-    
+/*    
     if (SN_ID == 0)
     {
       header.frame_type = FRAME_TDMA_BEACONFRAME;
@@ -353,7 +415,7 @@ static void init(void)
       header.src_node_id = SN_ID;
       header.payload_len = 0;
     }
-	
+*/	
     printf("Init RDC layer,packet size\n");
 
     on();
