@@ -38,6 +38,11 @@ static int8_t my_slot;
 
 // packet format -- removed when using Zigbee frame
 static char pkt_hdr[] = {65,-120,-120,-51,-85,-1,-1, SN_ID, 0};
+//FCF: 65,-120
+//Data Sequence number: -120
+//Address information: -51 -85(CD AB in hex) -1 -1 (short address mode)
+//Actually in the payload: SN_ID,0
+
 #define PKT_HDR_SIZE 9
 #define NODE_INDEX   7
 #define SEQ_INDEX   8
@@ -335,13 +340,16 @@ static void input(void)
 	  //memcpy(&rx_hdr,rx_pkt+PKT_HDR_SIZE,sizeof(struct tdma_hdr));
 	  //PRINTF("HDR: From node %d, seq_num %d\n",rx_hdr.src_node_id,rx_hdr.seq_num);
 	  
-	  uint8_t i = 0;
-	  PRINTF("DATA:");
-	  for(i = 0; i < 10; i++)
+	  if (rx_pkt[NODE_INDEX] == 1 || rx_pkt[NODE_INDEX] == 10)
 	  {
-	    PRINTF("%d ",rx_pkt[PKT_HDR_SIZE+i]);
+	      uint8_t i = 0;
+	      PRINTF("DATA:");
+	      for(i = 0; i < 10; i++)
+	      {
+		PRINTF("%d ",rx_pkt[PKT_HDR_SIZE+i]);
+	      }
+	      PRINTF("\n");
 	  }
-	  PRINTF("\n");
 	  
 	}
         PRINTF("[Sensor: %d] [Slot: %d] [Seq: %d]\n",
