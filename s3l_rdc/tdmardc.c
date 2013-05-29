@@ -12,6 +12,7 @@
 #include "net/queuebuf.h"
 #include <string.h>
 #include "tic-toc.h"
+#include "app.h"
 
 #define DEBUG 1
 #if DEBUG
@@ -57,6 +58,7 @@ char seq_num = 0;
 static rtimer_clock_t BS_TX_start_time = 0;
 static rtimer_clock_t BS_RX_start_time = 0;
 static char *node_list;		//record all the input node
+
 
 // SN global variable
 static rtimer_clock_t SN_RX_start_time = 0;
@@ -352,8 +354,12 @@ static void input(void)
 	  }
 	  
 	}
+	
+
+	
         PRINTF("[Sensor: %d] [Slot: %d] [Seq: %d]\n",
 	       rx_pkt[NODE_INDEX],current_TS,rx_pkt[SEQ_INDEX]);
+
 
     }
 
@@ -406,6 +412,11 @@ static void init(void)
         memset(pkt+PKT_HDR_SIZE,FREE_SLOT_CONST,total_slot_num); //set free slot
     else
         memset(pkt+PKT_HDR_SIZE,-1,total_slot_num); //free payload for SN
+	
+	
+    
+    
+    
 /*    
     if (SN_ID == 0)
     {
@@ -430,6 +441,7 @@ static void init(void)
 }
 
 /*-----------------------------------------------*/
+
 
 /*-----------------------------------------------*/
 const struct rdc_driver tdmardc_driver = 

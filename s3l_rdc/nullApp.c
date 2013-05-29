@@ -4,6 +4,23 @@
 #include "net/netstack.h"
 #include "sys/etimer.h"
 
+/*
+#include "app.h"
+
+void rdc_input(void)
+{
+  char * rx_pkt = (char *)packetbuf_dataptr();
+  printf("rdc_recv pkt %d from %d\n",rx_pkt[7],rx_pkt[8]);
+}
+
+const struct app_driver nullapp_driver = 
+{
+  "nullapp",
+  rdc_input,
+};
+*/
+
+
 PROCESS(null_app_process, "Null App Process");
 AUTOSTART_PROCESSES(&null_app_process);
 
@@ -16,6 +33,7 @@ PROCESS_THREAD(null_app_process, ev, data)
   static uint8_t debug_buf[3] = {0,1,2};
   static struct etimer rxtimer;
   etimer_set(&rxtimer,CLOCK_SECOND);
+  
   
   while(1)
   {
