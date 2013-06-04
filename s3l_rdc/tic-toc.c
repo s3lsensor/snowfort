@@ -8,11 +8,11 @@
 
 uint16_t tics[MAX_TICS];
 char *tags[MAX_TICS];
-uint8_t num_tics = 0;
+static uint8_t num_tics = 0;
 
 uint16_t tics_copy[MAX_TICS];
 char *tags_copy[MAX_TICS];
-uint8_t num_tics_copy = 0;
+static uint8_t num_tics_copy = 0;
 
 
 

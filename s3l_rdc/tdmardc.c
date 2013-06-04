@@ -1,9 +1,9 @@
 /**
- * \file 
- * 	A TDMA RDC implementation
- * \author
- * 	Yizheng Liao <yzliao@stanford.edu>
- */
+* \file 
+* 	A TDMA RDC implementation
+* \author
+* 	Yizheng Liao <yzliao@stanford.edu>
+*/
 
 #include "net/mac/tdmardc.h"
 #include "net/packetbuf.h"
@@ -11,8 +11,9 @@
 #include "sys/rtimer.h"
 #include "net/queuebuf.h"
 #include <string.h>
-#include "tic-toc.h"
-#include "app.h"
+//#include "tic-toc.h"
+
+
 
 #define DEBUG 1
 #if DEBUG
@@ -50,7 +51,7 @@ static char pkt_hdr[] = {65,-120,-120,-51,-85,-1,-1, SN_ID, 0};
 #define FREE_SLOT_CONST 127
 static char *pkt;
 static uint8_t pkt_size;
-char seq_num = 0;
+char seq_num = 10;
 
 //struct tdma_hdr header;
 
@@ -85,46 +86,46 @@ static void TDMA_BS_send(void)
     BS_RX_start_time = BS_TX_start_time+BS_period*RTIMER_MS;
     //PRINTF("BS_TX_start_time %u\n",BS_TX_start_time);
     
-    tic(RTIMER_NOW(),"BS");
-    toc();
-    tic(RTIMER_NOW(),"BS");
- 
+    //tic(RTIMER_NOW(),"BS");
+    //toc();
+    //tic(RTIMER_NOW(),"BS");
 
 
-   // set timer for next BS send
-   // right now, rtimer_timer does not consider drifting. For long time experiment, it may have problem
-   uint16_t offset = RTIMER_MS*segment_period;
-   //PRINTF("BS offset: %u\n",offset);
-   rtimer_set(&BSTimer,RTIMER_TIME(&BSTimer)+offset,0,TDMA_BS_send,NULL);
-   
-   
-   
-   //pkt content
-   pkt[SEQ_INDEX] = seq_num++;
-   memcpy(pkt+PKT_HDR_SIZE,node_list,total_slot_num);
+
+  // set timer for next BS send
+  // right now, rtimer_timer does not consider drifting. For long time experiment, it may have problem
+  uint16_t offset = RTIMER_MS*(segment_period);
+  //PRINTF("BS offset: %u\n",offset);
+  rtimer_set(&BSTimer,RTIMER_TIME(&BSTimer)+offset,0,TDMA_BS_send,NULL);
+  
+  
+  
+  //pkt content
+  pkt[SEQ_INDEX] = seq_num++;
+  memcpy(pkt+PKT_HDR_SIZE,node_list,total_slot_num);
 /*
-   int i = 0;
-   for (i = 0; i < total_slot_num; i++)
-   {
+  int i = 0;
+  for (i = 0; i < total_slot_num; i++)
+  {
       PRINTF("%d ",node_list[i]);
-   }
-   PRINTF("\n");
+  }
+  PRINTF("\n");
 */   
-   memset(node_list,FREE_SLOT_CONST,total_slot_num);
+  //memset(node_list,FREE_SLOT_CONST,total_slot_num);
 
-   //send packet -- pushed to radio layer
-   if(NETSTACK_RADIO.send(pkt,pkt_size) != RADIO_TX_OK)
-       printf("TDMA RDC: BS fails to send packet\n");
-   else
-       printf("TDMA RDC: BS sends %d\n",pkt[SEQ_INDEX]);
+  //send packet -- pushed to radio layer
+  if(NETSTACK_RADIO.send(pkt,pkt_size) != RADIO_TX_OK)
+      printf("TDMA RDC: BS fails to send packet\n");
+  else
+      printf("TDMA RDC: BS sends %d\n",pkt[SEQ_INDEX]);
 
-   print_tics();
+  //print_tics();
 }
 
 // TDMA_SN_send() -- called at a assigned time slot
 static void TDMA_SN_send(void)
 {
-    tic(RTIMER_NOW(),"SN send");
+    //tic(RTIMER_NOW(),"SN send");
     
     
     //set timer for open RADIO -- 5ms for opening earlier
@@ -151,7 +152,7 @@ static void TDMA_SN_send(void)
       memcpy(pkt+PKT_HDR_SIZE+temp_len,buffer,sizeof(uint8_t)*buf_send_ptr);
     }
 
- //   memcpy(pkt+PKT_HDR_SIZE,buffer,sizeof(uint8_t)*10);
+//   memcpy(pkt+PKT_HDR_SIZE,buffer,sizeof(uint8_t)*10);
     //reset payload
     //memset(buffer,0,10);
 //    buf_full_flg = 0;
@@ -161,13 +162,13 @@ static void TDMA_SN_send(void)
     // send packet -- pushed to radio layer
     if(NETSTACK_RADIO.on())
     {
-        if(NETSTACK_RADIO.send(pkt,pkt_size) != RADIO_TX_OK)
-            printf("TDMA RDC: SN fails to send packet\n");
-        else
-            printf("TDMA RDC: SN sends %d\n",pkt[SEQ_INDEX]);
+	if(NETSTACK_RADIO.send(pkt,pkt_size) != RADIO_TX_OK)
+	    printf("TDMA RDC: SN fails to send packet\n");
+	else
+	    printf("TDMA RDC: SN sends %d\n",pkt[SEQ_INDEX]);
     }
     else
-        printf("TDMA RDC: SN fails to open radio\n");
+	printf("TDMA RDC: SN fails to open radio\n");
 
     // turn off radio
     NETSTACK_RADIO.off();
@@ -204,7 +205,7 @@ static void send(mac_callback_t sent_callback, void *ptr_callback)
   if(buf_full_flg == 1)
     buf_send_ptr = buf_ptr;
   
- /* 
+/* 
   int i = 0;
   for(i = 0; i < 10; i++)
   {
@@ -212,7 +213,7 @@ static void send(mac_callback_t sent_callback, void *ptr_callback)
   }
   PRINTF("\n");
   */
- 
+
 }
 /*-----------------------------------------------*/
 // send packet list -- not used in TDMA
@@ -226,14 +227,14 @@ static void input(void)
     
     char *rx_pkt = (char *)packetbuf_dataptr();
     //PRINTF("RX packet, size %d\n",strlen(rx_pkt));
-    tic(RTIMER_NOW(),"pkt_in");
+    //tic(RTIMER_NOW(),"pkt_in");
 
     //debug
     /*
     short j = 0;
     for(j = 0; j < pkt_size; j++)
     {
-        PRINTF("%d ",rx_pkt[j]);
+	PRINTF("%d ",rx_pkt[j]);
     }
     PRINTF("\n");
     */
@@ -243,80 +244,80 @@ static void input(void)
     {
 		
 		
-	toc();
-	tic(RTIMER_NOW(),"pkt_in");        
+	//toc();
+	//tic(RTIMER_NOW(),"pkt_in");        
 	
 	
 	//PRINTF("From last RX %u\n",(RTIMER_NOW()-SN_RX_start_time)/RTIMER_MS);
 	SN_RX_start_time = RTIMER_NOW();
 	
 	//check where the packet is from BS
-        if (rx_pkt[NODE_INDEX] != 0)
-            return; //if not from BS, skip
+	if (rx_pkt[NODE_INDEX] != 0)
+	    return; //if not from BS, skip
 
-        /*--------from BS------------*/
-        
-        //turn off radio -- save power
-        if(NETSTACK_RADIO.off() != 1)
-        {
-            printf("TDMA RDC: SN fails to turn off radio");
-        }
+	/*--------from BS------------*/
+	
+	//turn off radio -- save power
+	if(NETSTACK_RADIO.off() != 1)
+	{
+	    printf("TDMA RDC: SN fails to turn off radio");
+	}
 
-        
+	
 
 
-        //first, check if BS assigns a slot
+	//first, check if BS assigns a slot
 
-        char i = 0;
-        char free_slot = 0;
+	char i = 0;
+	char free_slot = 0;
 	my_slot = -1;
-        for(i = PKT_HDR_SIZE; i < pkt_size; i++)
-        {
-            //print payload
+	for(i = PKT_HDR_SIZE; i < pkt_size; i++)
+	{
+	    //print payload
 	    //PRINTF("%d ",rx_pkt[i]);
 	    if(SN_ID == rx_pkt[i])
-            {
-                my_slot = i-PKT_HDR_SIZE;
+	    {
+		my_slot = i-PKT_HDR_SIZE;
 		break;
-            }    
-            else
-            {
-                if (rx_pkt[i] == FREE_SLOT_CONST) // exist free slot
-                    free_slot++;
+	    }    
+	    else
+	    {
+		if (rx_pkt[i] == FREE_SLOT_CONST) // exist free slot
+		    free_slot++;
 
-                //my_slot = -1;
-            }
-        }
+		//my_slot = -1;
+	    }
+	}
 
 
-        if (my_slot == -1 && free_slot != 0) //do not allocate a slot & there is a free slot
-        {
-            uint8_t rnd_num = RTIMER_NOW() % free_slot;
-            for(i = PKT_HDR_SIZE; i<pkt_size; i++)
-            {
-                if(rx_pkt[i] == FREE_SLOT_CONST)
-                {
-                    if (rnd_num == 0)
-                    {
-                        my_slot = i-PKT_HDR_SIZE;
-                        break;
-                    }
-                    else
-                        rnd_num--;
-                }
-            }            
-        }
+	if (my_slot == -1 && free_slot != 0) //do not allocate a slot & there is a free slot
+	{
+	    uint8_t rnd_num = RTIMER_NOW() % free_slot;
+	    for(i = PKT_HDR_SIZE; i<pkt_size; i++)
+	    {
+		if(rx_pkt[i] == FREE_SLOT_CONST)
+		{
+		    if (rnd_num == 0)
+		    {
+			my_slot = i-PKT_HDR_SIZE;
+			break;
+		    }
+		    else
+			rnd_num--;
+		}
+	    }            
+	}
 
-        //schedule for TX -- 5ms for guarding period (open radio earlier)
-        
+	//schedule for TX -- 5ms for guarding period (open radio earlier)
+	
 	if (my_slot != -1)
 	{
-        	//PRINTF("Schedule for TX at Slot %d\n",my_slot);
+		//PRINTF("Schedule for TX at Slot %d\n",my_slot);
 		uint16_t SN_TX_time = SN_RX_start_time + RTIMER_MS*(BS_period+TS_period * my_slot - 2); 
-        	rtimer_set(&SNTimer,SN_TX_time,0,TDMA_SN_send,NULL);
+		rtimer_set(&SNTimer,SN_TX_time,0,TDMA_SN_send,NULL);
 	}
 	
-	print_tics();
+	//print_tics();
     }
     else if(SN_ID == 0) //BS
     /*-----------------BS CODE---------------*/
@@ -324,16 +325,16 @@ static void input(void)
 	//tic(RTIMER_NOW(),"pkt_in");        
 	
 	//debug for collision
-        /*
-        short i = 0;
-        for(i = 0; i < pkt_size; i++)
-        {
-            PRINTF("%d ",rx_pkt[i]);
-        }
-        PRINTF("\n");
-        */
-        //set flag in pkt for TS occupancy
-        uint8_t current_TS = (RTIMER_NOW()-BS_RX_start_time)/(TS_period*RTIMER_MS);
+	/*
+	short i = 0;
+	for(i = 0; i < pkt_size; i++)
+	{
+	    PRINTF("%d ",rx_pkt[i]);
+	}
+	PRINTF("\n");
+	*/
+	//set flag in pkt for TS occupancy
+	uint8_t current_TS = (RTIMER_NOW()-BS_RX_start_time)/(TS_period*RTIMER_MS);
 	if(node_list[current_TS] == FREE_SLOT_CONST) //collision -- ask the node to find a new available slot
 	{
 	  //pkt[PKT_HDR_SIZE+current_TS] = rx_pkt[NODE_INDEX];
@@ -341,7 +342,7 @@ static void input(void)
 	  //struct tdma_hdr rx_hdr;
 	  //memcpy(&rx_hdr,rx_pkt+PKT_HDR_SIZE,sizeof(struct tdma_hdr));
 	  //PRINTF("HDR: From node %d, seq_num %d\n",rx_hdr.src_node_id,rx_hdr.seq_num);
-	  
+	  /*
 	  if (rx_pkt[NODE_INDEX] == 1 || rx_pkt[NODE_INDEX] == 10)
 	  {
 	      uint8_t i = 0;
@@ -352,12 +353,13 @@ static void input(void)
 	      }
 	      PRINTF("\n");
 	  }
+	  */
 	  
 	}
 	
 
 	
-        PRINTF("[Sensor: %d] [Slot: %d] [Seq: %d]\n",
+	PRINTF("[Sensor: %d] [Slot: %d] [Seq: %d]\n",
 	       rx_pkt[NODE_INDEX],current_TS,rx_pkt[SEQ_INDEX]);
 
 
@@ -372,7 +374,7 @@ static int on(void)
     PRINTF("turn on RDC layer\n");
     if (SN_ID == 0) //BS sends packet
     {
-        rtimer_set(&BSTimer,RTIMER_NOW()+RTIMER_MS*segment_period,0,TDMA_BS_send,NULL);
+	rtimer_set(&BSTimer,RTIMER_NOW()+RTIMER_MS*segment_period,0,TDMA_BS_send,NULL);
     }
     return NETSTACK_RADIO.on();
 }
@@ -381,9 +383,9 @@ static int on(void)
 static int off(int keep_radio_on)
 {
     if (keep_radio_on)
-        return NETSTACK_RADIO.on();
+	return NETSTACK_RADIO.on();
     else
-        return NETSTACK_RADIO.off();
+	return NETSTACK_RADIO.off();
 }
 /*-----------------------------------------------*/
 // check channel -- do not need in TDMA implementation
@@ -395,7 +397,7 @@ static unsigned short channel_check_interval(void)
 // initalize RDC layer
 static void init(void)
 {
-   
+  
     printf("node id %d\n",SN_ID); 
     // calculate the number of slots
     total_slot_num = (segment_period - BS_period)/TS_period;
@@ -409,32 +411,11 @@ static void init(void)
     pkt = ( char *)malloc(pkt_size+1);
     memcpy(pkt,pkt_hdr,PKT_HDR_SIZE);
     if (SN_ID == 0)
-        memset(pkt+PKT_HDR_SIZE,FREE_SLOT_CONST,total_slot_num); //set free slot
+	memset(pkt+PKT_HDR_SIZE,FREE_SLOT_CONST,total_slot_num); //set free slot
     else
-        memset(pkt+PKT_HDR_SIZE,-1,total_slot_num); //free payload for SN
+	memset(pkt+PKT_HDR_SIZE,-1,total_slot_num); //free payload for SN
 	
 	
-    
-    
-    
-/*    
-    if (SN_ID == 0)
-    {
-      header.frame_type = FRAME_TDMA_BEACONFRAME;
-      header.seq_num = 0;
-      header.dst_node_id = FRAME_TDMA_BEACON_DST;
-      header.src_node_id = 0;
-      header.payload_len = 0;
-    }
-    else
-    {
-      header.frame_type = FRAME_TDMA_DATAFRAME;
-      header.seq_num = 0;
-      header.dst_node_id = 0;
-      header.src_node_id = SN_ID;
-      header.payload_len = 0;
-    }
-*/	
     printf("Init RDC layer,packet size\n");
 
     on();
