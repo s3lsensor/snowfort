@@ -42,8 +42,33 @@
 #include <msp430.h>
 #include <stdio.h> /* For printf() */
 
+#define I2C_PxDIR   P2DIR
+#define I2C_PxIN    P2IN
+#define I2C_PxOUT   P2OUT
+#define I2C_PxSEL   P2SEL
+
+#define SDA      1 //6 //4//1
+#define SCL      3 //3 //5//3
 
 
+#define SDA_0()   (I2C_PxDIR |=  BV(SDA))		/* SDA Output */
+#define SDA_1()   (I2C_PxDIR &= ~BV(SDA))		/* SDA Input */
+#define SDA_IS_1  (I2C_PxIN & BV(SDA))
+
+#define SCL_0()   (I2C_PxDIR |=  BV(SCL))		/* SCL Output */
+#define SCL_1()   (I2C_PxDIR &= ~BV(SCL))		/* SCL Input */
+#define SCL_IS_1  (I2C_PxIN & BV(SCL))
+
+
+#define SCL_WAIT_FOR_1() do{}while (!SCL_IS_1)
+
+#define delay_4_7us() do{ _NOP(); _NOP(); _NOP(); _NOP(); \
+                          _NOP(); _NOP(); _NOP(); _NOP(); \
+                          _NOP(); _NOP(); _NOP(); _NOP(); }while(0)
+
+#define delay_4us()   do{ _NOP(); _NOP(); _NOP(); _NOP(); \
+                          _NOP(); _NOP(); _NOP(); _NOP(); \
+                          _NOP(); _NOP(); }while(0)
 /*---------------------------------------------------------------------------*/
 PROCESS(hello_world_process, "Hello world process");
 AUTOSTART_PROCESSES(&hello_world_process);
@@ -51,57 +76,17 @@ AUTOSTART_PROCESSES(&hello_world_process);
 PROCESS_THREAD(hello_world_process, ev, data)
 {
   PROCESS_BEGIN();
-
- unsigned rv;
-
- unsigned rd = 1; 
+    WDTCTL = WDTPW+WDTHOLD;
  
  printf("process starts\n");
-// read X1 data on ADXL
-  P3SEL |= 0x0a;                            // Assign I2C pins to module
-  U0CTL |= I2C + SYNC;                      // Switch USART0 to I2C mode
-  U0CTL &= ~I2CEN;                          // Recommended I2C init procedure
-  //I2CTCTL = I2CSSEL_2;                      // SMCLK
-  I2CSCLH = 0x02;                           // High period of SCL
-  I2CSCLL = 0x02;                           // Low period of SCL
-  I2CNDAT = 0x01;                           // Transmit one byte
-  U0CTL |= MST;									  // Master Mode
-  I2CIE = ARDYIFG;								  // data register ready interrupt enable
-  // Transmit register address
-  I2CSA = 0xA6;                             // Slave write address
-  I2CDRB = 0x33;									  // reading register address: X1 data
-  I2CTCTL = I2CSSEL_2 + I2CTRX + I2CSTT + I2CSTP;      // Transmit, ST, SP (clears MST)
-  printf("waiting for register address transmission. I2CIV = %d\n", I2CIV);
-  while(rd);
-  rd = 1;							  // wait for transmit ends
-  printf("register address transmitted\n");
-  //receive register data
-  I2CSA = 0xA7; 									  // Slave read address
-  I2CTCTL = I2CSSEL_2 + I2CSTT + I2CSTP;	  // receive X1 data
-  printf("waiting for data from sensor. I2CIV = %d\n", I2CIV);
-  while(rd);							  // wait for transmit ends
-  rd = 1; 
-  rv = I2CDRB;
- 
- 
-  printf("X1 data: %d\n", rv);
+ I2C_PxDIR |= 0xff;
+do{
+	I2C_PxOUT |= 0xff;
+	delay_4us();
+	I2C_PxOUT &= 0x00;
+	delay_4us();
+}while(1);
+
   PROCESS_END();
 }
-/*---------------------------------------------------------------------------*/
 
-#pragma vector=USART0TX_VECTOR
-__interrupt void USART0 (void)
-{
-
-  switch( I2CIV )
-  {
-   case 0x08:
-	 rd = 0;
-    break;
-
-  }
-}
-
-
-// search for their example on other sensors and interrupt
-// IAR
