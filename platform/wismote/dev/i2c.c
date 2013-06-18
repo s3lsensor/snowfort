@@ -63,8 +63,8 @@ void     i2c_stop(void);
  * SDA == P3.1
  * SCL == P3.3
  */
-#define SDA       1
-#define SCL       3
+#define SDA       1 //4//1
+#define SCL       3 //5//3
 
 #define SDA_0()   (I2C_PxDIR |=  BV(SDA))		/* SDA Output */
 #define SDA_1()   (I2C_PxDIR &= ~BV(SDA))		/* SDA Input */

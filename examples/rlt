@@ -1,0 +1,5 @@
+./z1/tutorials/Makefile:PROJECT_SOURCEFILES = i2cmaster.c tmp102.c adxl345.c battery-sensor.c sky-sensors.c #potentiometer-sensor.c
+./z1/tutorials/example-unicast-temp.c:#include "dev/i2cmaster.h"
+./z1/rssi_scanner/Makefile:PROJECT_SOURCEFILES = i2cmaster.c tmp102.c adxl345.c battery-sensor.c sky-sensors.c #potentiometer-sensor.c
+./z1/test-tmp102.c:#include "dev/i2cmaster.h"
+./z1/test-light-ziglet.c:#include "dev/i2cmaster.h"
