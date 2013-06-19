@@ -86,7 +86,7 @@ do{
 	I2C_PxOUT &= 0x00;
 	delay_4us();
 }while(1);
-
+ 
   PROCESS_END();
 }
 

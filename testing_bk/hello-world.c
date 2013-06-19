@@ -57,35 +57,25 @@ PROCESS_THREAD(hello_world_process, ev, data)
  printf("process starts\n");
 
 //check and receive
-
+do{
 /*-------I2C:	read data for X1----------------------------------------------*/
 i2c_enable();
-printf("i2c enabled\n");
+//printf("i2c enabled\n");
 
 //id = 0xA6;
 
 //start
 i2c_start();
-//printf("i2c started\n");
 //slave address-write
-//if(!i2c_write(0xA6))
-//	printf("write slave address transmit fail!\n");
 i2c_write(0xA6);//0x3A);//0xA6);
-//printf("write slave address transmit fail!\n");
 //register address
-//if(!i2c_write(0x33))
-//	printf("register address transmit fail\n");
-i2c_write(0x33);
-//printf("register address transmit fail\n");
+i2c_write(0x32);
 
 //stop-start
 i2c_stop();
 i2c_start();
 //slave address-read
-//if(!i2c_write(0xA7))
-//	printf("read slave address transmit fail!\n");
 i2c_write(0xA7);//0x3B);//0xA7);
-//printf("read slave address transmit fail!\n");
 //read data
 rv = i2c_read(0);
 //NACK
@@ -95,7 +85,8 @@ i2c_stop();
 
 //disable
 i2c_disable();
-printf("recieved: %d", rv);
+printf("recieved: %d\n", rv);
+}while(1);
   PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
