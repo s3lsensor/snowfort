@@ -198,7 +198,7 @@ i2c_enable();
 i2c_disable();
 // Major loop for reading
 do{
-		i2c_enable();
+i2c_enable();
 		
 /*		
 		i2c_start();
@@ -224,6 +224,133 @@ do{
 		i2c_write(0x00);//0x0 int_enable
 		i2c_stop();
 // */		
+
+/*
+		i2c_start();
+		i2c_write(0xA6);
+		i2c_write(0x1D);
+		i2c_write(0x40);		//0x40 - thresh-tap
+		i2c_stop();
+		
+		i2c_start();
+		i2c_write(0xA6);
+		i2c_write(0x1E);
+		i2c_write(0x00);		//0x0
+		i2c_stop();
+
+		
+		i2c_start();
+		i2c_write(0xA6);
+		i2c_write(0x1F);
+		i2c_write(0x00);		//0x0
+		i2c_stop();
+
+		
+		i2c_start();
+		i2c_write(0xA6);
+		i2c_write(0x20);
+		i2c_write(0x00);		//0x0 - three offsets
+		i2c_stop();
+
+		
+		i2c_start();
+		i2c_write(0xA6);
+		i2c_write(0x21);
+		i2c_write(0x7f);		//0x7f duration
+		i2c_stop();		
+		
+		i2c_start();
+		i2c_write(0xA6);
+		i2c_write(0x22);
+		i2c_write(0x30);		//0x30 - latency
+		i2c_stop();
+		
+		
+		i2c_start();
+		i2c_write(0xA6);
+		i2c_write(0x23);
+		i2c_write(0x7f);		//0x7f - window
+		i2c_stop();
+
+		
+		i2c_start();
+		i2c_write(0xA6);
+		i2c_write(0x24);
+		i2c_write(0x02);		//0x2 thresh_act
+		i2c_stop();
+		
+				
+		i2c_start();
+		i2c_write(0xA6);
+		i2c_write(0x25);
+		i2c_write(0x01);		//0x1 thresh_inact
+		i2c_stop();
+				
+		i2c_start();
+		i2c_write(0xA6);
+		i2c_write(0x26);
+		i2c_write(0xff);		//0xff time_inact
+		i2c_stop();
+				
+		i2c_start();
+		i2c_write(0xA6);
+		i2c_write(0x27);
+		i2c_write(0xff);		//0xff act_inact_ctl
+		i2c_stop();		
+		
+		i2c_start();
+		i2c_write(0xA6);
+		i2c_write(0x28);
+		i2c_write(0x05);		//0x05 thresh_ff
+		i2c_stop();		
+		
+		i2c_start();
+		i2c_write(0xA6);
+		i2c_write(0x29);
+		i2c_write(0x14);		//0x14 time_ff
+		i2c_stop();		
+		
+		i2c_start();
+		i2c_write(0xA6);
+		i2c_write(0x2A);
+		i2c_write(0x07);		//0x7 tap_axes
+		i2c_stop();		
+		
+		i2c_start();
+		i2c_write(0xA6);
+		i2c_write(0x2B);
+		i2c_write(0x00);		//0x0 act_tap_st
+		i2c_stop();
+		
+				
+		i2c_start();
+		i2c_write(0xA6);
+		i2c_write(0x2C);
+		i2c_write(0x0a);		//0x0a bw_rate
+		i2c_stop();		
+
+		
+		i2c_start();
+		i2c_write(0xA6);
+		i2c_write(0x2D);
+		i2c_write(0x08);		//0x08 power_ctl
+		i2c_stop();		
+		
+		i2c_start();
+		i2c_write(0xA6);
+		i2c_write(0x2E);
+		i2c_write(0x00);		//0x0 int_enable
+		i2c_stop();
+
+
+
+i2c_disable();
+
+			_NOP(); _NOP(); _NOP(); _NOP(); _NOP(); _NOP(); _NOP(); _NOP(); _NOP(); _NOP(); _NOP(); _NOP();
+
+// */
+i2c_enable();
+
 		
 		i2c_start();
 		i2c_write(0xA6);
@@ -249,16 +376,18 @@ do{
 		z1=i2c_read(0);
 		i2c_stop();
 		
-		i2c_disable();
+i2c_disable();
 		
 		x = 0;
 		x |= x1;
 		x = (x<<8) | x0;
 		xx=x*0.0078;
+		
 		y = 0;
 		y |= y1;
 		y = (y<<8) | y0;
 		yy=y*0.0078;
+		
 		z = 0;
 		z |= z1;
 		z = (z<<8) | z0;
