@@ -292,6 +292,11 @@ do{
 		
 		//disable
 		i2c_disable();
+		
+		for(rv =1 ; rv<=25; rv++){
+			_NOP(); _NOP(); _NOP(); _NOP(); _NOP(); _NOP(); _NOP(); _NOP(); _NOP(); _NOP();
+		}
+
 
 }while(1);
   PROCESS_END();
