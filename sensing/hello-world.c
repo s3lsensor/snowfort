@@ -52,52 +52,104 @@ AUTOSTART_PROCESSES(&hello_world_process);
 PROCESS_THREAD(hello_world_process, ev, data)
 {
   PROCESS_BEGIN();
-  unsigned rv, tmp;
-// read PWR_CTL register;
-		i2c_enable();
-		//start
-		i2c_start();
-		//slave address-write
-		i2c_write(0xA6);
-		//register address POWER_CTL 0x2D
-		i2c_write(0x2D);
-		//stop-start
-		i2c_stop();
-		i2c_start();
-		//slave address-read
-		i2c_write(0xA7);
-		//read data
-		rv = i2c_read(0);
-		//NACK
-		//stop
-		i2c_stop();
-		//disable
-		i2c_disable();
-		
-// set Measure to 1
-		rv |= 0x08;
-		i2c_enable();
-		//start
-		i2c_start();
-		//slave address-write
-		i2c_write(0xA6);
-		//register address POWER_CTL 0x2D
-		i2c_write(0x2D);
-		//data
-		i2c_write(rv);
-		//read data
-		i2c_stop();
-		//disable
-		i2c_disable();	
+  unsigned rv, x0, x1, y0, y1, z0, z1;
+// configuration -- bundle of single byte writes
+i2c_enable();
+
+
+/*
+	//disable act/inact mode: 0x27 -- 0x00
+	i2c_start();
+	i2c_write(0xA6);
+	i2c_write(0x27);
+	i2c_write(0x00);
+	i2c_stop();
+	//disable tap mode: 0x2A -- 0x00
+	i2c_start();
+	i2c_write(0xA6);
+	i2c_write(0x2A);
+	i2c_write(0x00);
+	i2c_stop();
+	//POWER_CTL: 0x2D -- link/0; auto_sleep/0; measure/1; sleep_bit/0; wakeup_bits/00; 00001000/0x08
+	i2c_start();
+	i2c_write(0xA6);
+	i2c_write(0x2D);
+	i2c_write(0x08);
+	i2c_stop();
+	//INT_ENABLE: 0x2E -- 0x00
+	i2c_start();
+	i2c_write(0xA6);
+	i2c_write(0x2E);
+	i2c_write(0x00);
+	i2c_stop();
+	//data format: 0x31 -- self_test/0; spi/0; int_invert/X; full_res/0; range bits/01 (4g)	00000001/0x01
+	i2c_start();
+	i2c_write(0xA6);
+	i2c_write(0x31);
+	i2c_write(0x01);
+	i2c_stop();
+	//FIFO_CTL: 0x38 -- 00/bypass; trigger/X; 0x00
+	i2c_start();
+	i2c_write(0xA6);
+	i2c_write(0x38);
+	i2c_write(0x00);
+	i2c_stop();
+// */
+
+
+	//POWER_CTL: 0x2D -- link/0; auto_sleep/0; measure/1; sleep_bit/0; wakeup_bits/00; 00001000/0x08
+	i2c_start();
+	i2c_write(0xA6);
+	i2c_write(0x2D);
+	i2c_write(0x08);
+	i2c_stop();
 	
-// Major loop to read X1
+	//data format: 0x31 -- self_test/0; spi/0; int_invert/X; full_res/0; range bits/01 (4g)	00000001/0x01
+	i2c_start();
+	i2c_write(0xA6);
+	i2c_write(0x31);
+	i2c_write(0x01);
+	i2c_stop();
+	
+i2c_disable();
+// Major loop for reading
 do{
 		i2c_enable();
+		
+		
+		// WHOAMI reference
+		i2c_start();
+		i2c_write(0xA6);
+		i2c_write(0x00);
+		i2c_stop();
+		i2c_start();
+		i2c_write(0xA7);
+		rv = i2c_read(0);
+		i2c_stop();
+		printf("Self: %d\n", rv);
+		
+// reference
+	//POWER_CTL: 0x2D -- link/0; auto_sleep/0; measure/1; sleep_bit/0; wakeup_bits/00; 00001000/0x08
+	i2c_start();
+	i2c_write(0xA6);
+	i2c_write(0x2D);
+	i2c_write(0x08);
+	i2c_stop();
+	
+	//data format: 0x31 -- self_test/0; spi/0; int_invert/X; full_res/0; range bits/01 (4g)	00000001/0x01
+	i2c_start();
+	i2c_write(0xA6);
+	i2c_write(0x31);
+	i2c_write(0x01);
+	i2c_stop();
+
+
+
 		//start
 		i2c_start();
 		//slave address-write
 		i2c_write(0xA6);
-		//register address POWER_CTL 0x2D
+		//register address for X0;
 		i2c_write(0x32);
 		//stop-start
 		i2c_stop();
@@ -105,13 +157,138 @@ do{
 		//slave address-read
 		i2c_write(0xA7);
 		//read data
-		rv = i2c_read(0);
+		x0 = i2c_read(0);
 		//NACK
 		//stop
 		i2c_stop();
+		//start
+		i2c_start();
+		//slave address-write
+		i2c_write(0xA6);
+		//register address for X1;
+		i2c_write(0x33);
+		//stop-start
+		i2c_stop();
+		i2c_start();
+		//slave address-read
+		i2c_write(0xA7);
+		//read data
+		x1 = i2c_read(0);
+		//NACK
+		//stop
+		i2c_stop();
+		//start
+		i2c_start();
+		//slave address-write
+		i2c_write(0xA6);
+		//register address for Y0;
+		i2c_write(0x34);
+		//stop-start
+		i2c_stop();
+		i2c_start();
+		//slave address-read
+		i2c_write(0xA7);
+		//read data
+		y0 = i2c_read(0);
+		//NACK
+		//stop
+		i2c_stop();
+		//start
+		i2c_start();
+		//slave address-write
+		i2c_write(0xA6);
+		//register address for Y1;
+		i2c_write(0x35);
+		//stop-start
+		i2c_stop();
+		i2c_start();
+		//slave address-read
+		i2c_write(0xA7);
+		//read data
+		y1 = i2c_read(0);
+		//NACK
+		//stop
+		i2c_stop();		
+		
+		//start
+		i2c_start();
+		//slave address-write
+		i2c_write(0xA6);
+		//register address for Z0;
+		i2c_write(0x36);
+		//stop-start
+		i2c_stop();
+		i2c_start();
+		//slave address-read
+		i2c_write(0xA7);
+		//read data
+		z0 = i2c_read(0);
+		//NACK
+		//stop
+		i2c_stop();
+		//start
+		i2c_start();
+		//slave address-write
+		i2c_write(0xA6);
+		//register address for Z1;
+		i2c_write(0x37);
+		//stop-start
+		i2c_stop();
+		i2c_start();
+		//slave address-read
+		i2c_write(0xA7);
+		//read data
+		z1 = i2c_read(0);
+		//NACK
+		//stop
+		i2c_stop();
+		printf("X: %d %d\nY: %d %d\nZ: %d %d\n", x0, x1, y0, y1, z0, z1);
+// */		
+		
+
+		
+// suppose to be		
+
+
+	//POWER_CTL: 0x2D -- link/0; auto_sleep/0; measure/1; sleep_bit/0; wakeup_bits/00; 00001000/0x08
+	i2c_start();
+	i2c_write(0xA6);
+	i2c_write(0x2D);
+	i2c_write(0x08);
+	i2c_stop();
+	
+	//data format: 0x31 -- self_test/0; spi/0; int_invert/X; full_res/0; range bits/01 (4g)	00000001/0x01
+	i2c_start();
+	i2c_write(0xA6);
+	i2c_write(0x31);
+	i2c_write(0x01);
+	i2c_stop();
+
+		i2c_start();
+		//slave address-write
+		i2c_write(0xA6);
+		//register address for Z1;
+		i2c_write(0x37);
+		//stop-start
+		i2c_stop();
+		i2c_start();
+		//slave address-read
+		i2c_write(0xA7);
+		//read data
+		x0 = i2c_read(1);
+		x1 = i2c_read(1);
+		y0 = i2c_read(1);
+		y1 = i2c_read(1);
+		z0 = i2c_read(1);
+		z1 = i2c_read(0);
+		//NACK
+		//stop
+		i2c_stop();
+// */		
+		
 		//disable
 		i2c_disable();
-		printf("X1: %d\n", rv);
+		printf("X: %d %d\nY: %d %d\nZ: %d %d\n", x0, x1, y0, y1, z0, z1);
 }while(1);
   PROCESS_END();
 }
