@@ -130,7 +130,7 @@ do{
 		
 // reference working okay
 
-	//// configure before every reading
+	//// configure before every read
 	//POWER_CTL: 0x2D -- link/0; auto_sleep/0; measure/1; sleep_bit/0; wakeup_bits/00; 00001000/0x08
 	i2c_start();
 	i2c_write(0xA6);
