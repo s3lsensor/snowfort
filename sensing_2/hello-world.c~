@@ -43,7 +43,7 @@
 #include "spi.h"
 #include <stdio.h> /* For printf() */
 #define debug
-#define DUR (0)
+#define DUR (2500)
 
   unsigned rv, xx0, xx1, yy0, yy1, zz0, zz1;
   int x, y, z;
@@ -53,6 +53,8 @@ void init();
 void set_measure();
 void measure();
 void strange_measure();
+void start();
+void write(unsigned _c);
 /*---------------------------------------------------------------------------*/
 PROCESS(hello_world_process, "Hello world process");
 AUTOSTART_PROCESSES(&hello_world_process);
@@ -75,12 +77,12 @@ printf("accessing WHOAMI register...\n");
 #endif
 i2c_enable();
 		
-		i2c_start();
-		i2c_write(0xA6);
-		i2c_write(0x00);
+		start();
+		write(0xA6);
+		write(0x00);
 		i2c_stop();
 		i2c_start();
-		i2c_write(0xA7);
+		write(0xA7);
 		rv = i2c_read(0);
 		i2c_stop();
 		
@@ -90,9 +92,6 @@ i2c_disable();
 			printf("i2c working correctly, this sensor is 229\n");
 		else{
 			printf("ERROR!ERROR!ERROR!ERROR!ERROR!ERROR!ERROR!\n");
-			for(i=0; i<2500000; i++){
-				_NOP(); _NOP(); _NOP(); _NOP(); _NOP(); _NOP(); _NOP(); _NOP(); _NOP(); _NOP();
-			}
 		}
 
 #ifdef debug
@@ -105,8 +104,8 @@ printf("Setting measurement mode before each measurement\n");
 			
 			
 // get acceleration on x, y, z axis
-//		measure();
-		strange_measure();
+		measure();
+//		strange_measure();
 
 //append the 2 bytes		
 		x = 0;
@@ -134,19 +133,19 @@ printf("z: %d\tz1: %d\n", z, zz1);
 		zz=z*0.0078;
 
 		printf("X: %d %d \nY: %d %d \nZ: %d %d \n",  xx0, xx1, yy0, yy1, zz0, zz1);
-		printf("X value: %d\tY value: %d\tZ value: %d\n\n\n", x, y, z);
+		printf("X value: %d\tY value: %d\tZ value: %d\n", x, y, z);
 
 		for(i =1 ; i<=25000; i++){
 			_NOP(); _NOP(); _NOP(); _NOP(); _NOP(); _NOP(); _NOP(); _NOP(); _NOP(); _NOP();
 		}
-
+	printf("%d\n\n\n", i);
 }while(1);
   PROCESS_END();
 }
 
 
 void init(){
-	i2c_enable();
+
 
 //0x40 - thresh-tap
 //0x0
@@ -168,134 +167,134 @@ void init(){
 //0x0 int_enable
 //0x01 data format
 
-		i2c_start();
-		i2c_write(0xA6);
-		i2c_write(0x1D);
-		i2c_write(0x40);		//0x40 - thresh-tap
-		i2c_stop();
+		start();
+		write(0xA6);
+		write(0x1D);
+		write(0x40);		//0x40 - thresh-tap
+		stop();
 		
-		i2c_start();
-		i2c_write(0xA6);
-		i2c_write(0x1E);
-		i2c_write(0x00);		//0x0
-		i2c_stop();
+		start();
+		write(0xA6);
+		write(0x1E);
+		write(0x00);		//0x0
+		stop();
 
 		
-		i2c_start();
-		i2c_write(0xA6);
-		i2c_write(0x1F);
-		i2c_write(0x00);		//0x0
-		i2c_stop();
+		start();
+		write(0xA6);
+		write(0x1F);
+		write(0x00);		//0x0
+		stop();
 
 		
-		i2c_start();
-		i2c_write(0xA6);
-		i2c_write(0x20);
-		i2c_write(0x00);		//0x0 - three offsets
-		i2c_stop();
+		start();
+		write(0xA6);
+		write(0x20);
+		write(0x00);		//0x0 - three offsets
+		stop();
 
 		
-		i2c_start();
-		i2c_write(0xA6);
-		i2c_write(0x21);
-		i2c_write(0x7f);		//0x7f duration
-		i2c_stop();		
+		start();
+		write(0xA6);
+		write(0x21);
+		write(0x7f);		//0x7f duration
+		stop();		
 		
-		i2c_start();
-		i2c_write(0xA6);
-		i2c_write(0x22);
-		i2c_write(0x30);		//0x30 - latency
-		i2c_stop();
+		start();
+		write(0xA6);
+		write(0x22);
+		write(0x30);		//0x30 - latency
+		stop();
 		
 		
-		i2c_start();
-		i2c_write(0xA6);
-		i2c_write(0x23);
-		i2c_write(0x7f);		//0x7f - window
-		i2c_stop();
+		start();
+		write(0xA6);
+		write(0x23);
+		write(0x7f);		//0x7f - window
+		stop();
 
 		
-		i2c_start();
-		i2c_write(0xA6);
-		i2c_write(0x24);
-		i2c_write(0x02);		//0x2 thresh_act
-		i2c_stop();
+		start();
+		write(0xA6);
+		write(0x24);
+		write(0x02);		//0x2 thresh_act
+		stop();
 		
 				
-		i2c_start();
-		i2c_write(0xA6);
-		i2c_write(0x25);
-		i2c_write(0x01);		//0x1 thresh_inact
-		i2c_stop();
+		start();
+		write(0xA6);
+		write(0x25);
+		write(0x01);		//0x1 thresh_inact
+		stop();
 				
-		i2c_start();
-		i2c_write(0xA6);
-		i2c_write(0x26);
-		i2c_write(0xff);		//0xff time_inact
-		i2c_stop();
+		start();
+		write(0xA6);
+		write(0x26);
+		write(0xff);		//0xff time_inact
+		stop();
 				
-		i2c_start();
-		i2c_write(0xA6);
-		i2c_write(0x27);
-		i2c_write(0xff);		//0xff act_inact_ctl
-		i2c_stop();		
+		start();
+		write(0xA6);
+		write(0x27);
+		write(0xff);		//0xff act_inact_ctl
+		stop();		
 		
-		i2c_start();
-		i2c_write(0xA6);
-		i2c_write(0x28);
-		i2c_write(0x05);		//0x05 thresh_ff
-		i2c_stop();		
+		start();
+		write(0xA6);
+		write(0x28);
+		write(0x05);		//0x05 thresh_ff
+		stop();		
 		
-		i2c_start();
-		i2c_write(0xA6);
-		i2c_write(0x29);
-		i2c_write(0x14);		//0x14 time_ff
-		i2c_stop();		
+		start();
+		write(0xA6);
+		write(0x29);
+		write(0x14);		//0x14 time_ff
+		stop();		
 		
-		i2c_start();
-		i2c_write(0xA6);
-		i2c_write(0x2A);
-		i2c_write(0x07);		//0x7 tap_axes
-		i2c_stop();		
+		start();
+		write(0xA6);
+		write(0x2A);
+		write(0x07);		//0x7 tap_axes
+		stop();		
 		
-		i2c_start();
-		i2c_write(0xA6);
-		i2c_write(0x2B);
-		i2c_write(0x00);		//0x0 act_tap_st
-		i2c_stop();
+		start();
+		write(0xA6);
+		write(0x2B);
+		write(0x00);		//0x0 act_tap_st
+		stop();
 		
 				
-		i2c_start();
-		i2c_write(0xA6);
-		i2c_write(0x2C);
-		i2c_write(0x0a);		//0x0a bw_rate
-		i2c_stop();		
+		start();
+		write(0xA6);
+		write(0x2C);
+		write(0x0a);		//0x0a bw_rate
+		stop();		
 // */
 
 /*
-		i2c_start();
-		i2c_write(0xA6);
-		i2c_write(0x2D);
-		i2c_write(0x00);		//set to standby mode first as recommanded
-		i2c_stop();	
+		start();
+		write(0xA6);
+		write(0x2D);
+		write(0x00);		//set to standby mode first as recommanded
+		stop();	
 		// */
-		i2c_start();
-		i2c_write(0xA6);
-		i2c_write(0x2D);
-		i2c_write(0x08);		//0x08 power_ctl
-		i2c_stop();		
+		start();
+		write(0xA6);
+		write(0x2D);
+		write(0x08);		//0x08 power_ctl
+		stop();		
 		
-		i2c_start();
-		i2c_write(0xA6);
-		i2c_write(0x2E);
-		i2c_write(0x00);		//0x0 int_enable
-		i2c_stop();
+		start();
+		write(0xA6);
+		write(0x2E);
+		write(0x00);		//0x0 int_enable
+		stop();
 		
-		i2c_start();
-		i2c_write(0xA6);
-		i2c_write(0x31);
-		i2c_write(0x01);		//0x1 data_format
-		i2c_stop();
+		start();
+		write(0xA6);
+		write(0x31);
+		write(0x01);		//0x1 data_format
+		stop();
 
 // */
 /*		
@@ -322,24 +321,24 @@ void init(){
 		i2c_write(0x00);//0x0 int_enable
 		i2c_stop();
 // */		
-i2c_disable();
+
 }
 
 void set_measure(){
 	int i;
 	i2c_enable();
-	/*
-		i2c_start();
-		i2c_write(0xA6);
-		i2c_write(0x2D);
-		i2c_write(0x00);		//set to standby mode first as recomanded
-		i2c_stop();	
+/*	
+		start();
+		write(0xA6);
+		write(0x2D);
+		write(0x00);		//set to standby mode first as recomanded
+		stop();	
 	// */	
-		i2c_start();
-		i2c_write(0xA6);
-		i2c_write(0x2D);
-		i2c_write(0x08);		//0x08 power_ctl
-		i2c_stop();	
+		start();
+		write(0xA6);
+		write(0x2D);
+		write(0x08);		//0x08 power_ctl
+		stop();	
 	
 	i2c_disable();
 	
@@ -349,85 +348,107 @@ printf("wait for measure.\n");
 		for(i =1 ; i<=DUR; i++){
 			_NOP(); _NOP(); _NOP(); _NOP(); _NOP(); _NOP(); _NOP(); _NOP(); _NOP(); _NOP();
 		}
+		printf("%d", i);
 }
 
 void measure(){ // standard data accessing according to the datasheet
-i2c_enable();
 
-		i2c_start();
-		i2c_write(0xA6);
-		i2c_write(0x32);
+
+		start();
+		write(0xA6);
+		write(0x32);
 		i2c_stop();
 		i2c_start();
-		i2c_write(0xA7);
+		write(0xA7);
 		xx0=i2c_read(1);
 		xx1=i2c_read(1);
 		yy0=i2c_read(1);
 		yy1=i2c_read(1);
 		zz0=i2c_read(1);
 		zz1=i2c_read(0);
-		i2c_stop();
+		stop();
 		
-i2c_disable();
+
 }
 
 void strange_measure(){ // non_standard reading. accessing each axis separately
-i2c_enable();
 
-		i2c_start();
-		i2c_write(0xA6);
-		i2c_write(0x32);
+
+		start();
+		write(0xA6);
+		write(0x32);
 		i2c_stop();
 		i2c_start();
-		i2c_write(0xA7);
+		write(0xA7);
 		xx0=i2c_read(0);
-		i2c_stop();
+		stop();
 		
-		i2c_start();
-		i2c_write(0xA6);
-		i2c_write(0x33);
+		start();
+		write(0xA6);
+		write(0x33);
 		i2c_stop();
 		i2c_start();
-		i2c_write(0xA7);
+		write(0xA7);
 		xx1=i2c_read(0);
-		i2c_stop();
+		stop();
 		
-		i2c_start();
-		i2c_write(0xA6);
-		i2c_write(0x34);
+		start();
+		write(0xA6);
+		write(0x34);
 		i2c_stop();
 		i2c_start();
-		i2c_write(0xA7);
+		write(0xA7);
 		yy0=i2c_read(0);
-		i2c_stop();
+		stop();
 		
-		i2c_start();
-		i2c_write(0xA6);
-		i2c_write(0x35);
+		start();
+		write(0xA6);
+		write(0x35);
 		i2c_stop();
 		i2c_start();
-		i2c_write(0xA7);
+		write(0xA7);
 		yy1=i2c_read(0);
-		i2c_stop();
+		stop();
 		
-		i2c_start();
-		i2c_write(0xA6);
-		i2c_write(0x36);
+		start();
+		write(0xA6);
+		write(0x36);
 		i2c_stop();
 		i2c_start();
-		i2c_write(0xA7);
+		write(0xA7);
 		zz0=i2c_read(0);
-		i2c_stop();
+		stop();
 		
-		i2c_start();
-		i2c_write(0xA6);
-		i2c_write(0x37);
+		start();
+		write(0xA6);
+		write(0x37);
 		i2c_stop();
 		i2c_start();
-		i2c_write(0xA7);
+		write(0xA7);
 		zz1=i2c_read(0);
-		i2c_stop();		
+		stop();		
 
 		
-i2c_disable();
+
+}
+
+
+void start(){
+	i2c_enable();
+	int suc;
+	suc = i2c_start();
+	while(suc == -1){
+		printf("start failed!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+		suc=i2c_start();
+	}
+}
+
+void write(unsigned _c){
+	if (i2c_write(_c)==0)
+		printf("write unsuccessful!!!!!!!!!!!!!!!!!!!!!!!!\n");
+}
+
+void stop(){
+	i2c_stop();
+	i2c_disable();
 }
