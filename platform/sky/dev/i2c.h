@@ -46,4 +46,10 @@ void     i2c_stop(void);
 int      i2c_write(unsigned);
 unsigned i2c_read(int send_ack);
 
+
+/* user added functions
+// */
+
+unsigned read_(unsigned slave_address_w, unsigned slave_address_r, unsigned register_address, int send_ack);
+void write_(unsigned slave_address, unsigned register_address, unsigned value);
 #endif /* I2C_H */

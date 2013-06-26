@@ -43,7 +43,7 @@
 #include "spi.h"
 #include <stdio.h> /* For printf() */
 #define debug
-#define DUR (2500)
+#define DUR (250)
 
   unsigned rv, xx0, xx1, yy0, yy1, zz0, zz1;
   int x, y, z;
@@ -55,6 +55,8 @@ void measure();
 void strange_measure();
 void start();
 void write(unsigned _c);
+void stop();
+void show_conf();
 /*---------------------------------------------------------------------------*/
 PROCESS(hello_world_process, "Hello world process");
 AUTOSTART_PROCESSES(&hello_world_process);
@@ -75,7 +77,6 @@ do{
 #ifdef debug
 printf("accessing WHOAMI register...\n");
 #endif
-i2c_enable();
 		
 		start();
 		write(0xA6);
@@ -84,9 +85,8 @@ i2c_enable();
 		i2c_start();
 		write(0xA7);
 		rv = i2c_read(0);
-		i2c_stop();
+		stop();
 		
-i2c_disable();
 
 		if(rv == 229)
 			printf("i2c working correctly, this sensor is 229\n");
@@ -98,15 +98,36 @@ i2c_disable();
 printf("Setting measurement mode before each measurement\n");
 #endif		
 			//enable measurement before each reading;
+			init();
 			set_measure();
-			
 			// */
+			
+			start();
+			write(0xA6);
+			write(0x2D);
+			i2c_stop();
+			i2c_start();
+			write(0xA7);
+			rv = i2c_read(0);
+			stop();
+			printf("POWER_CTL: %d\n", rv);
+			
+			start();
+			write(0xA6);
+			write(0x31);
+			i2c_stop();
+			i2c_start();
+			write(0xA7);
+			rv = i2c_read(0);
+			stop();
+			printf("DATA FORMAT: %d\n", rv);
+			
 			
 			
 // get acceleration on x, y, z axis
-		measure();
-//		strange_measure();
-
+//		measure();
+		strange_measure();
+		show_conf();
 //append the 2 bytes		
 		x = 0;
 		x |= xx1;
@@ -132,8 +153,46 @@ printf("z: %d\tz1: %d\n", z, zz1);
 		z = (z<<8) | zz0;
 		zz=z*0.0078;
 
-		printf("X: %d %d \nY: %d %d \nZ: %d %d \n",  xx0, xx1, yy0, yy1, zz0, zz1);
+		printf("Strange measure\nX: %d %d \nY: %d %d \nZ: %d %d \n",  xx0, xx1, yy0, yy1, zz0, zz1);
 		printf("X value: %d\tY value: %d\tZ value: %d\n", x, y, z);
+		
+		
+// get acceleration on x, y, z axis
+		measure();
+//		strange_measure();
+		show_conf();
+//append the 2 bytes		
+		x = 0;
+		x |= xx1;
+#ifdef debug
+printf("debuging...\nx: %d\tx1: %d\n", x, xx1);
+#endif
+		x = (x<<8) | xx0;
+		xx=x*0.0078;
+		
+		y = 0;
+		y |= yy1;
+#ifdef debug
+printf("y: %d\ty1: %d\n", y, yy1);
+#endif
+		y = (y<<8) | yy0;
+		yy=y*0.0078;
+		
+		z = 0;
+		z |= zz1;
+#ifdef debug
+printf("z: %d\tz1: %d\n", z, zz1);
+#endif
+		z = (z<<8) | zz0;
+		zz=z*0.0078;
+
+		printf("Normal measure\nX: %d %d \nY: %d %d \nZ: %d %d \n",  xx0, xx1, yy0, yy1, zz0, zz1);
+		printf("X value: %d\tY value: %d\tZ value: %d\n", x, y, z);
+
+		
+		
+		
+		
 
 		for(i =1 ; i<=25000; i++){
 			_NOP(); _NOP(); _NOP(); _NOP(); _NOP(); _NOP(); _NOP(); _NOP(); _NOP(); _NOP();
@@ -271,7 +330,7 @@ void init(){
 		stop();		
 // */
 
-/*
+
 		start();
 		write(0xA6);
 		write(0x2D);
@@ -326,8 +385,8 @@ void init(){
 
 void set_measure(){
 	int i;
-	i2c_enable();
-/*	
+//	i2c_enable();
+/*
 		start();
 		write(0xA6);
 		write(0x2D);
@@ -340,7 +399,7 @@ void set_measure(){
 		write(0x08);		//0x08 power_ctl
 		stop();	
 	
-	i2c_disable();
+//	i2c_disable();
 	
 #ifdef debug
 printf("wait for measure.\n");
@@ -451,4 +510,26 @@ void write(unsigned _c){
 void stop(){
 	i2c_stop();
 	i2c_disable();
+}
+
+void show_conf(){
+			start();
+			write(0xA6);
+			write(0x2D);
+			i2c_stop();
+			i2c_start();
+			write(0xA7);
+			rv = i2c_read(0);
+			stop();
+			printf("POWER_CTL: %d\n", rv);
+			
+			start();
+			write(0xA6);
+			write(0x31);
+			i2c_stop();
+			i2c_start();
+			write(0xA7);
+			rv = i2c_read(0);
+			stop();
+			printf("DATA FORMAT: %d\n", rv);
 }

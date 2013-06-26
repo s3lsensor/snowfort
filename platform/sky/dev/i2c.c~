@@ -73,8 +73,8 @@ void     i2c_stop(void);
  * SDA == P3.1/P3.4-UART0TX-4/P2.6-GIO1
  * SCL == P3.3/P3.5-IART0RX-2/P2.3-GIO0
  */
-#define SDA      1 //6 //4//1
-#define SCL      3 //3 //5//3
+#define SDA      6 //4//1
+#define SCL      3 //5//3
 
 #define SDA_0()   (I2C_PxDIR |=  BV(SDA))		/* SDA Output */
 #define SDA_1()   (I2C_PxDIR &= ~BV(SDA))		/* SDA Input */
@@ -230,4 +230,62 @@ i2c_read(int send_ack)
   SCL_0();
 
   return c;
+}
+
+unsigned read_(unsigned slave_address_w, unsigned slave_address_r, unsigned register_address, int send_ack){
+	unsigned rv;
+	int suc;
+	i2c_enable();
+	
+	// start
+	suc = i2c_start();
+	while(suc == -1){
+		printf("start failed!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+		suc=i2c_start();
+	}
+	// slave address	
+		if (i2c_write(slave_address_w)==0)
+			printf("write unsuccessful!!!!!!!!!!!!!!!!!!!!!!!!\n");
+	// register address
+		if (i2c_write(register_address)==0)
+			printf("write unsuccessful!!!!!!!!!!!!!!!!!!!!!!!!\n");
+	// restart
+		i2c_stop();
+		i2c_start();
+	// load slave read address
+		if (i2c_write(slave_address_r)==0)
+			printf("write unsuccessful!!!!!!!!!!!!!!!!!!!!!!!!\n");
+	// read
+		rv = i2c_read(send_ack);
+	// stop
+		i2c_stop();
+		
+	i2c_disable();
+	return rv;
+}
+
+void write_(unsigned slave_address, unsigned register_address, unsigned value){
+	unsigned rv;
+	int suc;
+	i2c_enable();
+	
+	// start
+	suc = i2c_start();
+	while(suc == -1){
+		printf("start failed!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+		suc=i2c_start();
+	}
+	// slave address	
+		if (i2c_write(slave_address)==0)
+			printf("write unsuccessful!!!!!!!!!!!!!!!!!!!!!!!!\n");
+	// register address
+		if (i2c_write(register_address)==0)
+			printf("write unsuccessful!!!!!!!!!!!!!!!!!!!!!!!!\n");
+	// write
+		if (i2c_write(value)==0)
+			printf("write unsuccessful!!!!!!!!!!!!!!!!!!!!!!!!\n");
+	// stop
+		i2c_stop();
+		
+	i2c_disable();
 }

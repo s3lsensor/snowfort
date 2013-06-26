@@ -231,3 +231,61 @@ i2c_read(int send_ack)
 
   return c;
 }
+
+unsigned read_(unsigned slave_address_w, unsigned slave_address_r, unsigned register_address, int send_ack){
+	unsigned rv;
+	int suc;
+	i2c_enable();
+	
+	// start
+	suc = i2c_start();
+	while(suc == -1){
+		printf("start failed!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+		suc=i2c_start();
+	}
+	// slave address	
+		if (i2c_write(slave_address_w)==0)
+			printf("write unsuccessful!!!!!!!!!!!!!!!!!!!!!!!!\n");
+	// register address
+		if (i2c_write(register_address)==0)
+			printf("write unsuccessful!!!!!!!!!!!!!!!!!!!!!!!!\n");
+	// restart
+		i2c_stop();
+		i2c_start();
+	// load slave read address
+		if (i2c_write(slave_address_r)==0)
+			printf("write unsuccessful!!!!!!!!!!!!!!!!!!!!!!!!\n");
+	// read
+		rv = i2c_read(send_ack);
+	// stop
+		i2c_stop();
+		
+	i2c_disable();
+	return rv;
+}
+
+void write_(unsigned slave_address, unsigned register_address, unsigned value){
+
+	int suc;
+	i2c_enable();
+	
+	// start
+	suc = i2c_start();
+	while(suc == -1){
+		printf("start failed!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+		suc=i2c_start();
+	}
+	// slave address	
+		if (i2c_write(slave_address)==0)
+			printf("write unsuccessful!!!!!!!!!!!!!!!!!!!!!!!!\n");
+	// register address
+		if (i2c_write(register_address)==0)
+			printf("write unsuccessful!!!!!!!!!!!!!!!!!!!!!!!!\n");
+	// write
+		if (i2c_write(value)==0)
+			printf("write unsuccessful!!!!!!!!!!!!!!!!!!!!!!!!\n");
+	// stop
+		i2c_stop();
+		
+	i2c_disable();
+}
