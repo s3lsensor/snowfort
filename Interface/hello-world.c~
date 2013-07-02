@@ -98,7 +98,6 @@ printf("Setting measurement mode before each measurement\n");
 #endif		
 			//enable measurement before each reading;
 			//printf("current mode %d\n", read_(0xA6, 0xA7, 0x2D, 0));
-			// STRANGE: set_meaaure() and single write_can never work, init() works okay
 			//set_measure();
 			init();
 			// */
