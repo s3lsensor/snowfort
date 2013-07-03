@@ -165,8 +165,8 @@ PROCESS_THREAD(null_app_process, ev, data)
 	int pkt_seq = data[SEQ_INDEX];
 	data = data + 9;
 	
-	printf("%u,%d,%u,%d %d %d %d %d ",node_id,pkt_seq,0,data[0],data[1],data[2],data[3],data[4]);
-	printf("%d %d %d %d %d\n",data[5],data[6],data[7],data[8],data[9]);
+	printf("%u,%u,%u,%d,%d,%d,%d,%d,",node_id,pkt_seq,0,data[0],data[1],data[2],data[3],data[4]);
+	printf("%d,%d,%d,%d,%d\n",data[5],data[6],data[7],data[8],data[9]);
 	//printf("Input: %s\n",input_buf);
       }
       
