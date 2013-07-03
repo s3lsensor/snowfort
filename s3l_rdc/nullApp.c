@@ -6,7 +6,7 @@
 #include "net/mac/tdmardc.h" // for flags to sync with tdma 
 #include "sys/etimer.h"
 #include "sys/log.h"
-#include "i2c.h"
+//#include "i2c.h"
 
 #define DEBUG 1
 
@@ -18,7 +18,7 @@
 #define RESOLUTION 7
 
 #define MPU_ADDRESS 0xD0
-
+/*
 static int16_t accx, accy, accz;
 static int16_t gyrx, gyry, gyrz;
 
@@ -55,6 +55,7 @@ static void measure_mpu(){
 	gyrz = (gyrz<<8) | measurevector[13];
 
 }
+*/
 
 static const int8_t SIN_TAB[] =
 {
@@ -85,9 +86,9 @@ static int8_t sin(uint16_t angleMilli)
 
 /*---------------------------------------------------------------*/
 PROCESS(null_app_process, "Null App Process");
-PROCESS(sensor_sampling_process, "Sensor Sampling Process");
-AUTOSTART_PROCESSES(&null_app_process, &sensor_sampling_process);
-//AUTOSTART_PROCESSES(&null_app_process);
+//PROCESS(sensor_sampling_process, "Sensor Sampling Process");
+//AUTOSTART_PROCESSES(&null_app_process, &sensor_sampling_process);
+AUTOSTART_PROCESSES(&null_app_process);
 /*---------------------------------------------------------------*/
 PROCESS_THREAD(null_app_process, ev, data)
 {
@@ -134,6 +135,8 @@ PROCESS_THREAD(null_app_process, ev, data)
 	counter++;
 	debug_buf[i] = sin(counter);
       }
+      packetbuf_copyfrom(debug_buf,sizeof(int8_t)*10);
+      NETSTACK_RDC.send(NULL,NULL);
 
     }
     else if (SN_ID == 0)
@@ -154,7 +157,7 @@ PROCESS_THREAD(null_app_process, ev, data)
 	}
       }
       
-      if (flag > 0)
+      if (flag)
       {
 	memcpy(input_buf,data+9,10);
 	//log_message("Input",input_buf);
@@ -173,6 +176,7 @@ PROCESS_THREAD(null_app_process, ev, data)
   PROCESS_END();
 }
 
+/*
 PROCESS_THREAD(sensor_sampling_process, ev, data)
 {
   PROCESS_BEGIN();
@@ -208,3 +212,4 @@ PROCESS_THREAD(sensor_sampling_process, ev, data)
   	}
   PROCESS_END();
 }
+*/

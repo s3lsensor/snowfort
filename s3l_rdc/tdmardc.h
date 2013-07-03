@@ -13,14 +13,13 @@
 
 extern const struct rdc_driver tdmardc_driver;
 
-// Define FCF Value
+// Define FCF Value -- unused right now
 #define FRAME_TDMA_BEACONFRAME (0x00)
 #define FRAME_TDMA_DATAFRAME 	(0x01)
 #define FRAME_TDMA_CMDFRAME	(0x03)
 
 #define FRAME_TDMA_BEACON_DST	(0xff)
 
-int check_rx_finished(void);
 
 struct tdma_hdr
 {
