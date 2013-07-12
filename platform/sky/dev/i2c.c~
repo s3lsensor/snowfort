@@ -55,7 +55,7 @@ void     i2c_enable(void);
 void     i2c_disable(void);
 int      i2c_start(void);
 unsigned i2c_read(int send_ack);
-int      i2c_write(unsigned);
+int      i2c_write(unsigned char);
 void     i2c_stop(void);
 
 //#define I2C_PxDIR   P3DIR
@@ -175,7 +175,7 @@ i2c_stop(void)
  * Return true if we received an ACK.
  */
 int
-i2c_write(unsigned _c)
+i2c_write(unsigned char _c)
 {
   unsigned char c = _c;
   unsigned long n;
@@ -233,15 +233,14 @@ i2c_read(int send_ack)
 }
 
 unsigned 
-read_(unsigned slave_address_w, unsigned slave_address_r, unsigned register_address, int send_ack){
+read_(unsigned slave_address, unsigned register_address, int send_ack){
 	unsigned rv;
 	int suc;
-	i2c_enable();
-	i2c_start();
-	i2c_stop();
-	i2c_disable();
+
+	unsigned slave_address_w = slave_address;
+	unsigned slave_address_r = slave_address+1;
 	
-	i2c_enable();
+//	i2c_enable();
 	// start
 	i2c_start();
 	/*
@@ -252,35 +251,78 @@ read_(unsigned slave_address_w, unsigned slave_address_r, unsigned register_addr
 	}
 	// */
 	// slave address	
-		if (i2c_write(slave_address_w)==0)
-			printf("read_ slave_addess_w unsuccessful!!!!!!!!!!!!!!!!!!!!!!!!\n");
+	if (i2c_write(slave_address_w)==0)
+	{
+		i2c_stop();
+		printf("read_ slave_address_w unsuccessful\n");
+	}		
 	// register address
-		if (i2c_write(register_address)==0)
-			printf("read_ register_address unsuccessful!!!!!!!!!!!!!!!!!!!!!!!!\n");
+	if (i2c_write(register_address)==0){
+		i2c_stop();
+		printf("read_ register unsuccessful\n");
+	}
 	// restart
-		i2c_stop();
-		i2c_start();
+	//i2c_stop();
+	i2c_start();
 	// load slave read address
-		if (i2c_write(slave_address_r)==0)
-			printf("read_ slave_address_r unsuccessful!!!!!!!!!!!!!!!!!!!!!!!!\n");
-	// read
-		rv = i2c_read(send_ack);
-	// stop
+	if (i2c_write(slave_address_r)==0){
 		i2c_stop();
+		printf("read_ slave_address_r unsuccessful\n");
+	}
+	// read
+	rv = i2c_read(send_ack);
+	// stop
+	i2c_stop();
 		
-	i2c_disable();
+//	i2c_disable();
 	return rv;
 }
 
-void write_(unsigned slave_address, unsigned register_address, unsigned value){
+void 
+read_multibyte(unsigned slave_address, unsigned register_address, int numbytes, unsigned char read_bytes[]){
+	unsigned char rv;
+	//int suc;
 
-	int suc;
-	i2c_enable();
-	i2c_start();
-	i2c_stop();
-	i2c_disable();
+	unsigned slave_address_w = slave_address;
+	unsigned slave_address_r = slave_address+1;
 	
-	i2c_enable();
+	i2c_start();
+	// slave address	
+	if (i2c_write(slave_address_w)==0){
+		i2c_stop();
+		printf("read_ slave_address_w unsuccessful\n");
+	}		
+	// register address
+	if (i2c_write(register_address)==0){
+		i2c_stop();
+		printf("read_ register unsuccessful\n");
+	}
+	// restart
+	i2c_start();
+	// load slave read address
+	if (i2c_write(slave_address_r)==0){
+		i2c_stop();
+		printf("read_ slave_address_r unsuccessful\n");
+	}	
+
+	int ii;
+	for (ii = 0; ii < (numbytes-1); ii++){	
+		// read
+		rv = i2c_read(1);
+		read_bytes[ii] = rv;
+	}
+	rv = i2c_read(0);
+	read_bytes[ii] = rv;
+	// stop
+	i2c_stop();
+}
+
+void write_(unsigned slave_address_w, unsigned register_address, unsigned value){
+
+	//int suc;
+
+	
+	//i2c_enable();
 	// start
 	/*
 	suc = i2c_start();
@@ -292,16 +334,23 @@ void write_(unsigned slave_address, unsigned register_address, unsigned value){
 	i2c_start();
 	
 	// slave address	
-		if (i2c_write(slave_address)==0)
-			printf("write_ slave_adress unsuccessful!!!!!!!!!!!!!!!!!!!!!!!!\n");
-	// register address
-		if (i2c_write(register_address)==0)
-			printf("write_ register_address unsuccessful!!!!!!!!!!!!!!!!!!!!!!!!\n");
-	// write
-		if (i2c_write(value)==0)
-			printf("write_ value unsuccessful!!!!!!!!!!!!!!!!!!!!!!!!\n");
-	// stop
+	if (i2c_write(slave_address_w)==0)
+	{
 		i2c_stop();
+		printf("read_ slave_address_w unsuccessful\n");
+	}
+	// register address
+	if (i2c_write(register_address)==0){
+		i2c_stop();
+		printf("read_ register unsuccessful\n");
+	}
+	// write
+	if (i2c_write(value)==0){
+		i2c_stop();		
+		printf("write_ value unsuccessful\n");
+	}
+	// stop
+	i2c_stop();
 		
-	i2c_disable();
+	//i2c_disable();
 }

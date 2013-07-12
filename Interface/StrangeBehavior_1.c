@@ -54,14 +54,15 @@ PROCESS_THREAD(hello_world_process, ev, data)
 {
   PROCESS_BEGIN();
   	//printf("0x00 is %d\n", read_(0xA6, 0xA7, 0x00, 0));
-  	/* // Strange behavior one -- first read/wirte can never success unless have the following code
-  	i2c_enable();
+  	 // Strange behavior one -- first read/wirte can never success unless have the following code
+  	/*i2c_enable();
   	i2c_start();
   	i2c_stop();
-  	i2c_disable();
-  	// */
-	printf("0x1D is %d\n", read_(0xA6, 0xA7, 0x1D, 0));
+  	i2c_disable();*/
+  	// 
 	write_(0xA6, 0x1D, 0x10);
+	printf("0x1D is %d\n", read_(0xA6, 0xA7, 0x1D, 0));
+	write_(0xA6, 0x1D, 0x11);
 	printf("0x1D is %d\n", read_(0xA6, 0xA7, 0x1D, 0));	
   PROCESS_END();
 }

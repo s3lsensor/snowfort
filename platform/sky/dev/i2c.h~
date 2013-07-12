@@ -43,7 +43,7 @@ void     i2c_disable(void);
 int      i2c_start(void);
 void     i2c_stop(void);
 
-int      i2c_write(unsigned);
+int      i2c_write(unsigned char);
 unsigned i2c_read(int send_ack);
 
 
@@ -51,5 +51,6 @@ unsigned i2c_read(int send_ack);
 // */
 
 unsigned read_(unsigned slave_address, unsigned register_address, int send_ack);
-void write_(unsigned slave_address, unsigned register_address, unsigned value);
+unsigned read_multibyte(unsigned slave_address, unsigned register_address, int numbytes);
+void write_(unsigned slave_address_w, unsigned register_address, unsigned value);
 #endif /* I2C_H */
