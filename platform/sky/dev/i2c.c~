@@ -235,7 +235,7 @@ i2c_read(int send_ack)
 unsigned 
 read_(unsigned slave_address, unsigned register_address, int send_ack){
 	unsigned rv;
-	int suc;
+//	int suc;
 
 	unsigned slave_address_w = slave_address;
 	unsigned slave_address_r = slave_address+1;
@@ -351,6 +351,4 @@ void write_(unsigned slave_address_w, unsigned register_address, unsigned value)
 	}
 	// stop
 	i2c_stop();
-		
-	//i2c_disable();
 }

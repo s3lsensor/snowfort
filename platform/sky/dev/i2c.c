@@ -255,11 +255,13 @@ read_(unsigned slave_address, unsigned register_address, int send_ack){
 	{
 		i2c_stop();
 		printf("read_ slave_address_w unsuccessful\n");
+		return 0;
 	}		
 	// register address
 	if (i2c_write(register_address)==0){
 		i2c_stop();
 		printf("read_ register unsuccessful\n");
+		return 0;
 	}
 	// restart
 	//i2c_stop();
@@ -268,6 +270,7 @@ read_(unsigned slave_address, unsigned register_address, int send_ack){
 	if (i2c_write(slave_address_r)==0){
 		i2c_stop();
 		printf("read_ slave_address_r unsuccessful\n");
+		return 0;
 	}
 	// read
 	rv = i2c_read(send_ack);
@@ -291,11 +294,13 @@ read_multibyte(unsigned slave_address, unsigned register_address, int numbytes, 
 	if (i2c_write(slave_address_w)==0){
 		i2c_stop();
 		printf("read_ slave_address_w unsuccessful\n");
+		return;
 	}		
 	// register address
 	if (i2c_write(register_address)==0){
 		i2c_stop();
 		printf("read_ register unsuccessful\n");
+		return;
 	}
 	// restart
 	i2c_start();
@@ -303,6 +308,7 @@ read_multibyte(unsigned slave_address, unsigned register_address, int numbytes, 
 	if (i2c_write(slave_address_r)==0){
 		i2c_stop();
 		printf("read_ slave_address_r unsuccessful\n");
+		return;
 	}	
 
 	int ii;
@@ -338,16 +344,19 @@ void write_(unsigned slave_address_w, unsigned register_address, unsigned value)
 	{
 		i2c_stop();
 		printf("read_ slave_address_w unsuccessful\n");
+		return;
 	}
 	// register address
 	if (i2c_write(register_address)==0){
 		i2c_stop();
 		printf("read_ register unsuccessful\n");
+		return;
 	}
 	// write
 	if (i2c_write(value)==0){
 		i2c_stop();		
 		printf("write_ value unsuccessful\n");
+		return;
 	}
 	// stop
 	i2c_stop();
