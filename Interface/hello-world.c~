@@ -49,8 +49,8 @@
 #define ITG_ADDRESS 0xD0
 
   //unsigned char rv, xx0, xx1, yy0, yy1, zz0, zz1;
-  short accx, accy, accz;
-  short gyrx, gyry, gyrz;
+  int16_t accx, accy, accz;
+  int16_t gyrx, gyry, gyrz;
   //float xx, yy, zz;
   
 void init_adxl();
@@ -206,16 +206,16 @@ void measure_itg(){
 	read_multibyte(ITG_ADDRESS, 0x1B, 8, measurevector);	
 
 	gyrx = 0;
-	gyrx |= measurevector[3];
-	gyrx = (gyrx<<8) | measurevector[2];
+	gyrx |= measurevector[2];
+	gyrx = (gyrx<<8) | measurevector[3];
 	
 	gyry = 0;
-	gyry |= measurevector[5];
-	gyry = (gyry<<8) | measurevector[4];
+	gyry |= measurevector[4];
+	gyry = (gyry<<8) | measurevector[5];
 		
 	gyrz = 0;
-	gyrz |= measurevector[7];
-	gyrz = (gyrz<<8) | measurevector[6];
+	gyrz |= measurevector[6];
+	gyrz = (gyrz<<8) | measurevector[7];
 	
 }
 
