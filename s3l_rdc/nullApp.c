@@ -4,6 +4,7 @@
 #include "net/netstack.h"
 #include "sys/etimer.h"
 #include "sys/log.h"
+#include "i2c.h"
 
 #define PKT_HDR_SIZE 9
 #define NODE_INDEX   7
@@ -11,6 +12,43 @@
 
 #define SIN_TAB_LEN 120
 #define RESOLUTION 7
+
+#define MPU_ADDRESS 0xD0
+
+static int16_t accx, accy, accz;
+static int16_t gyrx, gyry, gyrz;
+
+static void init_mpu6050(){
+	write_(MPU_ADDRESS, 0x6B, 0x01); //clear sleep bit, set clock to 0x01 (x-gyro)
+	write_(MPU_ADDRESS, 0x1B, 0x00); //fs_250 for gyro
+	write_(MPU_ADDRESS, 0x1C, 0x00); //fs_2 for accel
+}
+
+static void measure_mpu(){
+	uint8_t measurevector[14];
+	read_multibyte(MPU_ADDRESS, 0x3B, 14, measurevector);
+
+	accx = 0;
+	accx |= measurevector[0];
+	accx = (accx<<8) | measurevector[1];
+	accy = 0;
+	accy |= measurevector[2];
+	accy = (accy<<8) | measurevector[3];
+	accz = 0;
+	accz |= measurevector[4];
+	accz = (accz<<8) | measurevector[5];
+
+	gyrx = 0;
+	gyrx |= measurevector[8];
+	gyrx = (gyrx<<8) | measurevector[9];
+	gyry = 0;
+	gyry |= measurevector[10];
+	gyry = (gyry<<8) | measurevector[11];
+	gyrz = 0;
+	gyrz |= measurevector[12];
+	gyrz = (gyrz<<8) | measurevector[13];
+
+}
 
 static const int8_t SIN_TAB[] =
 {
@@ -59,7 +97,11 @@ PROCESS_THREAD(null_app_process, ev, data)
   else
     etimer_set(&rxtimer,CLOCK_SECOND/20);
   
-  
+  init_mpu6050();  
+  uint8_t rv;
+  rv = read_(MPU_ADDRESS, 0x75, 0);
+  printf("%d \n", rv);
+	
   
   while(1)
   {
@@ -69,6 +111,10 @@ PROCESS_THREAD(null_app_process, ev, data)
       PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&rxtimer));
       
       etimer_reset(&rxtimer);
+      
+      measure_mpu();
+      printf("Accel value: %d\tY value: %d\tZ value: %d\n",accx,accy,accz);
+
       packetbuf_copyfrom(debug_buf,sizeof(int8_t)*10);
       NETSTACK_RDC.send(NULL,NULL);
       
