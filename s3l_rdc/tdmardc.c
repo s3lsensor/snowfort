@@ -66,9 +66,9 @@ static char *node_list; //allocated, initialized in init()
 // SN global variable
 static rtimer_clock_t SN_RX_start_time = 0;
 static char buffer[10] = {0};
-static uint8_t buf_ptr = 0; //never updated?
-static uint8_t buf_send_ptr = 0; //never updated?
-static uint8_t buf_full_flg = 0; //never updated?
+static uint8_t buf_ptr = 0; //updated when send() called (RDC_send()) directly
+static uint8_t buf_send_ptr = 0; //updated when send() called (RDC_send()) directly
+static uint8_t buf_full_flg = 0; //updated when send() called RDC_send()) directly
 
 
 //Timer -- BS
@@ -153,9 +153,10 @@ static void TDMA_SN_send(void)
       memcpy(pkt+PKT_HDR_SIZE,buffer+buf_send_ptr,sizeof(uint8_t)*temp_len);
       memcpy(pkt+PKT_HDR_SIZE+temp_len,buffer,sizeof(uint8_t)*buf_send_ptr);
     }
+    //buf_full_flg is never reset? it should be reset in case 
+    //that buffer length and buf_send_ptr align, which set buf_ptr and 
+    //buf_send_ptr back to 0.
 
-    //insofar as buf_ptr, etc, are never updated, equivalent to:
-    //memcpy(pkt+PKT_HDR_SIZE,buffer,sizeof(uint8_t)*0);//???
 
 //   memcpy(pkt+PKT_HDR_SIZE,buffer,sizeof(uint8_t)*10);
     //reset payload
