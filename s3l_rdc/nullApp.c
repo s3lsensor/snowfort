@@ -77,9 +77,11 @@ static int8_t sin(uint16_t angleMilli)
   return SIN_TAB[angleMilli%SIN_TAB_LEN];
 }
 
+/*---------------------------------------------------------------*/
 PROCESS(null_app_process, "Null App Process");
-AUTOSTART_PROCESSES(&null_app_process);
-
+PROCESS(sensor_sampling_process, "Sensor Sampling Process");
+AUTOSTART_PROCESSES(&null_app_process, &sensor_sampling_process);
+/*---------------------------------------------------------------*/
 PROCESS_THREAD(null_app_process, ev, data)
 {
   PROCESS_BEGIN();
@@ -97,10 +99,10 @@ PROCESS_THREAD(null_app_process, ev, data)
   else
     etimer_set(&rxtimer,CLOCK_SECOND/20);
   
-  init_mpu6050();  
-  uint8_t rv;
-  rv = read_(MPU_ADDRESS, 0x75, 0);
-  printf("%d \n", rv);
+  //init_mpu6050();  
+  //uint8_t rv;
+  //rv = read_(MPU_ADDRESS, 0x75, 0);
+  //printf("%d \n", rv);
 	
   
   while(1)
@@ -112,8 +114,8 @@ PROCESS_THREAD(null_app_process, ev, data)
       
       etimer_reset(&rxtimer);
       
-      measure_mpu();
-      printf("Accel value: %d\tY value: %d\tZ value: %d\n",accx,accy,accz);
+      //measure_mpu();
+      //printf("Accel value: %d\tY value: %d\tZ value: %d\n",accx,accy,accz);
 
       packetbuf_copyfrom(debug_buf,sizeof(int8_t)*10);
       NETSTACK_RDC.send(NULL,NULL);
@@ -161,8 +163,46 @@ PROCESS_THREAD(null_app_process, ev, data)
 
     }
   }
+  PROCESS_END();
+}
 
+PROCESS_THREAD(sensor_sampling_process, ev, data)
+{
+  PROCESS_BEGIN();
+  printf("Sensor Sampling begun\n");
+  
+  static struct etimer sensetimer;
+  /*static int8_t debug_buf[10] = {0};
+  static struct etimer rxtimer;
+  static char input_buf[10] = {0};
+  static uint16_t counter = 0;
   
   
+  if (SN_ID != 0)
+    etimer_set(&rxtimer,CLOCK_SECOND);
+  else
+    etimer_set(&rxtimer,CLOCK_SECOND/20);*/
+  etimer_set(&sensetimer,CLOCK_SECOND);
+  
+  init_mpu6050();  
+  uint8_t rv;
+  rv = read_(MPU_ADDRESS, 0x75, 0);
+  printf("%d \n", rv);
+	
+  
+  while(1)
+  {
+    
+    if(SN_ID != 0)
+    {
+      PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&sensetimer));
+      
+      etimer_reset(&sensetimer);
+      
+      measure_mpu();
+      printf("Accel value: %d\tY value: %d\tZ value: %d\n",accx,accy,accz);
+
+    }
+  }
   PROCESS_END();
 }
