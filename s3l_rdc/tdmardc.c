@@ -24,7 +24,9 @@
 #endif
 
 
-#define RTIMER_MS (RTIMER_SECOND/1000.0)
+//#define RTIMER_MS 4// actually .9766 ms, if rtimer_second = 4096
+#define RTIMER_MS 33 // rtimer_second = 32768, closest integer estimate of ms. actually 1.0071 ms
+//#define RTIMER_MS (RTIMER_SECOND/1000.0) // unwise to play with floats...
 
 /*-----------------------------------------------*/
 // Global Variables
@@ -35,8 +37,8 @@ static uint16_t TS_period = 100;         //one time-slot duration in ms
 static uint16_t BS_period = 100;         //BS broadcasts duration in ms
 
 //slot information
-static uint8_t total_slot_num;
-static int8_t my_slot;
+static uint8_t total_slot_num; // calculated in init()
+static int8_t my_slot; // set in SN_send
 
 // packet format -- removed when using Zigbee frame
 static char pkt_hdr[] = {65,-120,-120,-51,-85,-1,-1, SN_ID, 0};
@@ -49,24 +51,24 @@ static char pkt_hdr[] = {65,-120,-120,-51,-85,-1,-1, SN_ID, 0};
 #define NODE_INDEX   7
 #define SEQ_INDEX   8
 #define FREE_SLOT_CONST 127
-static char *pkt;
-static uint8_t pkt_size;
-char seq_num = 10;
+static char *pkt; //allocated in init()
+static uint8_t pkt_size; //set in init()
+char seq_num = 10; //any reason why it defaults at 10?
 
 //struct tdma_hdr header;
 
 // BS global variable
 static rtimer_clock_t BS_TX_start_time = 0;
 static rtimer_clock_t BS_RX_start_time = 0;
-static char *node_list;		//record all the input node
+static char *node_list; //allocated, initialized in init()
 
 
 // SN global variable
 static rtimer_clock_t SN_RX_start_time = 0;
 static char buffer[10] = {0};
-static uint8_t buf_ptr = 0;
-static uint8_t buf_send_ptr = 0;
-static uint8_t buf_full_flg = 0;
+static uint8_t buf_ptr = 0; //never updated?
+static uint8_t buf_send_ptr = 0; //never updated?
+static uint8_t buf_full_flg = 0; //never updated?
 
 
 //Timer -- BS
@@ -76,7 +78,7 @@ static struct rtimer BSTimer;
 static struct rtimer SNTimer;
 
 //debug ****
-const static float rtimer_ms = RTIMER_SECOND/1000.00;
+//const static float rtimer_ms = RTIMER_SECOND/1000.00; //unused
 
 // TDMA_BS_send() -- called at a specific time
 static void TDMA_BS_send(void)
@@ -96,7 +98,7 @@ static void TDMA_BS_send(void)
   // right now, rtimer_timer does not consider drifting. For long time experiment, it may have problem
   uint16_t offset = RTIMER_MS*(segment_period);
   //PRINTF("BS offset: %u\n",offset);
-  rtimer_set(&BSTimer,RTIMER_TIME(&BSTimer)+offset,0,TDMA_BS_send,NULL);
+  rtimer_set(&BSTimer,RTIMER_TIME(&BSTimer)+offset,0,TDMA_BS_send,NULL); // replace with BS_TX_START?
   
   
   
@@ -130,13 +132,13 @@ static void TDMA_SN_send(void)
     
     //set timer for open RADIO -- 5ms for opening earlier
     //uint16_t time = RTIMER_TIME(&SNTimer)+RTIMER_MS*(segment_period-BS_period-my_slot*TS_period);
-    uint16_t time = RTIMER_NOW() + RTIMER_MS*(segment_period-BS_period-(my_slot+1)*TS_period - 5);
+    uint16_t time = RTIMER_NOW() + RTIMER_MS*(segment_period-BS_period-(my_slot+1)*TS_period - 5); //replace 5 with #def?
     rtimer_set(&SNTimer,time,0,NETSTACK_RADIO.on,NULL);
 
     pkt[SEQ_INDEX] = seq_num++;
 
     //slot number
-    pkt[PKT_HDR_SIZE+1] = my_slot;
+    pkt[PKT_HDR_SIZE+1] = my_slot; // equivalent to payload(1)???
     
     //copy header
     //header.seq_num = seq_num;
@@ -151,6 +153,9 @@ static void TDMA_SN_send(void)
       memcpy(pkt+PKT_HDR_SIZE,buffer+buf_send_ptr,sizeof(uint8_t)*temp_len);
       memcpy(pkt+PKT_HDR_SIZE+temp_len,buffer,sizeof(uint8_t)*buf_send_ptr);
     }
+
+    //insofar as buf_ptr, etc, are never updated, equivalent to:
+    //memcpy(pkt+PKT_HDR_SIZE,buffer,sizeof(uint8_t)*0);//???
 
 //   memcpy(pkt+PKT_HDR_SIZE,buffer,sizeof(uint8_t)*10);
     //reset payload
@@ -181,8 +186,9 @@ static void TDMA_SN_send(void)
 // send packet -- not used in TDMA
 static void send(mac_callback_t sent_callback, void *ptr_callback)
 {
-  
   uint8_t data_len = packetbuf_datalen();
+  uint16_t timenowsend = RTIMER_NOW();
+  printf("SEND - NOT CALLED %d\n", timenowsend);
   uint8_t *ptr;
   ptr = (uint8_t *)packetbuf_dataptr();
   
@@ -205,27 +211,28 @@ static void send(mac_callback_t sent_callback, void *ptr_callback)
   if(buf_full_flg == 1)
     buf_send_ptr = buf_ptr;
   
-/* 
-  int i = 0;
+ 
+/*  int i = 0;
   for(i = 0; i < 10; i++)
   {
     PRINTF("%d ",buffer[i]);
   }
-  PRINTF("\n");
-  */
+  PRINTF("\n");*/
+  
 
 }
 /*-----------------------------------------------*/
 // send packet list -- not used in TDMA
 static void send_list(mac_callback_t sent_callback, void *ptr, struct rdc_buf_list *list)
 {
+    printf("SEND_LIST NOT CALLED");
 }
 /*-----------------------------------------------*/
 // receives packet -- called in radio.c,radio.h
 static void input(void)
 {
     
-    char *rx_pkt = (char *)packetbuf_dataptr();
+    char *rx_pkt = (char *)packetbuf_dataptr();//add read of rx_len?
     //PRINTF("RX packet, size %d\n",strlen(rx_pkt));
     //tic(RTIMER_NOW(),"pkt_in");
 
@@ -253,7 +260,7 @@ static void input(void)
 	
 	//check where the packet is from BS
 	if (rx_pkt[NODE_INDEX] != 0)
-	    return; //if not from BS, skip
+	    return; //if not from BS, skip. turn off radio? perhaps, but there are bigger problems if that's happening...
 
 	/*--------from BS------------*/
 	
@@ -399,6 +406,12 @@ static void init(void)
 {
   
     printf("node id %d\n",SN_ID); 
+    /*uint16_t debugtime0 = RTIMER_NOW();
+    uint16_t debugtime1 = RTIMER_NOW()+RTIMER_SECOND;
+    uint16_t debugtime2 = RTIMER_NOW()+RTIMER_SECOND*2;
+    printf("TIME DEBUG: %d %d %d\n", debugtime0, debugtime1, debugtime2);*/
+
+
     // calculate the number of slots
     total_slot_num = (segment_period - BS_period)/TS_period;
     
