@@ -12,12 +12,12 @@
 #include "net/queuebuf.h"
 #include <string.h>
 //#include "tic-toc.h"
+#include <stdio.h>
 
 
 
 #define DEBUG 1
 #if DEBUG
-#include <stdio.h>
 #define PRINTF(...) printf(__VA_ARGS__)
 #else
 #define PRINTF(...)
@@ -65,6 +65,8 @@ static char *node_list; //allocated, initialized in init()
 
 // SN global variable
 static rtimer_clock_t SN_RX_start_time = 0;
+static uint16_t radioontime;
+static uint16_t radiodelay;
 static char buffer[10] = {0};
 static uint8_t buf_ptr = 0; //updated when send() called (RDC_send()) directly
 static uint8_t buf_send_ptr = 0; //updated when send() called (RDC_send()) directly
@@ -120,7 +122,6 @@ static void TDMA_BS_send(void)
       printf("TDMA RDC: BS fails to send packet\n");
   else
       printf("TDMA RDC: BS sends %d\n",pkt[SEQ_INDEX]);
-
   //print_tics();
 }
 
@@ -130,10 +131,10 @@ static void TDMA_SN_send(void)
     //tic(RTIMER_NOW(),"SN send");
     
     
-    //set timer for open RADIO -- 5ms for opening earlier
+    //set timer for open RADIO -- for opening earlier // originally 5 ms (insufficient? no, on order of 2ms delay)
     //uint16_t time = RTIMER_TIME(&SNTimer)+RTIMER_MS*(segment_period-BS_period-my_slot*TS_period);
-    uint16_t time = RTIMER_NOW() + RTIMER_MS*(segment_period-BS_period-(my_slot+1)*TS_period - 5); //replace 5 with #def?
-    rtimer_set(&SNTimer,time,0,NETSTACK_RADIO.on,NULL);
+    radioontime = RTIMER_NOW() + RTIMER_MS*(segment_period-BS_period-(my_slot)*TS_period - 5); //replace 5 with #def? // was originally my_slot+1. This is definitely wrong (creates bug where last slot has huge positive wait for radio turn-on)
+    rtimer_set(&SNTimer,radioontime,0,NETSTACK_RADIO.on,NULL);
 
     pkt[SEQ_INDEX] = seq_num++;
 
@@ -165,22 +166,28 @@ static void TDMA_SN_send(void)
 //    buf_ptr = 0;
 //    buf_send_ptr = 0;
 
-    // send packet -- pushed to radio layer
-    if(NETSTACK_RADIO.on())
-    {
-	if(NETSTACK_RADIO.send(pkt,pkt_size) != RADIO_TX_OK)
-	    printf("TDMA RDC: SN fails to send packet\n");
-	else
-	    printf("TDMA RDC: SN sends %d\n",pkt[SEQ_INDEX]);
-    }
-    else
-	printf("TDMA RDC: SN fails to open radio\n");
+    pkt[PKT_HDR_SIZE] = (char)((radiodelay>>8) & 0xFF);
+    pkt[PKT_HDR_SIZE+1] = (char)(radiodelay & 0xFF);
 
+
+    // send packet -- pushed to radio layer
+    if(NETSTACK_RADIO.on()){
+	if(NETSTACK_RADIO.send(pkt,pkt_size) != RADIO_TX_OK){
+	    #if DEBUG
+	    printf("TDMA RDC: SN fails to send packet\n");
+	    #endif
+	}else{
+	    #if DEBUG      
+	    printf("TDMA RDC: SN sends %d\n",pkt[SEQ_INDEX]);
+	    #endif
+	}
+    }else{
+	#if DEBUG
+	printf("TDMA RDC: SN fails to open radio\n");
+	#endif
+     }
     // turn off radio
     NETSTACK_RADIO.off();
-
-    
-
 }
 
 /*-----------------------------------------------*/
@@ -188,8 +195,8 @@ static void TDMA_SN_send(void)
 static void send(mac_callback_t sent_callback, void *ptr_callback)
 {
   uint8_t data_len = packetbuf_datalen();
-  uint16_t timenowsend = RTIMER_NOW();
-  printf("SEND - NOT CALLED %d\n", timenowsend);
+  //uint16_t timenowsend = RTIMER_NOW();
+  //printf("RDC_SEND called. TIME: %d\n", timenowsend);
   uint8_t *ptr;
   ptr = (uint8_t *)packetbuf_dataptr();
   
@@ -226,7 +233,9 @@ static void send(mac_callback_t sent_callback, void *ptr_callback)
 // send packet list -- not used in TDMA
 static void send_list(mac_callback_t sent_callback, void *ptr, struct rdc_buf_list *list)
 {
+    #if DEBUG
     printf("SEND_LIST NOT CALLED");
+    #endif
 }
 /*-----------------------------------------------*/
 // receives packet -- called in radio.c,radio.h
@@ -268,7 +277,9 @@ static void input(void)
 	//turn off radio -- save power
 	if(NETSTACK_RADIO.off() != 1)
 	{
+	    #if DEBUG
 	    printf("TDMA RDC: SN fails to turn off radio");
+	    #endif
 	}
 
 	
@@ -324,6 +335,7 @@ static void input(void)
 		uint16_t SN_TX_time = SN_RX_start_time + RTIMER_MS*(BS_period+TS_period * my_slot - 2); 
 		rtimer_set(&SNTimer,SN_TX_time,0,TDMA_SN_send,NULL);
 	}
+        radiodelay = SN_RX_start_time - radioontime;
 	
 	//print_tics();
     }
@@ -367,7 +379,7 @@ static void input(void)
 	
 
 	
-	PRINTF("[Sensor: %d] [Slot: %d] [Seq: %d]\n",
+	printf("[Sensor: %d] [Slot: %d] [Seq: %d]\n",
 	       rx_pkt[NODE_INDEX],current_TS,rx_pkt[SEQ_INDEX]);
 
 

@@ -6,6 +6,8 @@
 #include "sys/log.h"
 #include "i2c.h"
 
+#define DEBUG 0
+
 #define PKT_HDR_SIZE 9
 #define NODE_INDEX   7
 #define SEQ_INDEX   8
@@ -202,7 +204,9 @@ PROCESS_THREAD(sensor_sampling_process, ev, data)
   	    etimer_reset(&sensetimer);
       
   	    measure_mpu();
+	    #if DEBUG
   	    printf("Accel value: %d\tY value: %d\tZ value: %d\n",accx,accy,accz);
+	    #endif DEBUG
 
   	  }
   	}
