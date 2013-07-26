@@ -2,11 +2,12 @@
 #include "contiki.h"
 #include "net/packetbuf.h"
 #include "net/netstack.h"
+#include "net/mac/tdmardc.h" // for flags to sync with tdma 
 #include "sys/etimer.h"
 #include "sys/log.h"
 #include "i2c.h"
 
-#define DEBUG 0
+#define DEBUG 1
 
 #define PKT_HDR_SIZE 9
 #define NODE_INDEX   7
@@ -176,18 +177,7 @@ PROCESS_THREAD(sensor_sampling_process, ev, data)
 	printf("Sensor Sampling begun\n");
   
  	 static struct etimer sensetimer;
-  /*static int8_t debug_buf[10] = {0};
-  static struct etimer rxtimer;
-  static char input_buf[10] = {0};
-  static uint16_t counter = 0;
-  
-  
-  if (SN_ID != 0)
-    etimer_set(&rxtimer,CLOCK_SECOND);
-  else
-    etimer_set(&rxtimer,CLOCK_SECOND/20);*/
-	  etimer_set(&sensetimer,CLOCK_SECOND);
-  
+  	  etimer_set(&sensetimer,CLOCK_SECOND);
 	  init_mpu6050();  
 	  uint8_t rv;
 	  rv = read_(MPU_ADDRESS, 0x75, 0);

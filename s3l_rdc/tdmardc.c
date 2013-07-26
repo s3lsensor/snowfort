@@ -10,6 +10,7 @@
 #include "net/netstack.h"
 #include "sys/rtimer.h"
 #include "net/queuebuf.h"
+#include "dev/cc2420.h"
 #include <string.h>
 //#include "tic-toc.h"
 #include <stdio.h>
@@ -72,6 +73,9 @@ static uint8_t buf_ptr = 0; //updated when send() called (RDC_send()) directly
 static uint8_t buf_send_ptr = 0; //updated when send() called (RDC_send()) directly
 static uint8_t buf_full_flg = 0; //updated when send() called RDC_send()) directly
 
+static int rx_finished_flag = 0;
+
+int check_rx_finished(void);
 
 //Timer -- BS
 static struct rtimer BSTimer;
@@ -81,6 +85,11 @@ static struct rtimer SNTimer;
 
 //debug ****
 //const static float rtimer_ms = RTIMER_SECOND/1000.00; //unused
+
+int check_rx_finished(void)
+{
+    return rx_finished_flag;
+}
 
 // TDMA_BS_send() -- called at a specific time
 static void TDMA_BS_send(void)
@@ -336,7 +345,7 @@ static void input(void)
 		rtimer_set(&SNTimer,SN_TX_time,0,TDMA_SN_send,NULL);
 	}
         radiodelay = SN_RX_start_time - radioontime;
-	
+	rx_finished_flag = 1;
 	//print_tics();
     }
     else if(SN_ID == 0) //BS
@@ -381,6 +390,9 @@ static void input(void)
 	
 	printf("[Sensor: %d] [Slot: %d] [Seq: %d]\n",
 	       rx_pkt[NODE_INDEX],current_TS,rx_pkt[SEQ_INDEX]);
+
+	printf("Channel: %d\n", cc2420_get_channel());
+	printf("RSSI: %d\n", cc2420_last_rssi-45);
 
 
     }

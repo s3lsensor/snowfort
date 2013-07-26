@@ -20,6 +20,8 @@ extern const struct rdc_driver tdmardc_driver;
 
 #define FRAME_TDMA_BEACON_DST	(0xff)
 
+int check_rx_finished(void);
+
 struct tdma_hdr
 {
   uint16_t frame_type;
