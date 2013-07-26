@@ -21,6 +21,8 @@
 static int16_t accx, accy, accz;
 static int16_t gyrx, gyry, gyrz;
 
+static uint8_t measurevector[14];
+
 static void init_mpu6050(){
 	write_(MPU_ADDRESS, 0x6B, 0x01); //clear sleep bit, set clock to 0x01 (x-gyro)
 	write_(MPU_ADDRESS, 0x1B, 0x00); //fs_250 for gyro
@@ -28,7 +30,7 @@ static void init_mpu6050(){
 }
 
 static void measure_mpu(){
-	uint8_t measurevector[14];
+//	uint8_t measurevector[14];
 	read_multibyte(MPU_ADDRESS, 0x3B, 14, measurevector);
 
 	accx = 0;
@@ -121,8 +123,8 @@ PROCESS_THREAD(null_app_process, ev, data)
       //measure_mpu();
       //printf("Accel value: %d\tY value: %d\tZ value: %d\n",accx,accy,accz);
 
-      packetbuf_copyfrom(debug_buf,sizeof(int8_t)*10);
-      NETSTACK_RDC.send(NULL,NULL);
+//      packetbuf_copyfrom(debug_buf,sizeof(int8_t)*10);
+//      NETSTACK_RDC.send(NULL,NULL);
       
       //printf("NULLAPP: %d %d %d\n", debug_buf[0],debug_buf[1],debug_buf[2]);
       int i = 0;
@@ -197,6 +199,9 @@ PROCESS_THREAD(sensor_sampling_process, ev, data)
 	    #if DEBUG
   	    printf("Accel value: %d\tY value: %d\tZ value: %d\n",accx,accy,accz);
 	    #endif DEBUG
+
+	    packetbuf_copyfrom(measurevector,sizeof(int8_t)*10);
+	    NETSTACK_RDC.send(NULL,NULL);
 
   	  }
   	}

@@ -175,8 +175,9 @@ static void TDMA_SN_send(void)
 //    buf_ptr = 0;
 //    buf_send_ptr = 0;
 
-    pkt[PKT_HDR_SIZE] = (char)((radiodelay>>8) & 0xFF);
-    pkt[PKT_HDR_SIZE+1] = (char)(radiodelay & 0xFF);
+    pkt[PKT_HDR_SIZE+6] = (char)((radiodelay>>8) & 0xFF);
+    pkt[PKT_HDR_SIZE+7] = (char)(radiodelay & 0xFF);
+
 
 
     // send packet -- pushed to radio layer
@@ -394,6 +395,21 @@ static void input(void)
 	printf("Channel: %d\n", cc2420_get_channel());
 	printf("RSSI: %d\n", cc2420_last_rssi-45);
 
+    	uint8_t measurevector[6];
+    	memcpy(measurevector,rx_pkt+PKT_HDR_SIZE,6*sizeof(uint8_t));
+	uint16_t accx,accy,accz;
+
+	accx = 0;
+	accx |= measurevector[0];
+	accx = (accx<<8) | measurevector[1];
+	accy = 0;
+	accy |= measurevector[2];
+	accy = (accy<<8) | measurevector[3];
+	accz = 0;
+	accz |= measurevector[4];
+	accz = (accz<<8) | measurevector[5];
+
+	printf("Accel: %d %d %d\n", accx, accy, accz);
 
     }
 
