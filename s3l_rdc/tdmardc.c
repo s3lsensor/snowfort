@@ -12,13 +12,14 @@
 #include "net/queuebuf.h"
 #include "dev/cc2420.h"
 #include <string.h>
+#include <stdlib.h>
 //#include "tic-toc.h"
-#include <stdio.h>
 
 
 
 #define DEBUG 1
 #if DEBUG
+#include <stdio.h>
 #define PRINTF(...) printf(__VA_ARGS__)
 #else
 #define PRINTF(...)
@@ -128,9 +129,9 @@ static void TDMA_BS_send(void)
 
   //send packet -- pushed to radio layer
   if(NETSTACK_RADIO.send(pkt,pkt_size) != RADIO_TX_OK)
-      printf("TDMA RDC: BS fails to send packet\n");
+      PRINTF("TDMA RDC: BS fails to send packet\n");
   else
-      printf("TDMA RDC: BS sends %d\n",pkt[SEQ_INDEX]);
+      PRINTF("TDMA RDC: BS sends %d\n",pkt[SEQ_INDEX]);
   //print_tics();
 }
 
@@ -175,26 +176,25 @@ static void TDMA_SN_send(void)
 //    buf_ptr = 0;
 //    buf_send_ptr = 0;
 
-    pkt[PKT_HDR_SIZE+6] = (char)((radiodelay>>8) & 0xFF);
-    pkt[PKT_HDR_SIZE+7] = (char)(radiodelay & 0xFF);
+
+// the following two lines can be used to find delay with 
+// radio turning on-- rx received (for optimizing rdc cycle)
+// radio delay can be redefined for other debug uses, too.
+// mgm - 7/29/13
+//    pkt[PKT_HDR_SIZE+6] = (char)((radiodelay>>8) & 0xFF);
+//    pkt[PKT_HDR_SIZE+7] = (char)(radiodelay & 0xFF);
 
 
 
     // send packet -- pushed to radio layer
     if(NETSTACK_RADIO.on()){
 	if(NETSTACK_RADIO.send(pkt,pkt_size) != RADIO_TX_OK){
-	    #if DEBUG
-	    printf("TDMA RDC: SN fails to send packet\n");
-	    #endif
+	    PRINTF("TDMA RDC: SN fails to send packet\n");
 	}else{
-	    #if DEBUG      
-	    printf("TDMA RDC: SN sends %d\n",pkt[SEQ_INDEX]);
-	    #endif
+	    PRINTF("TDMA RDC: SN sends %d\n",pkt[SEQ_INDEX]);
 	}
     }else{
-	#if DEBUG
-	printf("TDMA RDC: SN fails to open radio\n");
-	#endif
+	PRINTF("TDMA RDC: SN fails to open radio\n");
      }
     // turn off radio
     NETSTACK_RADIO.off();
@@ -206,7 +206,7 @@ static void send(mac_callback_t sent_callback, void *ptr_callback)
 {
   uint8_t data_len = packetbuf_datalen();
   //uint16_t timenowsend = RTIMER_NOW();
-  //printf("RDC_SEND called. TIME: %d\n", timenowsend);
+  //PRINTF("RDC_SEND called. TIME: %d\n", timenowsend);
   uint8_t *ptr;
   ptr = (uint8_t *)packetbuf_dataptr();
   
@@ -243,9 +243,7 @@ static void send(mac_callback_t sent_callback, void *ptr_callback)
 // send packet list -- not used in TDMA
 static void send_list(mac_callback_t sent_callback, void *ptr, struct rdc_buf_list *list)
 {
-    #if DEBUG
-    printf("SEND_LIST NOT CALLED");
-    #endif
+    PRINTF("SEND_LIST NOT CALLED");
 }
 /*-----------------------------------------------*/
 // receives packet -- called in radio.c,radio.h
@@ -287,9 +285,7 @@ static void input(void)
 	//turn off radio -- save power
 	if(NETSTACK_RADIO.off() != 1)
 	{
-	    #if DEBUG
-	    printf("TDMA RDC: SN fails to turn off radio");
-	    #endif
+	    PRINTF("TDMA RDC: SN fails to turn off radio");
 	}
 
 	
@@ -297,7 +293,7 @@ static void input(void)
 
 	//first, check if BS assigns a slot
 
-	char i = 0;
+	unsigned char i = 0;
 	char free_slot = 0;
 	my_slot = -1;
 	for(i = PKT_HDR_SIZE; i < pkt_size; i++)
@@ -389,13 +385,14 @@ static void input(void)
 	
 
 	
-	printf("[Sensor: %d] [Slot: %d] [Seq: %d]\n",
+	PRINTF("[Sensor: %d] [Slot: %d] [Seq: %d]\n",
 	       rx_pkt[NODE_INDEX],current_TS,rx_pkt[SEQ_INDEX]);
 
-	printf("Channel: %d\n", cc2420_get_channel());
-	printf("RSSI: %d\n", cc2420_last_rssi-45);
+	PRINTF("Channel: %d\n", cc2420_get_channel());
+	PRINTF("RSSI: %d\n", cc2420_last_rssi-45);
 
-    	uint8_t measurevector[6];
+// debug for 
+/*    	uint8_t measurevector[6];
     	memcpy(measurevector,rx_pkt+PKT_HDR_SIZE,6*sizeof(uint8_t));
 	uint16_t accx,accy,accz;
 
@@ -409,8 +406,8 @@ static void input(void)
 	accz |= measurevector[4];
 	accz = (accz<<8) | measurevector[5];
 
-	printf("Accel: %d %d %d\n", accx, accy, accz);
-
+	PRINTF("Accel: %d %d %d\n", accx, accy, accz);
+*/
     }
 
 
@@ -446,11 +443,11 @@ static unsigned short channel_check_interval(void)
 static void init(void)
 {
   
-    printf("node id %d\n",SN_ID); 
+    PRINTF("node id %d\n",SN_ID); 
     /*uint16_t debugtime0 = RTIMER_NOW();
     uint16_t debugtime1 = RTIMER_NOW()+RTIMER_SECOND;
     uint16_t debugtime2 = RTIMER_NOW()+RTIMER_SECOND*2;
-    printf("TIME DEBUG: %d %d %d\n", debugtime0, debugtime1, debugtime2);*/
+    PRINTF("TIME DEBUG: %d %d %d\n", debugtime0, debugtime1, debugtime2);*/
 
 
     // calculate the number of slots
@@ -470,7 +467,7 @@ static void init(void)
 	memset(pkt+PKT_HDR_SIZE,-1,total_slot_num); //free payload for SN
 	
 	
-    printf("Init RDC layer,packet size\n");
+    PRINTF("Init RDC layer,packet size\n");
 
     on();
 }

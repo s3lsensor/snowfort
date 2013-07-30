@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 #include "contiki.h"
 #include "net/packetbuf.h"
 #include "net/netstack.h"
@@ -198,7 +199,7 @@ PROCESS_THREAD(sensor_sampling_process, ev, data)
   	    measure_mpu();
 	    #if DEBUG
   	    printf("Accel value: %d\tY value: %d\tZ value: %d\n",accx,accy,accz);
-	    #endif DEBUG
+	    #endif
 
 	    packetbuf_copyfrom(measurevector,sizeof(int8_t)*10);
 	    NETSTACK_RDC.send(NULL,NULL);
