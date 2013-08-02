@@ -40,7 +40,7 @@
  *   http://www.esacademy.com/faq/i2c/
  */
 
-#include <stdio.h>
+//#include <stdio.h>
 #include <contiki.h>
 #include <dev/spi.h>
 #include <dev/leds.h>
@@ -254,13 +254,13 @@ read_(unsigned slave_address, unsigned register_address, int send_ack){
 	if (i2c_write(slave_address_w)==0)
 	{
 		i2c_stop();
-		printf("read_ slave_address_w unsuccessful\n");
+		//printf("read_ slave_address_w unsuccessful\n");
 		return 0;
 	}		
 	// register address
 	if (i2c_write(register_address)==0){
 		i2c_stop();
-		printf("read_ register unsuccessful\n");
+		//printf("read_ register unsuccessful\n");
 		return 0;
 	}
 	// restart
@@ -269,7 +269,7 @@ read_(unsigned slave_address, unsigned register_address, int send_ack){
 	// load slave read address
 	if (i2c_write(slave_address_r)==0){
 		i2c_stop();
-		printf("read_ slave_address_r unsuccessful\n");
+		//printf("read_ slave_address_r unsuccessful\n");
 		return 0;
 	}
 	// read
@@ -293,13 +293,13 @@ read_multibyte(unsigned slave_address, unsigned register_address, int numbytes, 
 	// slave address	
 	if (i2c_write(slave_address_w)==0){
 		i2c_stop();
-		printf("read_ slave_address_w unsuccessful\n");
+		//printf("read_ slave_address_w unsuccessful\n");
 		return;
 	}		
 	// register address
 	if (i2c_write(register_address)==0){
 		i2c_stop();
-		printf("read_ register unsuccessful\n");
+		//printf("read_ register unsuccessful\n");
 		return;
 	}
 	// restart
@@ -307,7 +307,7 @@ read_multibyte(unsigned slave_address, unsigned register_address, int numbytes, 
 	// load slave read address
 	if (i2c_write(slave_address_r)==0){
 		i2c_stop();
-		printf("read_ slave_address_r unsuccessful\n");
+		//printf("read_ slave_address_r unsuccessful\n");
 		return;
 	}	
 
@@ -343,19 +343,19 @@ void write_(unsigned slave_address_w, unsigned register_address, unsigned value)
 	if (i2c_write(slave_address_w)==0)
 	{
 		i2c_stop();
-		printf("read_ slave_address_w unsuccessful\n");
+		//printf("read_ slave_address_w unsuccessful\n");
 		return;
 	}
 	// register address
 	if (i2c_write(register_address)==0){
 		i2c_stop();
-		printf("read_ register unsuccessful\n");
+		//printf("read_ register unsuccessful\n");
 		return;
 	}
 	// write
 	if (i2c_write(value)==0){
 		i2c_stop();		
-		printf("write_ value unsuccessful\n");
+		//printf("write_ value unsuccessful\n");
 		return;
 	}
 	// stop
