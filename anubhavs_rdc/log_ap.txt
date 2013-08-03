@@ -1,3 +1,0 @@
-using saved target 'sky'
-/home/user/snowflake/tools/sky/serialdump-linux -b115200 /dev/ttyUSB0
-—•ÿ·e'#uOs
