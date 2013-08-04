@@ -5,7 +5,8 @@
 #include "net/netstack.h"
 #include "net/mac/tdmardc.h" // for flags to sync with tdma 
 #include "sys/etimer.h"
-#include "sys/log.h"
+
+#include "app_util.h"
 //#include "i2c.h"
 
 #define DEBUG 1
@@ -143,32 +144,29 @@ PROCESS_THREAD(null_app_process, ev, data)
 			char* data = packetbuf_dataptr();
 			uint8_t flag = 0;
 
+			
 			int i;
+			int node_id = data[NODE_INDEX];
+			int pkt_seq = data[SEQ_INDEX];
+			int payload_len = data[PKT_PAYLOAD_SIZE_INDEX];
 
-			for(i = 0; i < 10; i++)
+			if (payload_len > 0)
 			{
-				if(data[i+PKT_HDR_SIZE] != input_buf[i])
+				for(i = 0; i < 10; i++)
 				{
-					flag++;
-					break;
+					if(data[i+PKT_HDR_SIZE] != input_buf[i])
+					{
+						flag++;
+						break;
+					}
 				}
 			}
 
-
 			if (flag)
 			{
-
-				//log_message("Input",input_buf);
-				int node_id = data[NODE_INDEX];
-				int pkt_seq = data[SEQ_INDEX];
-				int payload_len = data[PKT_PAYLOAD_SIZE_INDEX];
 				memcpy(input_buf,data+PKT_HDR_SIZE,payload_len*sizeof(char));
 				data = data + PKT_HDR_SIZE;
-
-				printf("%u,%d,%u",node_id,pkt_seq,0);
-				for (i = 0; i < payload_len; i++)
-					printf(",%d",data[i]);
-				printf("\n");
+				app_output(data,node_id,pkt_seq,payload_len);
 			}
 
 
