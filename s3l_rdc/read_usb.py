@@ -33,20 +33,20 @@ while True:
         continue
     #url = 'http://128.12.167.67/sensorRead.php'
     
-    #if tmp[3].endswith("\n"):
-    #    tmp[3] =tmp[3][:-1]
+#    if tmp.endswith("\n"):
+#        tmp[3] =tmp[3][:-1]
     localtime = time.asctime(time.localtime(time.time()))
     print "Local Time:", localtime
     print tmp
     
     #aa = tmp[3];
     
-    for i in range(3,len(tmp)-1):
-      values = {'sensor_id'    : int(float(tmp[0])),
-		'slot'  : int(tmp[1]),
-		'timestamp'    : datetime.datetime.utcnow(),
-		'temperature'    : int(tmp[i])}
-      data_id = data_collection.insert(values)
+    for i in range(3,5):
+	values = {'sensor_id'    : int(float(tmp[0])),
+		  'slot'  : int(tmp[1]),
+		  'timestamp'    : datetime.datetime.utcnow(),
+		  'temperature'    : int(tmp[i])}
+	data_id = data_collection.insert(values)
     
     f = open(tmp[0]+'.csv','a+')
     f.write(',')

@@ -3,7 +3,7 @@
  * 	A TDMA RDC implementation
  * \author
  * 	Yizheng Liao <yzliao@stanford.edu>
-*/
+ */
 
 #ifndef __TDMARDC_H__
 #define __TDMARDC_H__
@@ -13,24 +13,40 @@
 
 extern const struct rdc_driver tdmardc_driver;
 
-// Define FCF Value -- unused right now
-#define FRAME_TDMA_BEACONFRAME (0x00)
-#define FRAME_TDMA_DATAFRAME 	(0x01)
-#define FRAME_TDMA_CMDFRAME	(0x03)
+#define RTIMER_MS 33 // rtimer_second = 32768, closest integer estimate of ms. actually 1.0071 ms
 
-#define FRAME_TDMA_BEACON_DST	(0xff)
+// packet format -- removed when using Zigbee frame
+static char pkt_hdr[] = {65,-120,-120,-51,-85,-1,-1, SN_ID, 0, 0};
+//FCF: 65,-120
+//Data Sequence number: -120
+//Address information: -51 -85(CD AB in hex) -1 -1 (short address mode)
+//Actually in the payload: SN_ID,0,0
 
+#define PKT_HDR_SIZE 		10
+#define NODE_INDEX   		7
+#define SEQ_INDEX   		8
+#define PKT_PAYLOAD_SIZE_INDEX    	9
 
-struct tdma_hdr
-{
-  uint16_t frame_type;
-  uint8_t  seq_num;
-  uint8_t  dst_node_id;
-  uint8_t  src_node_id;
-  uint8_t  payload_len;
-};
+#define FREE_SLOT_CONST 	0x7F
+#define MAX_PKT_SIZE		127
+#define MAX_PKT_PAYLOAD_SIZE	50		//should be 117, let's start from 50 right now
 
+// time slot information -- default
+#ifndef SEGMENT_PERIOD
+#define SEGMENT_PERIOD	1100	//1100ms
+#endif
 
+#ifndef TS_PERIOD
+#define TS_PERIOD 		100		//100ms
+#endif
+
+#ifndef BS_PERIOD
+#define BS_PERIOD		100		//100ms
+#endif
+
+#ifndef TOTAL_TS
+#define TOTAL_TS		10
+#endif
 
 #endif /* __TDMARDC_H__ */
 
