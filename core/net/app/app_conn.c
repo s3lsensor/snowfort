@@ -12,7 +12,7 @@
  */
 
 #include "app_conn.h"
-#include "stdlib.h"
+#include <stdlib.h>
 
 #define DEBUG 1
 #if DEBUG
@@ -27,7 +27,7 @@
 static struct app_callbacks* app_callback_API;
 
 /*---------------------------------------------------------------------------*/
-void app_conn_open(const struct app_callbcks *u)
+void app_conn_open(const struct app_callbacks *u)
 {
 	app_callback_API = u;
 }
@@ -35,7 +35,7 @@ void app_conn_open(const struct app_callbcks *u)
 /*---------------------------------------------------------------------------*/
 void app_conn_close(void)
 {
-	app_callback_API = Null;
+	app_callback_API = NULL;
 }
 
 /*---------------------------------------------------------------------------*/

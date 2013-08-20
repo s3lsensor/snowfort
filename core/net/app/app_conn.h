@@ -28,7 +28,7 @@ struct app_callbacks
 /**
  * \brief	Set up/register the application callback connector
  */
-void app_conn_open(const struct app_callbcks *u);
+void app_conn_open(const struct app_callbacks *u);
 
 /**
  * \brief	Close the application callback connector
