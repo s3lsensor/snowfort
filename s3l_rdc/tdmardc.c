@@ -15,6 +15,7 @@
 #include <string.h>
 #include <stdio.h>
 
+#include "app_callback.h"
 
 
 
@@ -273,6 +274,7 @@ static void input(void)
 
 		PRINTF("Channel: %d;", cc2420_get_channel());
 		PRINTF("RSSI: %d\n", cc2420_last_rssi-45);
+		APP_CONF.rdc_callback();
 
 	}
 
