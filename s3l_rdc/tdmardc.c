@@ -12,6 +12,7 @@
 #include "sys/rtimer.h"
 #include "net/queuebuf.h"
 #include "dev/cc2420.h"
+#include "appconn/app_conn.h"
 #include <string.h>
 #include <stdio.h>
 
@@ -272,6 +273,9 @@ static void input(void)
 
 		PRINTF("Channel: %d;", cc2420_get_channel());
 		PRINTF("RSSI: %d\n", cc2420_last_rssi-45);
+
+		// callback to application layer
+		app_conn_input();
 	}
 
 

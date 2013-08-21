@@ -5,6 +5,7 @@
 #include "net/netstack.h"
 #include "net/mac/tdmardc.h" // for flags to sync with tdma 
 #include "sys/etimer.h"
+#include "appconn/app_conn.h"
 
 #include "app_util.h"
 //#include "i2c.h"
@@ -82,6 +83,14 @@ static int8_t sin(uint16_t angleMilli)
 }
 
 /*---------------------------------------------------------------*/
+//APP Callback function
+static void app_recv(void)
+{
+	printf("Received from RDC\n");
+}
+static const struct app_callbacks nullApp_callback= {app_recv};
+
+/*---------------------------------------------------------------*/
 PROCESS(null_app_process, "Null App Process");
 //PROCESS(sensor_sampling_process, "Sensor Sampling Process");
 //AUTOSTART_PROCESSES(&null_app_process, &sensor_sampling_process);
@@ -92,6 +101,7 @@ PROCESS_THREAD(null_app_process, ev, data)
 	PROCESS_BEGIN();
 	printf("Null App Started\n");
 
+	app_conn_open(&nullApp_callback);
 
 	static int8_t debug_buf[10] = {0};
 	static struct etimer rxtimer;
