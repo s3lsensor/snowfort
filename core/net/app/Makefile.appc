@@ -1,0 +1,1 @@
+CONTIKI_SOURCEFILES += app_conn.c
