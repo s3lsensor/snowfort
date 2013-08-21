@@ -87,6 +87,19 @@ static int8_t sin(uint16_t angleMilli)
 static void app_recv(void)
 {
 	printf("Received from RDC\n");
+	PROCESS_CONTEXT_BEGIN(&null_app_process);
+	char* data = packetbuf_dataptr();
+	uint8_t flag = 0;
+
+
+	int i;
+	int node_id = data[NODE_INDEX];
+	int pkt_seq = data[SEQ_INDEX];
+	int payload_len = data[PKT_PAYLOAD_SIZE_INDEX];
+	app_output(data+PKT_HDR_SIZE,node_id,pkt_seq,payload_len);
+
+	PROCESS_CONTEXT_END(&null_app_process);
+
 }
 static const struct app_callbacks nullApp_callback= {app_recv};
 
@@ -148,6 +161,7 @@ PROCESS_THREAD(null_app_process, ev, data)
 		}
 		else if (SN_ID == 0)
 		{
+/*
 			PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&rxtimer));
 			etimer_reset(&rxtimer);
 
@@ -179,7 +193,7 @@ PROCESS_THREAD(null_app_process, ev, data)
 				app_output(data,node_id,pkt_seq,payload_len);
 			}
 
-
+*/
 		}
 	}
 	PROCESS_END();
