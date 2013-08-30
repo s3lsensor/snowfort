@@ -5,6 +5,7 @@
 #include "net/netstack.h"
 #include "net/mac/tdmardc.h" // for flags to sync with tdma 
 #include "sys/etimer.h"
+#include "appconn/app_conn.h"
 
 #include "app_util.h"
 //#include "i2c.h"
@@ -86,12 +87,37 @@ PROCESS(null_app_process, "Null App Process");
 //PROCESS(sensor_sampling_process, "Sensor Sampling Process");
 //AUTOSTART_PROCESSES(&null_app_process, &sensor_sampling_process);
 AUTOSTART_PROCESSES(&null_app_process);
+
+/*---------------------------------------------------------------*/
+//APP Callback function
+static void app_recv(void)
+{
+	printf("Received from RDC\n");
+	PROCESS_CONTEXT_BEGIN(&null_app_process);
+	
+	char* data = packetbuf_dataptr();
+	uint8_t flag = 0;
+
+
+	int i;
+	int node_id = data[NODE_INDEX];
+	int pkt_seq = data[SEQ_INDEX];
+	int payload_len = data[PKT_PAYLOAD_SIZE_INDEX];
+	app_output(data+PKT_HDR_SIZE,node_id,pkt_seq,payload_len);
+
+	PROCESS_CONTEXT_END(&null_app_process);
+
+}
+static const struct app_callbacks nullApp_callback= {app_recv};
+
+
 /*---------------------------------------------------------------*/
 PROCESS_THREAD(null_app_process, ev, data)
 {
 	PROCESS_BEGIN();
 	printf("Null App Started\n");
 
+	app_conn_open(&nullApp_callback);
 
 	static int8_t debug_buf[10] = {0};
 	static struct etimer rxtimer;
@@ -109,68 +135,33 @@ PROCESS_THREAD(null_app_process, ev, data)
 	//rv = read_(MPU_ADDRESS, 0x75, 0);
 	//printf("%d \n", rv);
 
-
-	while(1)
+	if(SN_ID != 0)
 	{
 
-		if(SN_ID != 0)
-		{
-			PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&rxtimer));
+	  while(1)
+	  {
 
-			etimer_reset(&rxtimer);
+	    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&rxtimer));
 
-			//measure_mpu();
-			//printf("Accel value: %d\tY value: %d\tZ value: %d\n",accx,accy,accz);
+	    etimer_reset(&rxtimer);
 
-			//      packetbuf_copyfrom(debug_buf,sizeof(int8_t)*10);
-			//      NETSTACK_RDC.send(NULL,NULL);
+	    //measure_mpu();
+	    //printf("Accel value: %d\tY value: %d\tZ value: %d\n",accx,accy,accz);
 
-			//printf("NULLAPP: %d %d %d\n", debug_buf[0],debug_buf[1],debug_buf[2]);
-			int i = 0;
-			for(i = 0; i < 10; i++)
-			{
-				counter++;
-				debug_buf[i] = sin(counter);
-			}
-			packetbuf_copyfrom(debug_buf,sizeof(int8_t)*10);
-			NETSTACK_RDC.send(NULL,NULL);
+	    //      packetbuf_copyfrom(debug_buf,sizeof(int8_t)*10);
+	    //      NETSTACK_RDC.send(NULL,NULL);
 
-		}
-		else if (SN_ID == 0)
-		{
-			PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&rxtimer));
-			etimer_reset(&rxtimer);
+	    //printf("NULLAPP: %d %d %d\n", debug_buf[0],debug_buf[1],debug_buf[2]);
+	    int i = 0;
+	    for(i = 0; i < 10; i++)
+	    {
+		    counter++;
+		    debug_buf[i] = sin(counter);
+	    }
+	    packetbuf_copyfrom(debug_buf,sizeof(int8_t)*10);
+	    NETSTACK_RDC.send(NULL,NULL);
 
-			char* data = packetbuf_dataptr();
-			uint8_t flag = 0;
-
-			
-			int i;
-			int node_id = data[NODE_INDEX];
-			int pkt_seq = data[SEQ_INDEX];
-			int payload_len = data[PKT_PAYLOAD_SIZE_INDEX];
-
-			if (payload_len > 0)
-			{
-				for(i = 0; i < 10; i++)
-				{
-					if(data[i+PKT_HDR_SIZE] != input_buf[i])
-					{
-						flag++;
-						break;
-					}
-				}
-			}
-
-			if (flag)
-			{
-				memcpy(input_buf,data+PKT_HDR_SIZE,payload_len*sizeof(char));
-				data = data + PKT_HDR_SIZE;
-				app_output(data,node_id,pkt_seq,payload_len);
-			}
-
-
-		}
+	  }
 	}
 	PROCESS_END();
 }
