@@ -11,6 +11,11 @@
 //#include "i2c.h"
 
 #define DEBUG 1
+#if DEBUG
+#define PRINTF(...) printf(__VA_ARGS__)
+#else
+#define PRINTF(...)
+#endif
 
 #define SIN_TAB_LEN 120
 #define RESOLUTION 7
@@ -92,18 +97,29 @@ AUTOSTART_PROCESSES(&null_app_process);
 //APP Callback function
 static void app_recv(void)
 {
-	printf("Received from RDC\n");
+	//printf("Received from RDC\n");
 	PROCESS_CONTEXT_BEGIN(&null_app_process);
 	
-	char* data = packetbuf_dataptr();
+	uint8_t *data = packetbuf_dataptr();
 	uint8_t flag = 0;
 
 
 	int i;
-	int node_id = data[NODE_INDEX];
-	int pkt_seq = data[SEQ_INDEX];
-	int payload_len = data[PKT_PAYLOAD_SIZE_INDEX];
-	app_output(data+PKT_HDR_SIZE,node_id,pkt_seq,payload_len);
+	uint8_t node_id = data[NODE_INDEX];
+	uint8_t pkt_seq = data[SEQ_INDEX];
+	uint8_t payload_len = data[PKT_PAYLOAD_SIZE_INDEX];
+
+	PRINTF("%d,%d,%d%c", node_id, pkt_seq,payload_len,'|');
+	//To print the raw payload bytes
+	//printf("Received Payload = %.2x%.2x",node_id,pkt_seq);
+	for(i=0;i<payload_len;i++)
+	{
+			printf("%.2x",data[i+PKT_HDR_SIZE]);
+	}
+	printf("\n");
+
+
+	//app_output(data+PKT_HDR_SIZE,node_id,pkt_seq,payload_len);
 
 	PROCESS_CONTEXT_END(&null_app_process);
 
@@ -119,7 +135,7 @@ PROCESS_THREAD(null_app_process, ev, data)
 
 	app_conn_open(&nullApp_callback);
 
-	static int8_t debug_buf[10] = {0};
+	static uint8_t debug_buf[10] = {0};
 	static struct etimer rxtimer;
 	static char input_buf[MAX_PKT_PAYLOAD_SIZE] = {0};
 	static uint16_t counter = 0;
@@ -156,9 +172,10 @@ PROCESS_THREAD(null_app_process, ev, data)
 	    for(i = 0; i < 10; i++)
 	    {
 		    counter++;
-		    debug_buf[i] = sin(counter);
+		    debug_buf[i] = sin(counter)+127;
 	    }
 	    packetbuf_copyfrom(debug_buf,sizeof(int8_t)*10);
+
 	    NETSTACK_RDC.send(NULL,NULL);
 
 	  }

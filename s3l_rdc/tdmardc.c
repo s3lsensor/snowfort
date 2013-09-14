@@ -18,7 +18,7 @@
 
 
 
-#define DEBUG 1
+#define DEBUG 0
 #if DEBUG
 #define PRINTF(...) printf(__VA_ARGS__)
 #else
@@ -88,9 +88,9 @@ static void TDMA_BS_send(void)
 
 	//send packet -- pushed to radio layer
 	if(NETSTACK_RADIO.send(pkt,pkt_size) != RADIO_TX_OK)
-		printf("TDMA RDC: BS fails to send packet\n");
+		PRINTF("TDMA RDC: BS fails to send packet\n");
 	else
-		printf("TDMA RDC: BS sends %d\n",pkt[SEQ_INDEX]);
+		PRINTF("TDMA RDC: BS sends beacon with Seq # %u\n",pkt[SEQ_INDEX]);
 }
 
 // TDMA_SN_send() -- called at a assigned time slot
@@ -126,7 +126,7 @@ static void TDMA_SN_send(void)
 	{
 		if(NETSTACK_RADIO.send(pkt,pkt_size) != RADIO_TX_OK)
 		{
-			printf("TDMA RDC: SN fails to send packet\n");
+			PRINTF("TDMA RDC: SN fails to send packet\n");
 		}else
 		{
 			PRINTF("TDMA RDC: SN sends %d\n",pkt[SEQ_INDEX]);
@@ -137,7 +137,7 @@ static void TDMA_SN_send(void)
 	}
 	else
 	{
-		printf("TDMA RDC: SN fails to open radio\n");
+		PRINTF("TDMA RDC: SN fails to open radio\n");
 	}
 	// turn off radio
 	NETSTACK_RADIO.off();
@@ -202,7 +202,7 @@ static void input(void)
 		//turn off radio -- save power
 		if(NETSTACK_RADIO.off() != 1)
 		{
-			printf("TDMA RDC: SN fails to turn off radio");
+			PRINTF("TDMA RDC: SN fails to turn off radio");
 		}
 
 		//first, check if BS assigns a slot
@@ -275,9 +275,9 @@ static void input(void)
 		PRINTF("RSSI: %d\n", cc2420_last_rssi-45);
 
 		// callback to application layer
-		app_conn_input();
-	}
 
+	}
+	app_conn_input();
 
 }
 /*-----------------------------------------------*/
