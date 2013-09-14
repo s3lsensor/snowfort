@@ -114,7 +114,7 @@ static void app_recv(void)
 	//printf("Received Payload = %.2x%.2x",node_id,pkt_seq);
 	for(i=0;i<payload_len;i++)
 	{
-			printf("%.2x",data[i+PKT_HDR_SIZE]);
+		PRINTF("%.2x",data[i+PKT_HDR_SIZE]);
 	}
 	printf("\n");
 
@@ -142,7 +142,7 @@ PROCESS_THREAD(null_app_process, ev, data)
 
 
 	if (SN_ID != 0)
-		etimer_set(&rxtimer,CLOCK_SECOND);
+		etimer_set(&rxtimer,CLOCK_SECOND/8);
 	else
 		etimer_set(&rxtimer,CLOCK_SECOND/20);
 

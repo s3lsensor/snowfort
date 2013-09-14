@@ -69,12 +69,12 @@ static struct rtimer SNTimer;
 static void TDMA_BS_send(void)
 {
 	BS_TX_start_time = RTIMER_NOW();
-	BS_RX_start_time = BS_TX_start_time+BS_period*RTIMER_MS;
+	BS_RX_start_time = BS_TX_start_time+BS_period;//*RTIMER_MS;
 
 
 	// set timer for next BS send
 	// right now, rtimer_timer does not consider drifting. For long time experiment, it may have problem
-	uint16_t offset = RTIMER_MS*(segment_period);
+	uint16_t offset = (segment_period);//*RTIMER_MS
 	//PRINTF("BS offset: %u\n",offset);
 	rtimer_set(&BSTimer,RTIMER_TIME(&BSTimer)+offset,0,TDMA_BS_send,NULL);
 
@@ -101,7 +101,7 @@ static void TDMA_SN_send(void)
 
 	//set timer for open RADIO -- for opening earlier 2 ms
 	//uint16_t time = RTIMER_TIME(&SNTimer)+RTIMER_MS*(segment_period-BS_period-my_slot*TS_period);
-	radioontime = RTIMER_TIME(&SNTimer) + RTIMER_MS*(segment_period-BS_period-(my_slot)*TS_period - 2);
+	radioontime = RTIMER_TIME(&SNTimer) + (segment_period-BS_period-(my_slot)*TS_period - GRD_PERIOD);
 	rtimer_set(&SNTimer,radioontime,0,NETSTACK_RADIO.on,NULL);
 
 	pkt[SEQ_INDEX] = seq_num++;
@@ -248,11 +248,11 @@ static void input(void)
 		}
 
 		//schedule for TX -- 5ms for guarding period (open radio earlier)
-
+		my_slot=1;
 		if (my_slot != -1)
 		{
 			//PRINTF("Schedule for TX at Slot %d\n",my_slot);
-			uint16_t SN_TX_time = SN_RX_start_time + RTIMER_MS*(BS_period+TS_period * my_slot - 2);
+			uint16_t SN_TX_time = SN_RX_start_time + (BS_period+TS_period * my_slot - GRD_PERIOD);//*RTIMER_MS;
 			rtimer_set(&SNTimer,SN_TX_time,0,TDMA_SN_send,NULL);
 		}
 	}
@@ -260,7 +260,7 @@ static void input(void)
 		/*-----------------BS CODE---------------*/
 	{
 		//set flag in pkt for TS occupancy
-		uint8_t current_TS = (RTIMER_NOW()-BS_RX_start_time)/(TS_period*RTIMER_MS);
+		uint8_t current_TS = (RTIMER_NOW()-BS_RX_start_time)/(TS_period);//*RTIMER_MS);
 		if(node_list[current_TS] == FREE_SLOT_CONST) //collision -- ask the node to find a new available slot
 		{
 			node_list[current_TS] = rx_pkt[NODE_INDEX];
@@ -287,7 +287,7 @@ static int on(void)
 	PRINTF("turn on RDC layer\n");
 	if (SN_ID == 0) //BS sends packet
 	{
-		rtimer_set(&BSTimer,RTIMER_NOW()+RTIMER_MS*segment_period,0,TDMA_BS_send,NULL);
+		rtimer_set(&BSTimer,RTIMER_NOW()+segment_period,0,TDMA_BS_send,NULL);//segment_period*
 	}
 	return NETSTACK_RADIO.on();
 }
