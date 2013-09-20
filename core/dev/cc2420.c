@@ -386,6 +386,7 @@ cc2420_transmit(unsigned short payload_len)
       {
         rtimer_clock_t sfd_timestamp;
         sfd_timestamp = cc2420_sfd_start_time;
+        //printf("Sfd time = %u\n",sfd_timestamp);
         if(packetbuf_attr(PACKETBUF_ATTR_PACKET_TYPE) ==
            PACKETBUF_ATTR_PACKET_TYPE_TIMESTAMP) {
           /* Write timestamp to last two bytes of packet in TXFIFO. */
@@ -622,7 +623,7 @@ cc2420_interrupt(void)
 #endif /* CC2420_TIMETABLE_PROFILING */
 
   last_packet_timestamp = cc2420_sfd_start_time;
-  printf("Radio rec time = %u\n",cc2420_sfd_start_time);
+  //printf("Radio rec time = %u\n",cc2420_sfd_start_time);
   pending++;
   cc2420_packets_seen++;
   return 1;

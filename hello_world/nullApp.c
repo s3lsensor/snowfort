@@ -112,9 +112,14 @@ static void app_recv(void)
 	PRINTF("%d,%d,%d%c", node_id, pkt_seq,payload_len,'|');
 	//To print the raw payload bytes
 	//printf("Received Payload = %.2x%.2x",node_id,pkt_seq);
-	for(i=0;i<payload_len;i++)
-	{
-		PRINTF("%.2x",data[i+PKT_HDR_SIZE]);
+	if(payload_len < 45){
+		for(i=0;i<payload_len;i++)
+		{
+			PRINTF("%.2x",data[i+PKT_HDR_SIZE]);
+		}
+	}
+	else {
+
 	}
 	printf("\n");
 
