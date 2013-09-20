@@ -101,8 +101,11 @@ static void TDMA_SN_send(void)
 
 	//set timer for open RADIO -- for opening earlier 2 ms
 	//uint16_t time = RTIMER_TIME(&SNTimer)+RTIMER_MS*(segment_period-BS_period-my_slot*TS_period);
-	radioontime = RTIMER_TIME(&SNTimer) + (segment_period-BS_period-(my_slot)*TS_period - GRD_PERIOD);
+	radioontime = RTIMER_TIME(&SNTimer) + (total_slot_num-my_slot)*TS_period;//(segment_period-BS_period-(my_slot)*TS_period - GRD_PERIOD);
 	rtimer_set(&SNTimer,radioontime,0,NETSTACK_RADIO.on,NULL);
+
+	//uint16_t timeStmp = packetbuf_attr(PACKETBUF_ATTR_RADIO_TXPOWER);
+	//printf("\nNext transmission at %u, Last pkt time = %u\n",radioontime, timeStmp);
 
 	pkt[SEQ_INDEX] = seq_num++;
 
@@ -191,7 +194,11 @@ static void input(void)
 	/*-------------SN CODE----------------------*/
 	if (SN_ID != 0) // sensor node -- decide timeslot & schedule for TX
 	{
-		SN_RX_start_time = RTIMER_NOW();
+		SN_RX_start_time = packetbuf_attr(PACKETBUF_ATTR_TIMESTAMP);//RTIMER_NOW();//;RTIMER_TIME(&SNTimer)
+
+		printf("Time now = %u, Last pkt time = %u\n",SN_RX_start_time, packetbuf_attr(PACKETBUF_ATTR_TIMESTAMP));
+
+
 
 		//check where the packet is from BS
 		if (rx_pkt[NODE_INDEX] != 0)
@@ -248,22 +255,22 @@ static void input(void)
 		}
 
 		//schedule for TX -- 5ms for guarding period (open radio earlier)
-		my_slot=1;
+		my_slot=2;
 		if (my_slot != -1)
 		{
 			//PRINTF("Schedule for TX at Slot %d\n",my_slot);
-			uint16_t SN_TX_time = SN_RX_start_time + (BS_period+TS_period * my_slot - GRD_PERIOD);//*RTIMER_MS;
+			uint16_t SN_TX_time = SN_RX_start_time + (BS_period+TS_period * my_slot)- GRD_PERIOD;//*RTIMER_MS;
 			rtimer_set(&SNTimer,SN_TX_time,0,TDMA_SN_send,NULL);
 		}
 	}
 	else if(SN_ID == 0) //BS
 		/*-----------------BS CODE---------------*/
 	{
-		//set flag in pkt for TS occupancy
-		uint8_t current_TS = (RTIMER_NOW()-BS_RX_start_time)/(TS_period);//*RTIMER_MS);
-		if(node_list[current_TS] == FREE_SLOT_CONST) //collision -- ask the node to find a new available slot
+		//set flag in pkt for TS occupancy SN_RX_start_time = packetbuf_attr(PACKETBUF_ATTR_TIMESTAMP);
+		uint8_t current_TS = (packetbuf_attr(PACKETBUF_ATTR_TIMESTAMP)-BS_RX_start_time)/(TS_period);//*RTIMER_MS);
+		if(node_list[current_TS-1] == FREE_SLOT_CONST) //collision -- ask the node to find a new available slot
 		{
-			node_list[current_TS] = rx_pkt[NODE_INDEX];
+			node_list[current_TS-1] = rx_pkt[NODE_INDEX];
 		}
 
 

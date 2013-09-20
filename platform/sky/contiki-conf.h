@@ -78,7 +78,7 @@
 #endif /* QUEUEBUF_CONF_NUM */
 
 #ifndef TIMESYNCH_CONF_ENABLED
-#define TIMESYNCH_CONF_ENABLED           0
+#define TIMESYNCH_CONF_ENABLED           1
 #endif /* TIMESYNCH_CONF_ENABLED */
 
 #if TIMESYNCH_CONF_ENABLED
@@ -89,7 +89,7 @@
 
 #endif /* WITH_UIP6 */
 
-#define PACKETBUF_CONF_ATTRS_INLINE 1
+#define PACKETBUF_CONF_ATTRS_INLINE 0
 
 #ifndef RF_CHANNEL
 #define RF_CHANNEL              26

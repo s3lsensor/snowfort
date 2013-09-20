@@ -31,23 +31,25 @@ static char pkt_hdr[] = {65,-120,-120,-51,-85,-1,-1, SN_ID, 0, 0};
 
 #define FREE_SLOT_CONST 	0x7F
 #define MAX_PKT_SIZE		127
-#define MAX_PKT_PAYLOAD_SIZE	60		//should be 117, let's start from 50 right now
+#define MAX_PKT_PAYLOAD_SIZE	64		//should be 117, let's start from 50 right now
 
 // time slot information -- default
 #ifndef SEGMENT_PERIOD
-#define SEGMENT_PERIOD	(RTIMER_SECOND/8) //993//1092	//equivalent to 1100 ms, 33*1092~=1.1*32768
+#define SEGMENT_PERIOD	(RTIMER_SECOND/8.0) //993//1092	//equivalent to 1100 ms, 33*1092~=1.1*32768
 #endif
 
 #ifndef TOTAL_TS
-#define TOTAL_TS		58
+#define TOTAL_TS		36
 #endif
 
+#define BS_SLOTS 		2
+
 #ifndef TS_PERIOD
-#define TS_PERIOD 		(SEGMENT_PERIOD/(TOTAL_TS+1.0))//410//1638//3277//99		//100ms
+#define TS_PERIOD 		(SEGMENT_PERIOD/(TOTAL_TS+BS_SLOTS))//410//1638//3277//99		//100ms
 #endif
 
 #ifndef BS_PERIOD
-#define BS_PERIOD		(SEGMENT_PERIOD/(TOTAL_TS+1.0))//410//819//1638//3277//99		//100ms
+#define BS_PERIOD		(BS_SLOTS*TS_PERIOD)//410//819//1638//3277//99		//100ms
 #endif
 
 #ifndef GRD_PERIOD
