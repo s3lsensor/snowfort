@@ -39,10 +39,10 @@ static char pkt_hdr[] = {65,-120,-120,-51,-85,-1,-1, SN_ID, 0, 0};
 #endif
 
 #ifndef TOTAL_TS
-#define TOTAL_TS		8
+#define TOTAL_TS		30
 #endif
 
-#define BKN_SLOTS 		2.0
+#define BKN_SLOTS 		2
 
 #ifndef TS_PERIOD
 #define TS_PERIOD 		(SEGMENT_PERIOD/(TOTAL_TS+BKN_SLOTS))//410//1638//3277//99		//100ms

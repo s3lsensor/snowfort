@@ -186,6 +186,15 @@ static void send_list(mac_callback_t sent_callback, void *ptr, struct rdc_buf_li
 {
 	PRINTF("SEND_LIST NOT CALLED");
 }
+
+
+
+
+
+
+
+
+
 /*-----------------------------------------------*/
 // receives packet -- called in radio.c,radio.h
 static void input(void)
@@ -272,7 +281,7 @@ static void input(void)
 		/*-----------------BS CODE---------------*/
 	{
 		//set flag in pkt for TS occupancy SN_RX_start_time = packetbuf_attr(PACKETBUF_ATTR_TIMESTAMP);
-		uint8_t current_TS = (packetbuf_attr(PACKETBUF_ATTR_TIMESTAMP)-BS_RX_start_time)/(TS_period);//*RTIMER_MS);
+		uint8_t current_TS = (uint8_t)((packetbuf_attr(PACKETBUF_ATTR_TIMESTAMP)-BS_RX_start_time)/(TS_period));//*RTIMER_MS);
 		if(node_list[current_TS] == FREE_SLOT_CONST) //collision -- ask the node to find a new available slot
 		{
 			node_list[current_TS] = rx_pkt[NODE_INDEX];
