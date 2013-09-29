@@ -13,6 +13,8 @@
 #include "net/queuebuf.h"
 #include "dev/cc2420.h"
 #include "appconn/app_conn.h"
+#include "net/mac/framer-tdma.h"
+#include "frame802154.h"
 #include <string.h>
 #include <stdio.h>
 
@@ -64,6 +66,31 @@ static struct rtimer BSTimer;
 //Timer -- SN
 static struct rtimer SNTimer;
 
+// set_addr -- clean rime address and reset rime & cc2420 address
+static void sf_tdma_set_mac_addr(void)
+{
+  rimeaddr_t addr;
+  uint8_t longaddr[8];
+  uint16_t shortaddr;
+
+  // reset rime address
+  memset(&addr,0,sizeof(rimeaddr_t));
+  addr.u8[0] = SN_ID & 0xff;
+  addr.u8[1] = SN_ID >> 8;
+  rimeaddr_set_node_addr(&addr);
+  printf("Rime started with address ");
+  printf("%u.%u\n",rimeaddr_node_addr.u8[0],rimeaddr_node_addr.u8[1]);
+
+  // reset CC2420 address
+  shortaddr = (rimeaddr_node_addr.u8[0] << 8) + rimeaddr_node_addr.u8[1];
+  memset(longaddr,0,sizeof(longaddr));
+  rimeaddr_copy((rimeaddr_t *)&longaddr,&rimeaddr_node_addr);
+  printf("MAC %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x ",
+             longaddr[0], longaddr[1], longaddr[2], longaddr[3],
+             longaddr[4], longaddr[5], longaddr[6], longaddr[7]);
+  cc2420_set_pan_addr(IEEE802154_PANID, shortaddr, longaddr);
+}
+
 
 // TDMA_BS_send() -- called at a specific time
 static void TDMA_BS_send(void)
@@ -85,9 +112,21 @@ static void TDMA_BS_send(void)
 	pkt[PKT_PAYLOAD_SIZE_INDEX] = total_slot_num;
 	memcpy(pkt+PKT_HDR_SIZE,node_list,total_slot_num);
 
+	//copy pkt to packetbuff
+	packetbuf_copyfrom(&pkt,pkt_size);
+	packetbuf_set_attr(PACKETBUF_ATTR_MAC_SEQNO,seq_num);
+	uint8_t hdr_len = NETSTACK_FRAMER.create();
+
+	int i = 0;
+	uint8_t *hdr_ptr = packetbuf_hdrptr();
+	for(i = 0; i < hdr_len; i++)
+	{
+	  PRINTF("%u,",hdr_ptr[i]);
+	}
+	PRINTF("\n");
 
 	//send packet -- pushed to radio layer
-	if(NETSTACK_RADIO.send(pkt,pkt_size) != RADIO_TX_OK)
+	if(NETSTACK_RADIO.send(packetbuf_hdrptr(),packetbuf_totlen()) != RADIO_TX_OK)
 		printf("TDMA RDC: BS fails to send packet\n");
 	else
 		printf("TDMA RDC: BS sends %d\n",pkt[SEQ_INDEX]);
@@ -124,10 +163,25 @@ static void TDMA_SN_send(void)
 	// send packet -- pushed to radio layer
 	if(NETSTACK_RADIO.on())
 	{
-		if(NETSTACK_RADIO.send(pkt,pkt_size) != RADIO_TX_OK)
+	  packetbuf_copyfrom(&pkt,pkt_size);
+	  packetbuf_set_attr(PACKETBUF_ATTR_MAC_SEQNO,seq_num);
+	  uint8_t hdr_len = NETSTACK_FRAMER.create();
+
+
+	  int i = 0;
+    uint8_t *hdr_ptr = packetbuf_hdrptr();
+    for(i = 0; i < hdr_len; i++)
+    {
+      PRINTF("%u,",hdr_ptr[i]);
+    }
+    PRINTF("\n");
+
+
+	  if(NETSTACK_RADIO.send(packetbuf_hdrptr(),packetbuf_totlen()) != RADIO_TX_OK)
 		{
 			printf("TDMA RDC: SN fails to send packet\n");
-		}else
+		}
+		else
 		{
 			PRINTF("TDMA RDC: SN sends %d\n",pkt[SEQ_INDEX]);
 		}
@@ -147,7 +201,8 @@ static void TDMA_SN_send(void)
 // send packet
 static void send(mac_callback_t sent_callback, void *ptr_callback)
 {
-	uint8_t data_len = packetbuf_datalen();
+
+  uint8_t data_len = packetbuf_datalen();
 
 	uint8_t *ptr;
 	ptr = (uint8_t *)packetbuf_dataptr();
@@ -185,7 +240,11 @@ static void send_list(mac_callback_t sent_callback, void *ptr, struct rdc_buf_li
 static void input(void)
 {
 
-	char *rx_pkt = (char *)packetbuf_dataptr();
+  if(NETSTACK_FRAMER.parse() < 0)
+    printf("Incorrect decode frame\n");
+
+  char *rx_pkt = (char *)packetbuf_dataptr();
+  printf("%d %d %d %d %d",rx_pkt[0],rx_pkt[1],rx_pkt[2],rx_pkt[3],rx_pkt[4]);
 	uint16_t rx_pkt_len = rx_pkt[PKT_PAYLOAD_SIZE_INDEX];
 
 	/*-------------SN CODE----------------------*/
@@ -311,7 +370,8 @@ static unsigned short channel_check_interval(void)
 static void init(void)
 {
 
-	printf("mote id %d\n",SN_ID);
+	//reset rime & radio address
+  sf_tdma_set_mac_addr();
 
 	//check the if the number of time slot is large enough
 	uint32_t min_segment_len = TS_period*total_slot_num + BS_period;
