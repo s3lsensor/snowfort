@@ -18,6 +18,8 @@
 #include <string.h>
 #include <stdio.h>
 
+#include "remote-shell.h"
+
 
 
 #define DEBUG 1
@@ -117,7 +119,23 @@ static void TDMA_BS_send(void)
 
 	//copy pkt to packetbuff
 	//packetbuf_copyfrom((void *)&pkt[0],total_slot_num);
-	packetbuf_copyfrom((void *)&node_list[0],sizeof(uint8_t)*total_slot_num);
+
+	if(tdma_rdc_buf_ptr != 0) // has command to send
+	{
+	  packetbuf_copyfrom((void *)&tdma_rdc_buffer[0],sizeof(uint8_t)*tdma_rdc_buf_ptr);
+	  packetbuf_set_attr(PACKETBUF_ATTR_PACKET_TYPE,PACKETBUF_ATTR_PACKET_TYPE_CMD);
+	  tdma_rdc_buf_full_flg = 0;
+    tdma_rdc_buf_ptr = 0;
+    tdma_rdc_buf_send_ptr = 0;
+    PRINTF("send command %s\n",tdma_rdc_buffer);
+	}
+	else
+	{
+	  packetbuf_copyfrom((void *)&node_list[0],sizeof(uint8_t)*total_slot_num);
+	  packetbuf_set_attr(PACKETBUF_ATTR_PACKET_TYPE,PACKETBUF_ATTR_PACKET_TYPE_DATA);
+	}
+
+
 	packetbuf_set_attr(PACKETBUF_ATTR_MAC_SEQNO,seq_num);
 	uint8_t hdr_len = NETSTACK_FRAMER.create();
 
@@ -277,6 +295,19 @@ static void input(void)
 			printf("TDMA RDC: SN fails to turn off radio");
 		}
 
+		if (packetbuf_attr(PACKETBUF_ATTR_PACKET_TYPE) == PACKETBUF_ATTR_PACKET_TYPE_CMD)
+    {
+      remote_command_event_message = process_alloc_event();
+      char command_string[128];
+      strncpy(command_string,rx_pkt,rx_pkt_len);
+      command_string[rx_pkt_len] = (uint8_t)'\0';
+      PRINTF("RX Command: %s %d\n",command_string,strlen(command_string));
+
+      process_post(&remote_shell_process,remote_command_event_message,command_string);
+
+      return;
+    }
+
 		//first, check if BS assigns a slot
 		unsigned char i = 0;
 		char free_slot = 0;
@@ -349,8 +380,20 @@ static void input(void)
 		PRINTF("Channel: %d;", cc2420_get_channel());
 		PRINTF("RSSI: %d\n", cc2420_last_rssi-45);
 
-		// callback to application layer
-		app_conn_input();
+		if(packetbuf_attr(PACKETBUF_ATTR_PACKET_TYPE) == PACKETBUF_ATTR_PACKET_TYPE_DATA)
+		{
+		  // callback to application layer
+		  app_conn_input();
+		}
+		else if (packetbuf_attr(PACKETBUF_ATTR_PACKET_TYPE) == PACKETBUF_ATTR_PACKET_TYPE_CMD)
+		{
+		  remote_command_event_message = process_alloc_event();
+		  char command_string[128];
+		  strncpy(rx_pkt,command_string,rx_pkt_len);
+		  command_string[rx_pkt_len] = (uint8_t)'\0';
+
+		  process_post(&remote_shell_process,remote_command_event_message,command_string);
+		}
 	}
 
 
