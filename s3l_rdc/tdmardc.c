@@ -31,7 +31,7 @@
 /*-----------------------------------------------*/
 // Global Variables
 
-// Scheudling
+// Scheduling
 static const uint16_t segment_period = SEGMENT_PERIOD;   //one round time in ms
 static const uint16_t TS_period = TS_PERIOD;         //one time-slot duration in ms
 static const uint16_t BS_period = BS_PERIOD;         //BS broadcasts duration in ms
@@ -41,23 +41,24 @@ static const uint8_t total_slot_num = TOTAL_TS; // calculated in init()
 static int8_t my_slot; // set in SN_send
 
 //packet information
-static char *pkt; //allocated in init()
-static const uint8_t pkt_size = PKT_HDR_SIZE + MAX_PKT_PAYLOAD_SIZE; //set in init()
-char seq_num = 0; 
+//static uint8_t *pkt; //allocated in init()
+//static const uint8_t pkt_size = PKT_HDR_SIZE + MAX_PKT_PAYLOAD_SIZE; //set in init()
+static char seq_num = 0;
 
 // BS global variable
 static rtimer_clock_t BS_TX_start_time = 0;
 static rtimer_clock_t BS_RX_start_time = 0;
-static char *node_list; //allocated, initialized in init()
+static uint8_t *node_list; //allocated, initialized in init()
 
 
 // SN global variable
 static rtimer_clock_t SN_RX_start_time = 0;
 static uint16_t radioontime;
-static char buffer[MAX_PKT_PAYLOAD_SIZE] = {0};
-volatile static uint8_t buf_ptr = 0; //updated when send() called (RDC_send()) directly
-volatile static uint8_t buf_send_ptr = 0; //updated when send() called (RDC_send()) directly
-volatile static uint8_t buf_full_flg = 0; //updated when send() called RDC_send()) directly
+char tdma_rdc_buffer[MAX_PKT_PAYLOAD_SIZE] = {0};
+volatile uint8_t tdma_rdc_buf_ptr = 0; //updated when send() called (RDC_send()) directly
+volatile uint8_t tdma_rdc_buf_send_ptr = 0; //updated when send() called (RDC_send()) directly
+volatile uint8_t tdma_rdc_buf_full_flg = 0; //updated when send() called RDC_send()) directly
+volatile uint8_t tdma_rdc_buf_in_using_flg = 0;
 
 
 //Timer -- BS
@@ -105,31 +106,27 @@ static void TDMA_BS_send(void)
 	//PRINTF("BS offset: %u\n",offset);
 	rtimer_set(&BSTimer,RTIMER_TIME(&BSTimer)+offset,0,TDMA_BS_send,NULL);
 
-
+	//update packet sequence number
+	seq_num++;
 
 	//pkt content
-	pkt[SEQ_INDEX] = seq_num++;
-	pkt[PKT_PAYLOAD_SIZE_INDEX] = total_slot_num;
-	memcpy(pkt+PKT_HDR_SIZE,node_list,total_slot_num);
+	//pkt[SEQ_INDEX] = seq_num++;
+	//pkt[PKT_PAYLOAD_SIZE_INDEX] = total_slot_num;
+	//memcpy(pkt+PKT_HDR_SIZE,node_list,total_slot_num);
+	//memcpy(pkt,node_list,total_slot_num);
 
 	//copy pkt to packetbuff
-	packetbuf_copyfrom(&pkt,pkt_size);
+	//packetbuf_copyfrom((void *)&pkt[0],total_slot_num);
+	packetbuf_copyfrom((void *)&node_list[0],sizeof(uint8_t)*total_slot_num);
 	packetbuf_set_attr(PACKETBUF_ATTR_MAC_SEQNO,seq_num);
 	uint8_t hdr_len = NETSTACK_FRAMER.create();
 
-	int i = 0;
-	uint8_t *hdr_ptr = packetbuf_hdrptr();
-	for(i = 0; i < hdr_len; i++)
-	{
-	  PRINTF("%u,",hdr_ptr[i]);
-	}
-	PRINTF("\n");
 
 	//send packet -- pushed to radio layer
 	if(NETSTACK_RADIO.send(packetbuf_hdrptr(),packetbuf_totlen()) != RADIO_TX_OK)
 		printf("TDMA RDC: BS fails to send packet\n");
 	else
-		printf("TDMA RDC: BS sends %d\n",pkt[SEQ_INDEX]);
+		printf("TDMA RDC: BS sends %d\n",seq_num);
 }
 
 // TDMA_SN_send() -- called at a assigned time slot
@@ -143,27 +140,35 @@ static void TDMA_SN_send(void)
 	radioontime = RTIMER_TIME(&SNTimer) + RTIMER_MS*(segment_period-BS_period-(my_slot)*TS_period - 2);
 	rtimer_set(&SNTimer,radioontime,0,NETSTACK_RADIO.on,NULL);
 
-	pkt[SEQ_INDEX] = seq_num++;
+	//pkt[SEQ_INDEX] = seq_num++;
+
+	//update packet sequence number
+	seq_num++;
+
+	//wait if the tdma_rdc_buffer is accessing by other functions
+	while(tdma_rdc_buf_in_using_flg);
+
+	// lock tdma_rdc_buffer and preventing access from other functions.
+  tdma_rdc_buf_in_using_flg = 1;
 
 
-	if (buf_full_flg == 0)
+	if (tdma_rdc_buf_full_flg == 0)
 	{
-		memcpy(pkt+PKT_HDR_SIZE,buffer,sizeof(uint8_t)*buf_ptr);
-		pkt[PKT_PAYLOAD_SIZE_INDEX] = buf_ptr;
+		packetbuf_copyfrom((void *)&tdma_rdc_buffer[0],sizeof(uint8_t)*tdma_rdc_buf_ptr);
+		packetbuf_set_datalen(tdma_rdc_buf_ptr);
 	}
 	else
 	{
-		uint8_t temp_len = MAX_PKT_PAYLOAD_SIZE - buf_send_ptr;
-		memcpy(pkt+PKT_HDR_SIZE,buffer+buf_send_ptr,sizeof(uint8_t)*temp_len);
-		memcpy(pkt+PKT_HDR_SIZE+temp_len,buffer,sizeof(uint8_t)*buf_send_ptr);
-		pkt[PKT_PAYLOAD_SIZE_INDEX] = MAX_PKT_PAYLOAD_SIZE;
+		uint8_t temp_len = MAX_PKT_PAYLOAD_SIZE - tdma_rdc_buf_send_ptr;
+		memcpy(packetbuf_dataptr(),tdma_rdc_buffer+tdma_rdc_buf_send_ptr,sizeof(uint8_t)*temp_len);
+		memcpy(packetbuf_dataptr()+temp_len,tdma_rdc_buffer,sizeof(uint8_t)*tdma_rdc_buf_send_ptr);
+		packetbuf_set_datalen(MAX_PKT_PAYLOAD_SIZE);
 	}
 
 
 	// send packet -- pushed to radio layer
 	if(NETSTACK_RADIO.on())
 	{
-	  packetbuf_copyfrom(&pkt,pkt_size);
 	  packetbuf_set_attr(PACKETBUF_ATTR_MAC_SEQNO,seq_num);
 	  uint8_t hdr_len = NETSTACK_FRAMER.create();
 
@@ -183,11 +188,11 @@ static void TDMA_SN_send(void)
 		}
 		else
 		{
-			PRINTF("TDMA RDC: SN sends %d\n",pkt[SEQ_INDEX]);
+			PRINTF("TDMA RDC: SN sends %d\n",seq_num);
 		}
-		buf_full_flg = 0;
-		buf_ptr = 0;
-		buf_send_ptr = 0;
+	  tdma_rdc_buf_full_flg = 0;
+	  tdma_rdc_buf_ptr = 0;
+	  tdma_rdc_buf_send_ptr = 0;
 	}
 	else
 	{
@@ -195,6 +200,9 @@ static void TDMA_SN_send(void)
 	}
 	// turn off radio
 	NETSTACK_RADIO.off();
+
+	// release tdma_rdc_buffer
+  tdma_rdc_buf_in_using_flg = 0;
 }
 
 /*-----------------------------------------------*/
@@ -202,31 +210,32 @@ static void TDMA_SN_send(void)
 static void send(mac_callback_t sent_callback, void *ptr_callback)
 {
 
+/*
   uint8_t data_len = packetbuf_datalen();
 
 	uint8_t *ptr;
 	ptr = (uint8_t *)packetbuf_dataptr();
 
-	if((data_len+buf_ptr) <= MAX_PKT_PAYLOAD_SIZE)
+	if((data_len+tdma_rdc_buf_ptr) <= MAX_PKT_PAYLOAD_SIZE)
 	{
-		memcpy(buffer+buf_ptr,ptr,data_len*sizeof(uint8_t));
-		buf_ptr = buf_ptr + data_len;
+		memcpy(tdma_rdc_buffer+tdma_rdc_buf_ptr,ptr,data_len*sizeof(uint8_t));
+		tdma_rdc_buf_ptr = tdma_rdc_buf_ptr + data_len;
 	}
 	else
 	{
-		uint8_t temp_len = MAX_PKT_PAYLOAD_SIZE-buf_ptr;
-		memcpy(buffer+buf_ptr,ptr,temp_len*sizeof(uint8_t));
-		buf_full_flg = 1;
-		buf_ptr = 0;
-		memcpy(buffer+buf_ptr,ptr+temp_len,(data_len-temp_len)*sizeof(uint8_t));
-		buf_ptr = buf_ptr + data_len - temp_len;
+		uint8_t temp_len = MAX_PKT_PAYLOAD_SIZE-tdma_rdc_buf_ptr;
+		memcpy(tdma_rdc_buffer+tdma_rdc_buf_ptr,ptr,temp_len*sizeof(uint8_t));
+		tdma_rdc_buf_full_flg = 1;
+		tdma_rdc_buf_ptr = 0;
+		memcpy(tdma_rdc_buffer+tdma_rdc_buf_ptr,ptr+temp_len,(data_len-temp_len)*sizeof(uint8_t));
+		tdma_rdc_buf_ptr = tdma_rdc_buf_ptr + data_len - temp_len;
 
 	}
 
-	if(buf_full_flg == 1)
-		buf_send_ptr = buf_ptr;
+	if(tdma_rdc_buf_full_flg == 1)
+	  tdma_rdc_buf_send_ptr = tdma_rdc_buf_ptr;
 
-
+*/
 
 }
 /*-----------------------------------------------*/
@@ -243,18 +252,22 @@ static void input(void)
   if(NETSTACK_FRAMER.parse() < 0)
     printf("Incorrect decode frame\n");
 
-  char *rx_pkt = (char *)packetbuf_dataptr();
-  printf("%d %d %d %d %d",rx_pkt[0],rx_pkt[1],rx_pkt[2],rx_pkt[3],rx_pkt[4]);
-	uint16_t rx_pkt_len = rx_pkt[PKT_PAYLOAD_SIZE_INDEX];
+  uint8_t *rx_pkt = (uint8_t *)packetbuf_dataptr();
+//  printf("RX:%u %u %u %u %u ",rx_pkt[0],rx_pkt[1],rx_pkt[2],rx_pkt[3],rx_pkt[4]);
+//  printf("%u %u %u %u %u\n",rx_pkt[5],rx_pkt[6],rx_pkt[7],rx_pkt[8],rx_pkt[9]);
+//	uint16_t rx_pkt_len = rx_pkt[PKT_PAYLOAD_SIZE_INDEX];
+  uint16_t rx_pkt_len = packetbuf_datalen();
 
 	/*-------------SN CODE----------------------*/
 	if (SN_ID != 0) // sensor node -- decide timeslot & schedule for TX
 	{
 		SN_RX_start_time = RTIMER_NOW();
 
-		//check where the packet is from BS
-		if (rx_pkt[NODE_INDEX] != 0)
-			return;
+		//check if the packet is from BS
+		if (!rimeaddr_cmp(packetbuf_addr(PACKETBUF_ADDR_SENDER),&rimeaddr_null))
+		{
+		  return;
+		}
 
 		/*--------from BS------------*/
 
@@ -265,17 +278,16 @@ static void input(void)
 		}
 
 		//first, check if BS assigns a slot
-
 		unsigned char i = 0;
 		char free_slot = 0;
 		my_slot = -1;
-		for(i = PKT_HDR_SIZE; i < PKT_HDR_SIZE+rx_pkt_len; i++)
+		for(i = 0; i < rx_pkt_len; i++)
 		{
 			//print payload
 			//PRINTF("%d ",rx_pkt[i]);
 			if(SN_ID == rx_pkt[i])
 			{
-				my_slot = i-PKT_HDR_SIZE;
+				my_slot = i;
 				break;
 			}
 			else
@@ -291,13 +303,13 @@ static void input(void)
 		if (my_slot == -1 && free_slot != 0) //do not allocate a slot & there is a free slot
 		{
 			uint8_t rnd_num = RTIMER_NOW() % free_slot;
-			for(i = PKT_HDR_SIZE; i<PKT_HDR_SIZE+rx_pkt_len; i++)
+			for(i = 0; i<rx_pkt_len; i++)
 			{
 				if(rx_pkt[i] == FREE_SLOT_CONST)
 				{
 					if (rnd_num == 0)
 					{
-						my_slot = i-PKT_HDR_SIZE;
+						my_slot = i;
 						break;
 					}
 					else
@@ -306,7 +318,7 @@ static void input(void)
 			}
 		}
 
-		//schedule for TX -- 5ms for guarding period (open radio earlier)
+		//schedule for TX -- 2ms for guarding period (open radio earlier)
 
 		if (my_slot != -1)
 		{
@@ -318,17 +330,21 @@ static void input(void)
 	else if(SN_ID == 0) //BS
 		/*-----------------BS CODE---------------*/
 	{
-		//set flag in pkt for TS occupancy
+    rimeaddr_t *sent_sn_addr = packetbuf_addr(PACKETBUF_ADDR_SENDER);
+    uint8_t sent_sn_id = sent_sn_addr->u8[0];
+
+	  //set flag in pkt for TS occupancy
 		uint8_t current_TS = (RTIMER_NOW()-BS_RX_start_time)/(TS_period*RTIMER_MS);
 		if(node_list[current_TS] == FREE_SLOT_CONST) //collision -- ask the node to find a new available slot
 		{
-			node_list[current_TS] = rx_pkt[NODE_INDEX];
+			//node_list[current_TS] = rx_pkt[NODE_INDEX];
+		  node_list[current_TS] = sent_sn_id;
 		}
 
 
 
-		PRINTF("[Sensor: %d] [Slot: %d] [Seq: %d]\n",
-				rx_pkt[NODE_INDEX],current_TS,rx_pkt[SEQ_INDEX]);
+		PRINTF("[Sensor: %u] [Slot: %u] [Seq: %u]\n",
+				sent_sn_id,current_TS,packetbuf_attr(PACKETBUF_ATTR_PACKET_ID));
 
 		PRINTF("Channel: %d;", cc2420_get_channel());
 		PRINTF("RSSI: %d\n", cc2420_last_rssi-45);
@@ -385,17 +401,19 @@ static void init(void)
 	//allocate node_list space
 	if (SN_ID == 0)
 	{
-		node_list = (char *)malloc(total_slot_num);
+		node_list = (uint8_t *)malloc(total_slot_num);
 		memset(node_list,FREE_SLOT_CONST,total_slot_num);
 	}
 
 	// allocate packet space
+/*
 	pkt = ( char *)malloc(pkt_size+1);
 	memcpy(pkt,pkt_hdr,PKT_HDR_SIZE);
 	if (SN_ID == 0)
 		memset(pkt+PKT_HDR_SIZE,FREE_SLOT_CONST,total_slot_num); //set free slot
 	else
 		memset(pkt+PKT_HDR_SIZE,(uint8_t)0x7F,total_slot_num); //free payload for SN
+*/
 
 
 	printf("Init RDC layer,packet size\n");

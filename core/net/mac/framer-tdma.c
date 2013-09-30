@@ -16,7 +16,7 @@
 #include "net/mac/frame802154.h"
 #include "net/packetbuf.h"
 
-#define DEBUG 1
+#define DEBUG 0
 
 #if DEBUG
 #include <stdio.h>
