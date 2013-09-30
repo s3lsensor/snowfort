@@ -78,7 +78,7 @@
 #endif /* QUEUEBUF_CONF_NUM */
 
 #ifndef TIMESYNCH_CONF_ENABLED
-#define TIMESYNCH_CONF_ENABLED           1
+#define TIMESYNCH_CONF_ENABLED           0
 #endif /* TIMESYNCH_CONF_ENABLED */
 
 #if TIMESYNCH_CONF_ENABLED
@@ -87,9 +87,11 @@
 #define CC2420_CONF_SFD_TIMESTAMPS       1
 #endif /* TIMESYNCH_CONF_ENABLED */
 
+#define CC2420_CONF_SFD_TIMESTAMPS       1 //enable for time-stamping pkts
+
 #endif /* WITH_UIP6 */
 
-#define PACKETBUF_CONF_ATTRS_INLINE 0
+#define PACKETBUF_CONF_ATTRS_INLINE 1
 
 #ifndef RF_CHANNEL
 #define RF_CHANNEL              26

@@ -117,6 +117,7 @@ static void app_recv(void)
 		{
 			PRINTF("%.2x",data[i+PKT_HDR_SIZE]);
 		}
+		printf(", Timestamp in pkt = %u", (data[payload_len+PKT_HDR_SIZE]<<8)+data[payload_len+PKT_HDR_SIZE+1]);
 	}
 	else {
 
@@ -180,6 +181,7 @@ PROCESS_THREAD(null_app_process, ev, data)
 		    debug_buf[i] = sin(counter)+127;
 	    }
 	    packetbuf_copyfrom(debug_buf,sizeof(int8_t)*10);
+
 
 	    NETSTACK_RDC.send(NULL,NULL);
 

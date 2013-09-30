@@ -120,6 +120,7 @@ volatile uint16_t cc2420_sfd_start_time;
 volatile uint16_t cc2420_sfd_end_time;
 
 static volatile uint16_t last_packet_timestamp;
+extern volatile rtimer_clock_t BS_radio_TX_time;
 /*---------------------------------------------------------------------------*/
 PROCESS(cc2420_process, "CC2420 driver");
 /*---------------------------------------------------------------------------*/
@@ -381,16 +382,24 @@ cc2420_transmit(unsigned short payload_len)
 #else /* WITH_SEND_CCA */
   strobe(CC2420_STXON);
 #endif /* WITH_SEND_CCA */
+
+
   for(i = LOOP_20_SYMBOLS; i > 0; i--) {
     if(CC2420_SFD_IS_1) {
       {
+    	BS_radio_TX_time=RTIMER_NOW();
+    	rtimer_clock_t dumd = 0x1264;
+    	//printf("%05u",BS_radio_TX_time);//TX time radio
         rtimer_clock_t sfd_timestamp;
         sfd_timestamp = cc2420_sfd_start_time;
-        //printf("Sfd time = %u\n",sfd_timestamp);
+
+        //
         if(packetbuf_attr(PACKETBUF_ATTR_PACKET_TYPE) ==
            PACKETBUF_ATTR_PACKET_TYPE_TIMESTAMP) {
           /* Write timestamp to last two bytes of packet in TXFIFO. */
-          CC2420_WRITE_RAM(&sfd_timestamp, CC2420RAM_TXFIFO + payload_len - 1, 2);
+          //CC2420_WRITE_RAM(&sfd_timestamp, CC2420RAM_TXFIFO + payload_len - 1, 2);
+          CC2420_WRITE_RAM(&BS_radio_TX_time, CC2420RAM_TXFIFO + payload_len - 1, 2);
+          //printf("TX time radio = %u,",RTIMER_NOW());
         }
       }
 
@@ -481,6 +490,7 @@ cc2420_prepare(const void *payload, unsigned short payload_len)
 static int
 cc2420_send(const void *payload, unsigned short payload_len)
 {
+	//printf("%05u,",RTIMER_NOW());//Enter radio send
   cc2420_prepare(payload, payload_len);
   return cc2420_transmit(payload_len);
 }
@@ -615,6 +625,7 @@ TIMETABLE_AGGREGATE(aggregate_time, 10);
 int
 cc2420_interrupt(void)
 {
+	printf("Enter cc2420 interrupt.\n");
   CC2420_CLEAR_FIFOP_INT();
   process_poll(&cc2420_process);
 #if CC2420_TIMETABLE_PROFILING
@@ -647,7 +658,7 @@ PROCESS_THREAD(cc2420_process, ev, data)
     packetbuf_clear();
     packetbuf_set_attr(PACKETBUF_ATTR_TIMESTAMP, last_packet_timestamp);
     len = cc2420_read(packetbuf_dataptr(), PACKETBUF_SIZE);
-    
+    printf("Set buf length=%u\n",len);
     packetbuf_set_datalen(len);
     
     NETSTACK_RDC.input();
@@ -707,6 +718,7 @@ cc2420_read(void *buf, unsigned short bufsize)
     RELEASE_LOCK();
     return 0;
   }
+  printf("Received pkt len=%u,", len);
 
   getrxdata(buf, len - AUX_LEN);
 #if CC2420_CONF_CHECKSUM
