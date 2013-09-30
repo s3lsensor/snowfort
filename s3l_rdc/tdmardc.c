@@ -18,7 +18,9 @@
 #include <string.h>
 #include <stdio.h>
 
+#ifdef SF_FEATURE_SHELL_OPT
 #include "remote-shell.h"
+#endif
 
 
 
@@ -191,15 +193,6 @@ static void TDMA_SN_send(void)
 	  uint8_t hdr_len = NETSTACK_FRAMER.create();
 
 
-	  int i = 0;
-    uint8_t *hdr_ptr = packetbuf_hdrptr();
-    for(i = 0; i < hdr_len; i++)
-    {
-      PRINTF("%u,",hdr_ptr[i]);
-    }
-    PRINTF("\n");
-
-
 	  if(NETSTACK_RADIO.send(packetbuf_hdrptr(),packetbuf_totlen()) != RADIO_TX_OK)
 		{
 			printf("TDMA RDC: SN fails to send packet\n");
@@ -297,7 +290,7 @@ static void input(void)
 
 		if (packetbuf_attr(PACKETBUF_ATTR_PACKET_TYPE) == PACKETBUF_ATTR_PACKET_TYPE_CMD)
     {
-      remote_command_event_message = process_alloc_event();
+#ifdef SF_FEATURE_SHELL_OPT
       char command_string[128];
       strncpy(command_string,rx_pkt,rx_pkt_len);
       command_string[rx_pkt_len] = (uint8_t)'\0';
@@ -306,49 +299,51 @@ static void input(void)
       process_post(&remote_shell_process,remote_command_event_message,command_string);
 
       return;
+#endif
     }
-
-		//first, check if BS assigns a slot
-		unsigned char i = 0;
-		char free_slot = 0;
-		my_slot = -1;
-		for(i = 0; i < rx_pkt_len; i++)
+		else if(packetbuf_attr(PACKETBUF_ATTR_PACKET_TYPE) == PACKETBUF_ATTR_PACKET_TYPE_DATA)
 		{
-			//print payload
-			//PRINTF("%d ",rx_pkt[i]);
-			if(SN_ID == rx_pkt[i])
-			{
-				my_slot = i;
-				break;
-			}
-			else
-			{
-				if (rx_pkt[i] == FREE_SLOT_CONST) // exist free slot
-						free_slot++;
+      //first, check if BS assigns a slot
+      unsigned char i = 0;
+      char free_slot = 0;
+      my_slot = -1;
+      for(i = 0; i < rx_pkt_len; i++)
+      {
+        //print payload
+        //PRINTF("%d ",rx_pkt[i]);
+        if(SN_ID == rx_pkt[i])
+        {
+          my_slot = i;
+          break;
+        }
+        else
+        {
+          if (rx_pkt[i] == FREE_SLOT_CONST) // exist free slot
+              free_slot++;
 
-				//my_slot = -1;
-			}
+          //my_slot = -1;
+        }
+      }
+
+
+      if (my_slot == -1 && free_slot != 0) //do not allocate a slot & there is a free slot
+      {
+        uint8_t rnd_num = RTIMER_NOW() % free_slot;
+        for(i = 0; i<rx_pkt_len; i++)
+        {
+          if(rx_pkt[i] == FREE_SLOT_CONST)
+          {
+            if (rnd_num == 0)
+            {
+              my_slot = i;
+              break;
+            }
+            else
+              rnd_num--;
+          }
+        }
+      }
 		}
-
-
-		if (my_slot == -1 && free_slot != 0) //do not allocate a slot & there is a free slot
-		{
-			uint8_t rnd_num = RTIMER_NOW() % free_slot;
-			for(i = 0; i<rx_pkt_len; i++)
-			{
-				if(rx_pkt[i] == FREE_SLOT_CONST)
-				{
-					if (rnd_num == 0)
-					{
-						my_slot = i;
-						break;
-					}
-					else
-						rnd_num--;
-				}
-			}
-		}
-
 		//schedule for TX -- 2ms for guarding period (open radio earlier)
 
 		if (my_slot != -1)
@@ -384,15 +379,6 @@ static void input(void)
 		{
 		  // callback to application layer
 		  app_conn_input();
-		}
-		else if (packetbuf_attr(PACKETBUF_ATTR_PACKET_TYPE) == PACKETBUF_ATTR_PACKET_TYPE_CMD)
-		{
-		  remote_command_event_message = process_alloc_event();
-		  char command_string[128];
-		  strncpy(rx_pkt,command_string,rx_pkt_len);
-		  command_string[rx_pkt_len] = (uint8_t)'\0';
-
-		  process_post(&remote_shell_process,remote_command_event_message,command_string);
 		}
 	}
 

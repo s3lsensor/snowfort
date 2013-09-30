@@ -7,15 +7,19 @@
 #include "sys/etimer.h"
 #include "appconn/app_conn.h"
 
+#ifdef SF_FEATURE_SHELL_OPT
 //include for shell
 #include "shell.h"
 #include "serial-shell.h"
 #include "remote-shell.h"
+#endif
 
 #include "app_util.h"
 //#include "i2c.h"
 
 #define DEBUG 1
+
+
 
 #define SIN_TAB_LEN 120
 #define RESOLUTION 7
@@ -123,9 +127,11 @@ PROCESS_THREAD(null_app_process, ev, data)
 	PROCESS_BEGIN();
 	printf("Null App Started\n");
 
+#ifdef SF_FEATURE_SHELL_OPT
 	serial_shell_init();
 	remote_shell_init();
 	shell_reboot_init();
+#endif
 
 	app_conn_open(&nullApp_callback);
 
@@ -174,6 +180,8 @@ PROCESS_THREAD(null_app_process, ev, data)
 	}
 	else
 	{
+#ifdef SF_FEATURE_SHELL_OPT
+	  // BS sends command to sensor every 10 seconds for rebooting
 	  while(1)
 	  {
 	    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&rxtimer));
@@ -182,6 +190,7 @@ PROCESS_THREAD(null_app_process, ev, data)
 	    char command[] = "reboot";
 	    app_conn_send(command,strlen(command));
 	  }
+#endif
 	}
 	PROCESS_END();
 }

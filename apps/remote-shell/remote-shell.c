@@ -83,5 +83,6 @@ PROCESS_THREAD(remote_shell_process,ev,data)
 void remote_shell_init(void)
 {
   process_start(&remote_shell_process,NULL);
+  remote_command_event_message = process_alloc_event();
 }
 /*---------------------------------------------------------------------------*/
