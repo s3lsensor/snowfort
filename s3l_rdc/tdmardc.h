@@ -10,22 +10,23 @@
 
 #include "net/mac/rdc.h"
 #include "dev/radio.h"
+#include "stdint.h"
 
 extern const struct rdc_driver tdmardc_driver;
 
 #define RTIMER_MS 33 // rtimer_second = 32768, closest integer estimate of ms. actually 1.0071 ms
 
 // packet format -- removed when using Zigbee frame
-static char pkt_hdr[] = {65,-120,-120,-51,-85,-1,-1, SN_ID, 0, 0};
+//static char pkt_hdr[] = {65,-120,-120,-51,-85,-1,-1, SN_ID, 0, 0};
 //FCF: 65,-120
 //Data Sequence number: -120
 //Address information: -51 -85(CD AB in hex) -1 -1 (short address mode)
 //Actually in the payload: SN_ID,0,0
 
-#define PKT_HDR_SIZE 		10
-#define NODE_INDEX   		7
-#define SEQ_INDEX   		8
-#define PKT_PAYLOAD_SIZE_INDEX    	9
+//#define PKT_HDR_SIZE 		10
+//#define NODE_INDEX   		7
+//#define SEQ_INDEX   		8
+//#define PKT_PAYLOAD_SIZE_INDEX    	9
 
 #define FREE_SLOT_CONST 	0x7F
 #define MAX_PKT_SIZE		127
@@ -47,6 +48,13 @@ static char pkt_hdr[] = {65,-120,-120,-51,-85,-1,-1, SN_ID, 0, 0};
 #ifndef TOTAL_TS
 #define TOTAL_TS		10
 #endif
+
+/* data structure for transferring data*/
+extern char tdma_rdc_buffer[MAX_PKT_PAYLOAD_SIZE];
+extern volatile uint8_t tdma_rdc_buf_ptr; //updated when send() called (RDC_send()) directly
+extern volatile uint8_t tdma_rdc_buf_send_ptr; //updated when send() called (RDC_send()) directly
+extern volatile uint8_t tdma_rdc_buf_full_flg; //updated when send() called RDC_send()) directly
+extern volatile uint8_t tdma_rdc_buf_in_using_flg;
 
 #endif /* __TDMARDC_H__ */
 
