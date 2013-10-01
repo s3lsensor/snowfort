@@ -6,4 +6,4 @@
 #define NETSTACK_CONF_FRAMER  framer_tdma
 
 //define feature
-//#define SF_FEATURE_SHELL_OPT
+#define SF_FEATURE_SHELL_OPT

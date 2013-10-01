@@ -144,7 +144,7 @@ PROCESS_THREAD(null_app_process, ev, data)
 	if (SN_ID != 0)
 		etimer_set(&rxtimer,CLOCK_SECOND);
 	else
-		etimer_set(&rxtimer,CLOCK_SECOND*10);
+		etimer_set(&rxtimer,CLOCK_SECOND*15);
 
 	//init_mpu6050();
 	//uint8_t rv;
@@ -188,7 +188,8 @@ PROCESS_THREAD(null_app_process, ev, data)
 	    etimer_reset(&rxtimer);
 
 	    char command[] = "reboot";
-	    app_conn_send(command,strlen(command));
+	    //app_conn_send(command,strlen(command));
+	    remote_shell_send(command,strlen(command));
 	  }
 #endif
 	}

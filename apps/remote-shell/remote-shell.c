@@ -18,9 +18,17 @@
 #include "remote-shell.h"
 
 #include "net/mac/tdmardc.h"
+#include "appconn/app_conn.h"
 
 #include <stdio.h>
 #include <string.h>
+
+#define DEBUG 1
+#if DEBUG
+#define PRINTF(...) printf(__VA_ARGS__)
+#else
+#define PRINTF(...)
+#endif
 
 process_event_t remote_command_event_message;
 
@@ -86,3 +94,13 @@ void remote_shell_init(void)
   remote_command_event_message = process_alloc_event();
 }
 /*---------------------------------------------------------------------------*/
+void remote_shell_send(const char* cmd, const uint16_t len)
+{
+  PRINTF("Remote shell command: %s -- sent\n",cmd);
+  app_conn_send(cmd,len);
+}
+/*---------------------------------------------------------------------------*/
+void remote_shell_input(const char* cmd)
+{
+  process_post(&remote_shell_process,remote_command_event_message,cmd);
+}

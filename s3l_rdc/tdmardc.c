@@ -296,8 +296,8 @@ static void input(void)
       command_string[rx_pkt_len] = (uint8_t)'\0';
       PRINTF("RX Command: %s %d\n",command_string,strlen(command_string));
 
-      process_post(&remote_shell_process,remote_command_event_message,command_string);
-
+      //process_post(&remote_shell_process,remote_command_event_message,command_string);
+      remote_shell_input(command_string);
       return;
 #endif
     }
