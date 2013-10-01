@@ -118,7 +118,7 @@ static uint8_t volatile pending;
 volatile uint8_t cc2420_sfd_counter;
 volatile uint16_t cc2420_sfd_start_time;
 volatile uint16_t cc2420_sfd_end_time;
-
+extern volatile rtimer_clock_t BS_radio_TX_time;
 static volatile uint16_t last_packet_timestamp;
 /*---------------------------------------------------------------------------*/
 PROCESS(cc2420_process, "CC2420 driver");
@@ -384,6 +384,8 @@ cc2420_transmit(unsigned short payload_len)
   for(i = LOOP_20_SYMBOLS; i > 0; i--) {
     if(CC2420_SFD_IS_1) {
       {
+    	printf("%05u",RTIMER_NOW());
+    	BS_radio_TX_time = RTIMER_NOW();
         rtimer_clock_t sfd_timestamp;
         sfd_timestamp = cc2420_sfd_start_time;
         //printf("Sfd time = %u\n",sfd_timestamp);
@@ -481,6 +483,7 @@ cc2420_prepare(const void *payload, unsigned short payload_len)
 static int
 cc2420_send(const void *payload, unsigned short payload_len)
 {
+  printf("%05u,",RTIMER_NOW());
   cc2420_prepare(payload, payload_len);
   return cc2420_transmit(payload_len);
 }

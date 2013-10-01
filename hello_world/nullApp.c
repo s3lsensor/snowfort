@@ -109,7 +109,7 @@ static void app_recv(void)
 	uint8_t pkt_seq = data[SEQ_INDEX];
 	uint8_t payload_len = data[PKT_PAYLOAD_SIZE_INDEX];
 
-	PRINTF("%d,%d,%d%c", node_id, pkt_seq,payload_len,'|');
+	/*PRINTF("%d,%d,%d%c", node_id, pkt_seq,payload_len,'|');
 	//To print the raw payload bytes
 	//printf("Received Payload = %.2x%.2x",node_id,pkt_seq);
 	if(payload_len < 45){
@@ -121,8 +121,9 @@ static void app_recv(void)
 	else {
 
 	}
-	printf("\n");
+	printf("\n");*/
 
+	printf("%u,",(data[payload_len+PKT_HDR_SIZE-1]<<8)+data[payload_len+PKT_HDR_SIZE-2]);
 
 	//app_output(data+PKT_HDR_SIZE,node_id,pkt_seq,payload_len);
 
