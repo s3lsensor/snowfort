@@ -351,6 +351,10 @@ PROCESS_THREAD(shell_sendcmd_process, ev, data)
     printf("Send COMMAND \"%s\" to remote node\n",data);
     remote_shell_send(data,strlen(data));
   }
+  else
+  {
+    printf("\"%s\" is not a validate remote shell command\n",data);
+  }
 
   PROCESS_END();
 }
