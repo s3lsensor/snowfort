@@ -42,7 +42,8 @@
 #include "contiki-conf.h"
 #include "dev/xmem.h"
 
-unsigned short node_id = 0;
+//unsigned short node_id = 0;
+unsigned short node_id = SN_ID;
 
 /*---------------------------------------------------------------------------*/
 void
