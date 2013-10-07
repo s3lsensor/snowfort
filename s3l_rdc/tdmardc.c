@@ -297,7 +297,7 @@ static void input(void)
       PRINTF("RX Command: %s %d\n",command_string,strlen(command_string));
 
       //process_post(&remote_shell_process,remote_command_event_message,command_string);
-      remote_shell_input(command_string);
+      remote_shell_input();
       return;
 #endif
     }

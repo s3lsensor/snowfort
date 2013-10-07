@@ -19,6 +19,7 @@
 
 #include "net/mac/tdmardc.h"
 #include "appconn/app_conn.h"
+#include "net/packetbuf.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -100,7 +101,10 @@ void remote_shell_send(const char* cmd, const uint16_t len)
   app_conn_send(cmd,len);
 }
 /*---------------------------------------------------------------------------*/
-void remote_shell_input(const char* cmd)
+void remote_shell_input(void)
 {
-  process_post(&remote_shell_process,remote_command_event_message,cmd);
+  char command[30];
+  strncpy(command,(char *)packetbuf_dataptr(),packetbuf_datalen());
+  command[packetbuf_datalen()] = '\0';
+  process_post(&remote_shell_process,remote_command_event_message,command);
 }

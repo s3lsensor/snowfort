@@ -18,7 +18,7 @@
 
 void remote_shell_init(void);
 void remote_shell_send(const char* cmd, const uint16_t len);
-void remote_shell_input(const char* cmd);
+void remote_shell_input(void);
 
 PROCESS_NAME(remote_shell_process);
 extern process_event_t remote_command_event_message;
