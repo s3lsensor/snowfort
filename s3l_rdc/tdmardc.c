@@ -124,6 +124,9 @@ static void TDMA_BS_send(void)
 
 	if(tdma_rdc_buf_ptr != 0) // has command to send
 	{
+	  // Assume for BS, if the tdma_rdc_buf is not empty, then the payload should be command.
+	  // Should be changed if BS can send other types of data.
+
 	  packetbuf_copyfrom((void *)&tdma_rdc_buffer[0],sizeof(uint8_t)*tdma_rdc_buf_ptr);
 	  packetbuf_set_attr(PACKETBUF_ATTR_PACKET_TYPE,PACKETBUF_ATTR_PACKET_TYPE_CMD);
 	  tdma_rdc_buf_full_flg = 0;
