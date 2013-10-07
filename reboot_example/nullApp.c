@@ -113,7 +113,7 @@ static void app_recv(void)
 
 	int pkt_seq = packetbuf_attr(PACKETBUF_ATTR_PACKET_ID);
 	int payload_len = packetbuf_datalen();
-	app_output(data,rx_sn_id,pkt_seq,payload_len);
+	//app_output(data,rx_sn_id,pkt_seq,payload_len);
 
 	PROCESS_CONTEXT_END(&null_app_process);
 
@@ -131,6 +131,7 @@ PROCESS_THREAD(null_app_process, ev, data)
 	serial_shell_init();
 	remote_shell_init();
 	shell_reboot_init();
+	shell_sky_init();
 #endif
 
 	app_conn_open(&nullApp_callback);
@@ -144,7 +145,7 @@ PROCESS_THREAD(null_app_process, ev, data)
 	if (SN_ID != 0)
 		etimer_set(&rxtimer,CLOCK_SECOND);
 	else
-		etimer_set(&rxtimer,CLOCK_SECOND*15);
+		etimer_set(&rxtimer,CLOCK_SECOND*6);
 
 	//init_mpu6050();
 	//uint8_t rv;
@@ -180,6 +181,8 @@ PROCESS_THREAD(null_app_process, ev, data)
 	}
 	else
 	{
+	  static uint8_t tx_power_counter = 0;
+	  uint8_t tx_power = 0;
 #ifdef SF_FEATURE_SHELL_OPT
 	  // BS sends command to sensor every 10 seconds for rebooting
 	  while(1)
@@ -187,8 +190,12 @@ PROCESS_THREAD(null_app_process, ev, data)
 	    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&rxtimer));
 	    etimer_reset(&rxtimer);
 
-	    char command[] = "reboot";
+	    //char command[] = "reboot";
 	    //app_conn_send(command,strlen(command));
+	    tx_power_counter += 5;
+	    tx_power = 10 + (tx_power_counter % 21);
+	    char command[20];
+	    sprintf(command,"%s %d\0","txpower",tx_power);
 	    remote_shell_send(command,strlen(command));
 	  }
 #endif

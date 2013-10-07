@@ -298,6 +298,10 @@ static void input(void)
 
       //process_post(&remote_shell_process,remote_command_event_message,command_string);
       remote_shell_input();
+
+      //skip this period for TX
+      rtimer_set(&SNTimer,SN_RX_start_time+(TS_PERIOD-2)*RTIMER_MS,0,NETSTACK_RADIO.on,NULL);
+
       return;
 #endif
     }
