@@ -131,8 +131,8 @@ PROCESS_THREAD(null_app_process, ev, data)
 	serial_shell_init();
 	remote_shell_init();
 	shell_reboot_init();
-	shell_sky_init();
 	shell_blink_init();
+	shell_sky_init();
 #endif
 
 	app_conn_open(&nullApp_callback);

@@ -52,11 +52,13 @@
 #include "dev/battery-sensor.h"
 #include "dev/sht11-sensor.h"
 #include "net/rime/timesynch.h"
+#include "remote-shell.h"
 
 #include "node-id.h"
 
 #include <stdio.h>
 #include <string.h>
+
 
 /*---------------------------------------------------------------------------*/
 PROCESS(shell_nodeid_process, "nodeid");
@@ -84,6 +86,11 @@ SHELL_COMMAND(rfchannel_command,
 	      "rfchannel",
 	      "rfchannel <channel>: change CC2420 radio channel (11 - 26)",
 	      &shell_rfchannel_process);
+PROCESS(shell_sendcmd_process, "sendcmd");
+SHELL_COMMAND(sendcmd_command,
+         "sendcmd",
+         "sendcmd <command>: send command to remote node",
+         &shell_sendcmd_process);
 /*---------------------------------------------------------------------------*/
 #define MAX(a, b) ((a) > (b)? (a): (b))
 #define MIN(a, b) ((a) < (b)? (a): (b))
@@ -136,6 +143,43 @@ struct sense_msg {
   uint16_t rssi;
   uint16_t voltage;
 };
+/*---------------------------------------------------------------------------*/
+#define REMOTE_CMD_NUM 5
+char *remote_cmd_list[REMOTE_CMD_NUM]; //list of available remote command
+uint8_t
+shell_sky_is_remote_cmd(const char * str)
+{
+  char * strptr = str;
+  char command[20] = {'\0'};
+  short counter = 0;
+  short command_len;
+  short i;
+
+  while((isalpha(*strptr) || *strptr == ' ') && counter < 20)
+  {
+    if(isalpha(*strptr))
+    {
+      command[counter] = (*strptr);
+      ++strptr;
+      ++counter;
+    }
+    else if(*strptr == ' ')
+    {
+      ++strptr;
+    }
+  }
+  command[counter]='\0';
+  command_len = strlen(command);
+
+  for(i = 0; i < REMOTE_CMD_NUM; i++)
+  {
+    if(strncmp(command,remote_cmd_list[i],command_len) == 0)
+      return 1;
+  }
+
+  return 0;
+
+}
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(shell_sense_process, ev, data)
 {
@@ -295,6 +339,22 @@ PROCESS_THREAD(shell_nodeid_process, ev, data)
   PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
+PROCESS_THREAD(shell_sendcmd_process, ev, data)
+{
+
+  PROCESS_BEGIN();
+
+  //verify if the command is a valid remote command
+
+  if(shell_sky_is_remote_cmd(data) != 0)
+  {
+    printf("Send COMMAND \"%s\" to remote node\n",data);
+    remote_shell_send(data,strlen(data));
+  }
+
+  PROCESS_END();
+}
+/*---------------------------------------------------------------------------*/
 void
 shell_sky_init(void)
 {
@@ -303,6 +363,14 @@ shell_sky_init(void)
   shell_register_command(&sense_command);
   shell_register_command(&senseconv_command);
   shell_register_command(&nodeid_command);
+  shell_register_command(&sendcmd_command);
+
+  //remote command list
+  remote_cmd_list[0] = "reboot";
+  remote_cmd_list[1] = "txpower";
+  remote_cmd_list[2] = "blink";
+  remote_cmd_list[3] = "rfchannel";
+  remote_cmd_list[4] = "nodeid";
 
 }
 /*---------------------------------------------------------------------------*/
