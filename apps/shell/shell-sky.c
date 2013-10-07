@@ -230,7 +230,6 @@ PROCESS_THREAD(shell_txpower_process, ev, data)
   } else {
     cc2420_set_txpower(msg.txpower);
     printf("New TX Power %d (expected) %d (HW)\n",msg.txpower,cc2420_get_txpower());
-    //NETSTACK_RDC.init();
   }
 
   msg.len = 1;
