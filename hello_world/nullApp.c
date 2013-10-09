@@ -105,31 +105,29 @@ static void app_recv(void)
 
 
 	int i;
-	uint8_t node_id = data[NODE_INDEX];
-	uint8_t pkt_seq = data[SEQ_INDEX];
-	uint8_t payload_len = data[PKT_PAYLOAD_SIZE_INDEX];
+	rimeaddr_t *rime_node_addr = packetbuf_addr(PACKETBUF_ADDR_SENDER);
+	uint8_t node_id = rime_node_addr->u8[0];
+	uint8_t pkt_seq = packetbuf_attr(PACKETBUF_ATTR_PACKET_ID);
+	uint8_t payload_len = packetbuf_datalen();
 
-	PRINTF("%d,%d,%d%c\n", node_id, pkt_seq,packetbuf_datalen(),'|');
-	//PRINTF("%d,%d,%d%c", node_id, pkt_seq,packetbuf_datalen(),'|');
-	/*//To print the raw payload bytes
-	printf("Received Payload = %.2x%.2x",node_id,pkt_seq);
+	PRINTF("%u,%u,%u,%c",node_id,pkt_seq,payload_len,'|');
+
 	if(payload_len < 45){
 		for(i=0;i<payload_len;i++)
 		{
-			PRINTF("%.2x",data[i+PKT_HDR_SIZE]);
+			PRINTF("%.2x",data[i]);
 		}
-		printf(", Timestamp in pkt = %u", (data[payload_len+PKT_HDR_SIZE]<<8)+data[payload_len+PKT_HDR_SIZE+1]);
+
 	}
 	else {
 
-	}*/
-	//printf("\n");
+	}
+	PRINTF("\n");
 
-	//printf("%05u,",(data[payload_len+PKT_HDR_SIZE-1]<<8)+data[payload_len+PKT_HDR_SIZE-2]);
-	//printf("%02x,%02x,%02x,%02x",data[payload_len+PKT_HDR_SIZE-3],data[payload_len+PKT_HDR_SIZE-2],data[payload_len+PKT_HDR_SIZE-1],data[payload_len+PKT_HDR_SIZE]);
 
 
 	//app_output(data+PKT_HDR_SIZE,node_id,pkt_seq,payload_len);
+
 
 	PROCESS_CONTEXT_END(&null_app_process);
 
@@ -152,7 +150,8 @@ PROCESS_THREAD(null_app_process, ev, data)
 
 
 	if (SN_ID != 0)
-		etimer_set(&rxtimer,CLOCK_SECOND/8);
+		//etimer_set(&rxtimer,(unsigned long)(SEGMENT_PERIOD));
+		etimer_set( &rxtimer, (unsigned long)(CLOCK_SECOND/(FRAMES_PER_SEC)));
 	else
 		etimer_set(&rxtimer,CLOCK_SECOND/20);
 
@@ -184,10 +183,10 @@ PROCESS_THREAD(null_app_process, ev, data)
 		    counter++;
 		    debug_buf[i] = sin(counter)+127;
 	    }
-	    packetbuf_copyfrom(debug_buf,sizeof(int8_t)*10);
 
 
-	    NETSTACK_RDC.send(NULL,NULL);
+	    app_conn_send(debug_buf,sizeof(int8_t)*10);
+
 
 	  }
 	}
