@@ -120,7 +120,7 @@ volatile uint16_t cc2420_sfd_start_time;
 volatile uint16_t cc2420_sfd_end_time;
 extern volatile rtimer_clock_t radio_TX_time;
 static volatile uint16_t last_packet_timestamp;
-extern volatile rtimer_clock_t BS_radio_TX_time;
+
 /*---------------------------------------------------------------------------*/
 PROCESS(cc2420_process, "CC2420 driver");
 /*---------------------------------------------------------------------------*/
