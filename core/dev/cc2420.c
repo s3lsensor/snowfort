@@ -633,7 +633,7 @@ TIMETABLE_AGGREGATE(aggregate_time, 10);
 int
 cc2420_interrupt(void)
 {
-	printf("Enter cc2420 interrupt.\n");
+	//printf("Enter cc2420 interrupt.\n");
   CC2420_CLEAR_FIFOP_INT();
   process_poll(&cc2420_process);
 #if CC2420_TIMETABLE_PROFILING
@@ -642,7 +642,7 @@ cc2420_interrupt(void)
 #endif /* CC2420_TIMETABLE_PROFILING */
 
   last_packet_timestamp = cc2420_sfd_start_time;
-  //printf("Radio rec time = %u\n",cc2420_sfd_start_time);
+
   pending++;
   cc2420_packets_seen++;
   return 1;
@@ -666,7 +666,7 @@ PROCESS_THREAD(cc2420_process, ev, data)
     packetbuf_clear();
     packetbuf_set_attr(PACKETBUF_ATTR_TIMESTAMP, last_packet_timestamp);
     len = cc2420_read(packetbuf_dataptr(), PACKETBUF_SIZE);
-    printf("Set buf length=%u\n",len);
+    //printf("Set buf length=%u\n",len);
     packetbuf_set_datalen(len);
     
     NETSTACK_RDC.input();
@@ -726,7 +726,7 @@ cc2420_read(void *buf, unsigned short bufsize)
     RELEASE_LOCK();
     return 0;
   }
-  printf("Received pkt len=%u,", len);
+
 
   getrxdata(buf, len - AUX_LEN);
 #if CC2420_CONF_CHECKSUM
