@@ -34,12 +34,17 @@ static char pkt_hdr[] = {65,-120,-120,-51,-85,-1,-1, SN_ID, 0, 0};
 #define MAX_PKT_PAYLOAD_SIZE	117		//should be 117, let's start from 50 right now
 
 // time slot information -- default
+
+#ifndef SLOT_NUM
+#define SLOT_NUM 10
+#endif
+
 #ifndef SEGMENT_PERIOD
 #define SEGMENT_PERIOD	(RTIMER_SECOND/8.0) //993//1092	//equivalent to 1100 ms, 33*1092~=1.1*32768
 #endif
 
 #ifndef TOTAL_TS
-#define TOTAL_TS		30
+#define TOTAL_TS		62
 #endif
 
 #define BKN_SLOTS 		2

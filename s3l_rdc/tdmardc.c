@@ -36,8 +36,8 @@ static const uint16_t TS_period = TS_PERIOD;         //one time-slot duration in
 static const uint16_t BS_period = BS_PERIOD;         //BS broadcasts duration in ms
 
 //slot information
-static const uint8_t total_slot_num = TOTAL_TS; // calculated in init()
-static int8_t my_slot; // set in SN_send
+static const uint16_t total_slot_num = TOTAL_TS; // calculated in init()
+static int16_t my_slot=SLOT_NUM; // set in SN_send
 
 //packet information
 static char *pkt; //allocated in init()
@@ -47,7 +47,9 @@ char seq_num = 0;
 // BS global variable
 static rtimer_clock_t BS_TX_start_time = 0;
 static rtimer_clock_t BS_RX_start_time = 0;
-volatile rtimer_clock_t BS_radio_TX_time;
+
+volatile rtimer_clock_t radio_TX_time;
+
 static char *node_list; //allocated, initialized in init()
 
 
@@ -70,34 +72,48 @@ static struct rtimer SNTimer;
 // TDMA_BS_send() -- called at a specific time
 static void TDMA_BS_send(void)
 {
-	rtimer_clock_t tBSsend = RTIMER_NOW();
-	//printf("%05u,",tBSsend);//Enter BS send
+
+	//printf("%05u,",RTIMER_NOW());//call time for BS_send
+
+	uint8_t bkn_len = 16;
+	uint8_t bkn_pkt[16]={0};
+	bkn_pkt[14]=1;
+	bkn_pkt[15]=2;
+
 
 	rtimer_set(&BSTimer,RTIMER_TIME(&BSTimer)+segment_period,0,TDMA_BS_send,NULL);
 	//pkt content
 	pkt[SEQ_INDEX] = seq_num++;
-	pkt[PKT_PAYLOAD_SIZE_INDEX] = total_slot_num;
-	memcpy(pkt+PKT_HDR_SIZE,node_list,total_slot_num);
+	//pkt[PKT_PAYLOAD_SIZE_INDEX] = total_slot_num;
+	//memcpy(pkt+PKT_HDR_SIZE,node_list,total_slot_num);
+	pkt[PKT_PAYLOAD_SIZE_INDEX] = bkn_len;
+	memcpy(pkt+PKT_HDR_SIZE,bkn_pkt,bkn_len);
 
 	BS_TX_start_time = RTIMER_NOW();//packetbuf_attr(PACKETBUF_ATTR_TIMESTAMP);//RTIMER_NOW();
-	//printf("TX time from RDC = %u, Timestamp = %u\n",BS_TX_start_time,packetbuf_attr(PACKETBUF_ATTR_TIMESTAMP));
+
+	//printf("Bkn sent, t = %u, Timestamp = %u\n",BS_TX_start_time,packetbuf_attr(PACKETBUF_ATTR_TIMESTAMP));
+
 	// set timer for next BS send
 	// right now, rtimer_timer does not consider drifting. For long time experiment, it may have problem
 	//uint16_t offset = (segment_period);//*RTIMER_MS
 	//PRINTF("BS offset: %u\n",offset);
 
-	packetbuf_set_attr(PACKETBUF_ATTR_PACKET_TYPE,
-		                           PACKETBUF_ATTR_PACKET_TYPE_TIMESTAMP);
+
+	packetbuf_set_attr(PACKETBUF_ATTR_PACKET_TYPE, PACKETBUF_ATTR_PACKET_TYPE_TIMESTAMP);
 	//send packet -- pushed to radio layer
-	//printf("\n%02u,",RTIMER_NOW()-tBSsend);
-	if(NETSTACK_RADIO.send(pkt,pkt_size) != RADIO_TX_OK)
+	if(NETSTACK_RADIO.send(pkt,bkn_len+PKT_HDR_SIZE) != RADIO_TX_OK)
+
 		PRINTF("TDMA RDC: BS fails to send packet\n");
 	else
 		PRINTF("TDMA RDC: BS sends beacon with Seq # %u\n",pkt[SEQ_INDEX]);
 	//printf(",%05u",BS_radio_TX_time);
 
-	BS_RX_start_time = BS_radio_TX_time+BS_period;//BS_TX_start_time+BS_period;//*RTIMER_MS;
 
+	//printf("%05u\n",radio_TX_time);
+	BS_RX_start_time = radio_TX_time+BS_period;//*RTIMER_MS;
+	printf("%lu,%lu\n",energest_type_time(ENERGEST_TYPE_LISTEN),energest_type_time(ENERGEST_TYPE_TRANSMIT));
+
+	//energest_flush();
 
 
 }
@@ -113,6 +129,8 @@ static void TDMA_SN_send(void)
 	radioontime = SN_RX_start_time+segment_period-GRD_PERIOD;//RTIMER_TIME(&SNTimer) + (total_slot_num-my_slot)*TS_period-GRD_PERIOD;//(segment_period-BS_period-(my_slot)*TS_period - GRD_PERIOD);
 	rtimer_set(&SNTimer,radioontime,0,NETSTACK_RADIO.on,NULL);
 
+
+	//printf("%05u,\n",radioontime);
 	//uint16_t timeStmp = packetbuf_attr(PACKETBUF_ATTR_RADIO_TXPOWER);
 	//printf("\nNext transmission at %u, Last pkt time = %u\n",radioontime, timeStmp);
 
@@ -132,13 +150,17 @@ static void TDMA_SN_send(void)
 		pkt[PKT_PAYLOAD_SIZE_INDEX] = MAX_PKT_PAYLOAD_SIZE;
 	}
 
-	packetbuf_set_attr(PACKETBUF_ATTR_PACKET_TYPE,PACKETBUF_ATTR_PACKET_TYPE_TIMESTAMP);
-	uint16_t codeExeTime = RTIMER_NOW()-callBkTime;
-	//printf("Previous beacon= %u, next tx= %u, next exp beacon= %u, code time= %u\n",SN_RX_start_time, RTIMER_NOW(), radioontime,codeExeTime);
+
+	//uint16_t codeExeTime = RTIMER_NOW()-callBkTime;
+
 	// send packet -- pushed to radio layer
+	//packetbuf_set_attr(PACKETBUF_ATTR_PACKET_TYPE, PACKETBUF_ATTR_PACKET_TYPE_TIMESTAMP);
+	//printf("%lu,",RTIMER_NOW());
 	if(NETSTACK_RADIO.on())
 	{
-		if(NETSTACK_RADIO.send(pkt,pkt_size) != RADIO_TX_OK)
+		//printf("%lu,\n",RTIMER_NOW());
+		//if(NETSTACK_RADIO.send(pkt,pkt_size) != RADIO_TX_OK)
+		if(NETSTACK_RADIO.send(pkt,buf_ptr+PKT_HDR_SIZE) != RADIO_TX_OK)
 		{
 			PRINTF("TDMA RDC: SN fails to send packet\n");
 		}else
@@ -157,7 +179,11 @@ static void TDMA_SN_send(void)
 
 	// turn off radio
 	NETSTACK_RADIO.off();
-	//printf("\n");
+
+
+	printf("%lu,%lu\n",energest_type_time(ENERGEST_TYPE_LISTEN),energest_type_time(ENERGEST_TYPE_TRANSMIT));
+	//energest_flush();
+
 }
 
 /*-----------------------------------------------*/
@@ -211,19 +237,24 @@ static void send_list(mac_callback_t sent_callback, void *ptr, struct rdc_buf_li
 static void input(void)
 {
 
-	printf("Called from RDC for rec.\n");
-	char *rx_pkt = (char *)packetbuf_dataptr();
-	uint16_t rx_pkt_len = rx_pkt[PKT_PAYLOAD_SIZE_INDEX];
 
 	/*-------------SN CODE----------------------*/
 	if (SN_ID != 0) // sensor node -- decide timeslot & schedule for TX
 	{
 		//printf("Last receive = %u, current = %u\n",SN_RX_start_time, packetbuf_attr(PACKETBUF_ATTR_TIMESTAMP));
 
-		SN_RX_start_time = packetbuf_attr(PACKETBUF_ATTR_TIMESTAMP);//RTIMER_NOW();//;RTIMER_TIME(&SNTimer)
-		//printf("\n%05u,",SN_RX_start_time);//Bkn rec time=
-//		printf("Time now = %u, Last pkt time = %u\n",SN_RX_start_time, packetbuf_attr(PACKETBUF_ATTR_TIMESTAMP));
 
+		//turn off radio -- save power
+		if(NETSTACK_RADIO.off() != 1)
+		{
+			PRINTF("TDMA RDC: SN fails to turn off radio");
+		}
+
+		char *rx_pkt = (char *)packetbuf_dataptr();
+		uint16_t rx_pkt_len = rx_pkt[PKT_PAYLOAD_SIZE_INDEX];
+
+
+		SN_RX_start_time = packetbuf_attr(PACKETBUF_ATTR_TIMESTAMP);
 
 
 		//check where the packet is from BS
@@ -232,77 +263,42 @@ static void input(void)
 
 		/*--------from BS------------*/
 
-		//turn off radio -- save power
-		if(NETSTACK_RADIO.off() != 1)
-		{
-			PRINTF("TDMA RDC: SN fails to turn off radio");
-		}
-
-		//first, check if BS assigns a slot
-
-		unsigned char i = 0;
-		char free_slot = 0;
-		my_slot = -1;
-		for(i = PKT_HDR_SIZE; i < PKT_HDR_SIZE+rx_pkt_len; i++)
-		{
-			//print payload
-			//PRINTF("%d ",rx_pkt[i]);
-			if(SN_ID == rx_pkt[i])
-			{
-				my_slot = i-PKT_HDR_SIZE;
-				break;
-			}
-			else
-			{
-				if (rx_pkt[i] == FREE_SLOT_CONST) // exist free slot
-						free_slot++;
-
-				//my_slot = -1;
-			}
-		}
 
 
-		if (my_slot == -1 && free_slot != 0) //do not allocate a slot & there is a free slot
-		{
-			uint8_t rnd_num = RTIMER_NOW() % free_slot;
-			for(i = PKT_HDR_SIZE; i<PKT_HDR_SIZE+rx_pkt_len; i++)
-			{
-				if(rx_pkt[i] == FREE_SLOT_CONST)
-				{
-					if (rnd_num == 0)
-					{
-						my_slot = i-PKT_HDR_SIZE;
-						break;
-					}
-					else
-						rnd_num--;
-				}
-			}
-		}
-
-		//schedule for TX -- 5ms for guarding period (open radio earlier)
-		my_slot=4;
+		//my_slot=60; //don't use slot 1 and 62 if segment_period=1/8s, edge slots have timing issues
 		if (my_slot != -1)
 		{
 			//PRINTF("Schedule for TX at Slot %d\n",my_slot);
-			uint16_t SN_TX_time = SN_RX_start_time + (BS_period+TS_period * (my_slot-1))-132;//- GRD_PERIOD;//*RTIMER_MS;
+			uint16_t SN_TX_time = SN_RX_start_time + (BS_period+TS_period * (my_slot-1))-32;//32 is for 16B payload, might need adjustment for other sizes
+
+
 			rtimer_set(&SNTimer,SN_TX_time,0,TDMA_SN_send,NULL);
+			//printf("%u,",SN_TX_time);
 		}
+		//printf("%05u,",SN_RX_start_time); //Beacon receive time
 	}
 	else if(SN_ID == 0) //BS
 		/*-----------------BS CODE---------------*/
 	{
-		//set flag in pkt for TS occupancy SN_RX_start_time = packetbuf_attr(PACKETBUF_ATTR_TIMESTAMP);
-		rtimer_clock_t relFrameTime = (rtimer_clock_t)((packetbuf_attr(PACKETBUF_ATTR_TIMESTAMP)-BS_radio_TX_time)%segment_period);
-		uint8_t current_TS = (uint8_t)((relFrameTime-BS_period)/(TS_period))+2;//*RTIMER_MS);
 
-		if(node_list[current_TS] == FREE_SLOT_CONST) //collision -- ask the node to find a new available slot
+
+
+		char *rx_pkt = (char *)packetbuf_dataptr();
+		uint16_t rx_pkt_len = rx_pkt[PKT_PAYLOAD_SIZE_INDEX];
+
+		rtimer_clock_t relFrameTime =(rtimer_clock_t)((packetbuf_attr(PACKETBUF_ATTR_TIMESTAMP)-radio_TX_time)%segment_period);
+		uint8_t current_TS = (uint8_t)((relFrameTime-BS_period)/TS_period )+1;
+
+		//printf(",%05u\n",packetbuf_attr(PACKETBUF_ATTR_TIMESTAMP));
+		if(node_list[current_TS-1] == FREE_SLOT_CONST) //collision -- ask the node to find a new available slot
+
 		{
-			node_list[current_TS] = rx_pkt[NODE_INDEX];
+			node_list[current_TS-1] = rx_pkt[NODE_INDEX];
 		}
 
-		//printf(",%05u",packetbuf_attr(PACKETBUF_ATTR_TIMESTAMP));//Pkt rec. from SN
-		//printf("Slot: %u, ",current_TS);
+
+		printf("Slot: %u, \n",current_TS);
+
 		PRINTF("[Sensor: %d] [Slot: %d] [Seq: %d]\n",
 				rx_pkt[NODE_INDEX],current_TS,rx_pkt[SEQ_INDEX]);
 

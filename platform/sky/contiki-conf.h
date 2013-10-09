@@ -86,6 +86,8 @@
 #undef CC2420_CONF_SFD_TIMESTAMPS
 #define CC2420_CONF_SFD_TIMESTAMPS       1
 #endif /* TIMESYNCH_CONF_ENABLED */
+#define CC2420_CONF_SFD_TIMESTAMPS       1 //for timestamping incoming packets
+
 
 #define CC2420_CONF_SFD_TIMESTAMPS       1 //enable for time-stamping pkts
 

@@ -109,9 +109,10 @@ static void app_recv(void)
 	uint8_t pkt_seq = data[SEQ_INDEX];
 	uint8_t payload_len = data[PKT_PAYLOAD_SIZE_INDEX];
 
-	PRINTF("%d,%d,%d%c", node_id, pkt_seq,payload_len,'|');
-	//To print the raw payload bytes
-	//printf("Received Payload = %.2x%.2x",node_id,pkt_seq);
+	PRINTF("%d,%d,%d%c\n", node_id, pkt_seq,packetbuf_datalen(),'|');
+	//PRINTF("%d,%d,%d%c", node_id, pkt_seq,packetbuf_datalen(),'|');
+	/*//To print the raw payload bytes
+	printf("Received Payload = %.2x%.2x",node_id,pkt_seq);
 	if(payload_len < 45){
 		for(i=0;i<payload_len;i++)
 		{
@@ -121,8 +122,11 @@ static void app_recv(void)
 	}
 	else {
 
-	}
-	printf("\n");
+	}*/
+	//printf("\n");
+
+	//printf("%05u,",(data[payload_len+PKT_HDR_SIZE-1]<<8)+data[payload_len+PKT_HDR_SIZE-2]);
+	//printf("%02x,%02x,%02x,%02x",data[payload_len+PKT_HDR_SIZE-3],data[payload_len+PKT_HDR_SIZE-2],data[payload_len+PKT_HDR_SIZE-1],data[payload_len+PKT_HDR_SIZE]);
 
 
 	//app_output(data+PKT_HDR_SIZE,node_id,pkt_seq,payload_len);
