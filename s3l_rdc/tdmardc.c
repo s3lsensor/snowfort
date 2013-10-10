@@ -12,13 +12,9 @@
 #include "sys/rtimer.h"
 #include "net/queuebuf.h"
 #include "dev/cc2420.h"
-<<<<<<< HEAD
 #include "appconn/app_conn.h"
-=======
->>>>>>> parent of 4a08e08... Merge pull request #24 from s3lsensor/yzliao_v0.2_mac_hdr
 #include <string.h>
 #include <stdio.h>
-
 
 
 
@@ -109,13 +105,8 @@ static void TDMA_SN_send(void)
 	rtimer_set(&SNTimer,radioontime,0,NETSTACK_RADIO.on,NULL);
 
 	pkt[SEQ_INDEX] = seq_num++;
-<<<<<<< HEAD
 
 
-=======
-
-
->>>>>>> parent of 4a08e08... Merge pull request #24 from s3lsensor/yzliao_v0.2_mac_hdr
 	if (buf_full_flg == 0)
 	{
 		memcpy(pkt+PKT_HDR_SIZE,buffer,sizeof(uint8_t)*buf_ptr);
@@ -283,6 +274,8 @@ static void input(void)
 		PRINTF("Channel: %d;", cc2420_get_channel());
 		PRINTF("RSSI: %d\n", cc2420_last_rssi-45);
 
+		// callback to application layer
+		app_conn_input();
 	}
 
 
