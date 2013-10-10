@@ -43,7 +43,7 @@ void app_conn_input(void);
 /*
  * \brief Send current data from application layer to RDC layer
  */
-void app_conn_send(const void * ptr, uint16_t data_len);
+void app_conn_send(const void * ptr, const uint16_t data_len);
 
 
 

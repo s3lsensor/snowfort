@@ -48,7 +48,22 @@ static int create(void)
 	memset(&params,0,sizeof(frame802154_t));
 
 	/* Build the FCF */
-	params.fcf.frame_type = FRAME802154_DATAFRAME;
+	//params.fcf.frame_type = FRAME802154_DATAFRAME;
+	switch (packetbuf_attr(PACKETBUF_ATTR_PACKET_TYPE))
+	{
+	  case PACKETBUF_ATTR_PACKET_TYPE_DATA: //data frame
+	    params.fcf.frame_type = FRAME802154_DATAFRAME;
+	    break;
+
+	  case PACKETBUF_ATTR_PACKET_TYPE_CMD: // command frame & command ack frame
+	    params.fcf.frame_type = FRAME802154_CMDFRAME;
+	    break;
+
+	  default:
+	    params.fcf.frame_type = FRAME802154_DATAFRAME;
+	    break;
+	}
+
 	params.fcf.security_enabled = 0;
 	params.fcf.frame_pending = 0;	//do not support data request right now
 	params.fcf.ack_required = 0;
@@ -135,6 +150,17 @@ static int parse(void)
 		}
 		packetbuf_set_addr(PACKETBUF_ADDR_SENDER, (rimeaddr_t *)&frame.src_addr);
 		packetbuf_set_attr(PACKETBUF_ATTR_PACKET_ID, frame.seq);
+
+		switch (frame.fcf.frame_type)
+		{
+		  case  FRAME802154_DATAFRAME:
+		    packetbuf_set_attr(PACKETBUF_ATTR_PACKET_TYPE,PACKETBUF_ATTR_PACKET_TYPE_DATA);
+		    break;
+
+		  case  FRAME802154_CMDFRAME:
+		    packetbuf_set_attr(PACKETBUF_ATTR_PACKET_TYPE,PACKETBUF_ATTR_PACKET_TYPE_CMD);
+        break;
+		}
 
 		PRINTF("15.4-IN: %2X", frame.fcf.frame_type);
 		PRINTADDR(packetbuf_addr(PACKETBUF_ADDR_SENDER));

@@ -67,14 +67,12 @@ extern const struct rdc_driver tdmardc_driver;
 #define GRD_PERIOD		65 //ticks for 2 ms
 #endif
 
-
 /* data structure for transferring data*/
 extern char tdma_rdc_buffer[MAX_PKT_PAYLOAD_SIZE];
 extern volatile uint8_t tdma_rdc_buf_ptr; //updated when send() called (RDC_send()) directly
 extern volatile uint8_t tdma_rdc_buf_send_ptr; //updated when send() called (RDC_send()) directly
 extern volatile uint8_t tdma_rdc_buf_full_flg; //updated when send() called RDC_send()) directly
 extern volatile uint8_t tdma_rdc_buf_in_using_flg;
-
 
 #endif /* __TDMARDC_H__ */
 

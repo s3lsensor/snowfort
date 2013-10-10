@@ -382,8 +382,6 @@ cc2420_transmit(unsigned short payload_len)
 #else /* WITH_SEND_CCA */
   strobe(CC2420_STXON);
 #endif /* WITH_SEND_CCA */
-
-
   for(i = LOOP_20_SYMBOLS; i > 0; i--) {
     if(CC2420_SFD_IS_1) {
       {
@@ -397,11 +395,9 @@ cc2420_transmit(unsigned short payload_len)
            PACKETBUF_ATTR_PACKET_TYPE_TIMESTAMP) {
           /* Write timestamp to last two bytes of packet in TXFIFO. */
           //CC2420_WRITE_RAM(&sfd_timestamp, CC2420RAM_TXFIFO + payload_len - 1, 2);
-
         	CC2420_WRITE_RAM(&radio_TX_time, CC2420RAM_TXFIFO + payload_len - 1, 2);
 
         }
-
       }
 
       if(!(status() & BV(CC2420_TX_ACTIVE))) {
@@ -414,8 +410,6 @@ cc2420_transmit(unsigned short payload_len)
       if(receive_on) {
 	ENERGEST_OFF(ENERGEST_TYPE_LISTEN);
       }
-
-
       ENERGEST_ON(ENERGEST_TYPE_TRANSMIT);
       /* We wait until transmission has ended so that we get an
 	 accurate measurement of the transmission time.*/
@@ -425,8 +419,6 @@ cc2420_transmit(unsigned short payload_len)
       ENERGEST_OFF_LEVEL(ENERGEST_TYPE_TRANSMIT,cc2420_get_txpower());
 #endif
       ENERGEST_OFF(ENERGEST_TYPE_TRANSMIT);
-
-
       if(receive_on) {
 	ENERGEST_ON(ENERGEST_TYPE_LISTEN);
       } else {
@@ -441,7 +433,6 @@ cc2420_transmit(unsigned short payload_len)
       }
 
       RELEASE_LOCK();
-
       return RADIO_TX_OK;
     }
   }
@@ -496,9 +487,7 @@ cc2420_prepare(const void *payload, unsigned short payload_len)
 static int
 cc2420_send(const void *payload, unsigned short payload_len)
 {
-
   //printf("%05u,",RTIMER_NOW());
-
   cc2420_prepare(payload, payload_len);
   return cc2420_transmit(payload_len);
 }
@@ -642,7 +631,7 @@ cc2420_interrupt(void)
 #endif /* CC2420_TIMETABLE_PROFILING */
 
   last_packet_timestamp = cc2420_sfd_start_time;
-
+  //printf("Radio rec time = %u\n",cc2420_sfd_start_time);
   pending++;
   cc2420_packets_seen++;
   return 1;

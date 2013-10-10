@@ -324,6 +324,7 @@ int shell_start_command(char *commandline, int commandline_len,
  */
 unsigned long shell_strtolong(const char *str, const char **retstr);
 
+
 unsigned long shell_time(void);
 void shell_set_time(unsigned long seconds);
 
@@ -413,6 +414,7 @@ struct shell_input {
 #include "shell-udpsend.h"
 #include "shell-vars.h"
 #include "shell-wget.h"
+
 
 #endif /* __SHELL_H__ */
 

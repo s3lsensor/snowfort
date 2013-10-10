@@ -7,15 +7,19 @@
 #include "sys/etimer.h"
 #include "appconn/app_conn.h"
 
+#ifdef SF_FEATURE_SHELL_OPT
+//include for shell
+#include "shell.h"
+#include "serial-shell.h"
+#include "remote-shell.h"
+#endif
+
 #include "app_util.h"
 //#include "i2c.h"
 
 #define DEBUG 1
-#if DEBUG
-#define PRINTF(...) printf(__VA_ARGS__)
-#else
-#define PRINTF(...)
-#endif
+
+
 
 #define SIN_TAB_LEN 120
 #define RESOLUTION 7
@@ -97,12 +101,11 @@ AUTOSTART_PROCESSES(&null_app_process);
 //APP Callback function
 static void app_recv(void)
 {
-	//printf("Received from RDC\n");
+	printf("Received from RDC\n");
 	PROCESS_CONTEXT_BEGIN(&null_app_process);
 	
-	uint8_t *data = packetbuf_dataptr();
-	uint8_t flag = 0;
-
+	char* data = packetbuf_dataptr();
+	//uint8_t flag = 0;
 
 	int i;
 	rimeaddr_t *sent_sn_addr = packetbuf_addr(PACKETBUF_ADDR_SENDER);
@@ -124,19 +127,26 @@ PROCESS_THREAD(null_app_process, ev, data)
 	PROCESS_BEGIN();
 	printf("Null App Started\n");
 
+#ifdef SF_FEATURE_SHELL_OPT
+	serial_shell_init();
+	remote_shell_init();
+	shell_reboot_init();
+	shell_blink_init();
+	shell_sky_init();
+#endif
+
 	app_conn_open(&nullApp_callback);
 
-	static uint8_t debug_buf[10] = {0};
+	static int8_t debug_buf[10] = {0};
 	static struct etimer rxtimer;
 	static char input_buf[MAX_PKT_PAYLOAD_SIZE] = {0};
 	static uint16_t counter = 0;
 
 
 	if (SN_ID != 0)
-		//etimer_set(&rxtimer,(unsigned long)(SEGMENT_PERIOD));
-		etimer_set( &rxtimer, (unsigned long)(CLOCK_SECOND/(FRAMES_PER_SEC)));
+		etimer_set(&rxtimer,CLOCK_SECOND);
 	else
-		etimer_set(&rxtimer,CLOCK_SECOND/20);
+		etimer_set(&rxtimer,CLOCK_SECOND*6);
 
 	//init_mpu6050();
 	//uint8_t rv;
@@ -164,12 +174,41 @@ PROCESS_THREAD(null_app_process, ev, data)
 	    for(i = 0; i < 10; i++)
 	    {
 		    counter++;
-		    debug_buf[i] = sin(counter)+127;
+		    debug_buf[i] = sin(counter);
 	    }
-
 	    app_conn_send(debug_buf,sizeof(int8_t)*10);
 
 	  }
+	}
+	else
+	{
+
+#ifdef SF_FEATURE_SHELL_OPT
+	  //static uint8_t tx_power_counter = 0;
+    //uint8_t tx_power = 0;
+
+
+	  // BS sends command to sensor every 10 seconds for rebooting
+	  while(1)
+	  {
+	    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&rxtimer));
+	    etimer_reset(&rxtimer);
+
+	    //reboot
+	    //char command[] = "reboot";
+
+	    // tx power
+	    //tx_power_counter += 5;
+	    //tx_power = 10 + (tx_power_counter % 21);
+	    //char command[20];
+	    //sprintf(command,"%s %d\0","txpower",tx_power);
+
+	    // blink
+	    char command[20];
+	    sprintf(command,"%s %d\0","blink",5);
+	    remote_shell_send(command,strlen(command));
+	  }
+#endif
 	}
 	PROCESS_END();
 }

@@ -222,14 +222,13 @@ main(int argc, char **argv)
    * Hardware initialization done!
    */
 
-
+  
 #if WITH_TINYOS_AUTO_IDS
   node_id = TOS_NODE_ID;
 #else /* WITH_TINYOS_AUTO_IDS */
   /* Restore node id if such has been stored in external mem */
   node_id_restore();
 #endif /* WITH_TINYOS_AUTO_IDS */
-
 
   /* for setting "hardcoded" IEEE 802.15.4 MAC addresses */
 #ifdef IEEE_802154_MAC_ADDRESS
