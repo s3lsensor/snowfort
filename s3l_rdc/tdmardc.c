@@ -91,8 +91,8 @@ static void sf_tdma_set_mac_addr(void)
   memset(longaddr,0,sizeof(longaddr));
   rimeaddr_copy((rimeaddr_t *)&longaddr,&rimeaddr_node_addr);
   printf("MAC %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x ",
-             longaddr[0], longaddr[1], longaddr[2], longaddr[3],
-             longaddr[4], longaddr[5], longaddr[6], longaddr[7]);
+         longaddr[0], longaddr[1], longaddr[2], longaddr[3],
+         longaddr[4], longaddr[5], longaddr[6], longaddr[7]);
   cc2420_set_pan_addr(IEEE802154_PANID, shortaddr, longaddr);
 }
 
@@ -100,122 +100,122 @@ static void sf_tdma_set_mac_addr(void)
 // TDMA_BS_send() -- called at a specific time
 static void TDMA_BS_send(void)
 {
-	BS_TX_start_time = RTIMER_NOW();
-	BS_RX_start_time = BS_TX_start_time+BS_period*RTIMER_MS;
+  BS_TX_start_time = RTIMER_NOW();
+  BS_RX_start_time = BS_TX_start_time+BS_period*RTIMER_MS;
 
 
-	// set timer for next BS send
-	// right now, rtimer_timer does not consider drifting. For long time experiment, it may have problem
-	uint16_t offset = RTIMER_MS*(segment_period);
-	//PRINTF("BS offset: %u\n",offset);
-	rtimer_set(&BSTimer,RTIMER_TIME(&BSTimer)+offset,0,TDMA_BS_send,NULL);
+  // set timer for next BS send
+  // right now, rtimer_timer does not consider drifting. For long time experiment, it may have problem
+  uint16_t offset = RTIMER_MS*(segment_period);
+  //PRINTF("BS offset: %u\n",offset);
+  rtimer_set(&BSTimer,RTIMER_TIME(&BSTimer)+offset,0,TDMA_BS_send,NULL);
 
-	//update packet sequence number
-	seq_num++;
+  //update packet sequence number
+  seq_num++;
 
-	//pkt content
-	//pkt[SEQ_INDEX] = seq_num++;
-	//pkt[PKT_PAYLOAD_SIZE_INDEX] = total_slot_num;
-	//memcpy(pkt+PKT_HDR_SIZE,node_list,total_slot_num);
-	//memcpy(pkt,node_list,total_slot_num);
+  //pkt content
+  //pkt[SEQ_INDEX] = seq_num++;
+  //pkt[PKT_PAYLOAD_SIZE_INDEX] = total_slot_num;
+  //memcpy(pkt+PKT_HDR_SIZE,node_list,total_slot_num);
+  //memcpy(pkt,node_list,total_slot_num);
 
-	//copy pkt to packetbuff
-	//packetbuf_copyfrom((void *)&pkt[0],total_slot_num);
+  //copy pkt to packetbuff
+  //packetbuf_copyfrom((void *)&pkt[0],total_slot_num);
 
-	if(tdma_rdc_buf_ptr != 0) // has command to send
-	{
-	  // Assume for BS, if the tdma_rdc_buf is not empty, then the payload should be command.
-	  // Should be changed if BS can send other types of data.
+  if(tdma_rdc_buf_ptr != 0) // has command to send
+  {
+    // Assume for BS, if the tdma_rdc_buf is not empty, then the payload should be command.
+    // Should be changed if BS can send other types of data.
 
-	  packetbuf_copyfrom((void *)&tdma_rdc_buffer[0],sizeof(uint8_t)*tdma_rdc_buf_ptr);
-	  packetbuf_set_attr(PACKETBUF_ATTR_PACKET_TYPE,PACKETBUF_ATTR_PACKET_TYPE_CMD);
-	  tdma_rdc_buf_full_flg = 0;
+    packetbuf_copyfrom((void *)&tdma_rdc_buffer[0],sizeof(uint8_t)*tdma_rdc_buf_ptr);
+    packetbuf_set_attr(PACKETBUF_ATTR_PACKET_TYPE,PACKETBUF_ATTR_PACKET_TYPE_CMD);
+    tdma_rdc_buf_full_flg = 0;
     tdma_rdc_buf_ptr = 0;
     tdma_rdc_buf_send_ptr = 0;
-    PRINTF("send command %s\n",tdma_rdc_buffer);
-	}
-	else
-	{
-	  packetbuf_copyfrom((void *)&node_list[0],sizeof(uint8_t)*total_slot_num);
-	  packetbuf_set_attr(PACKETBUF_ATTR_PACKET_TYPE,PACKETBUF_ATTR_PACKET_TYPE_DATA);
-	}
+    PRINTF("send command %s %d\n",tdma_rdc_buffer,packetbuf_attr(PACKETBUF_ATTR_PACKET_TYPE));
+  }
+  else
+  {
+    packetbuf_copyfrom((void *)&node_list[0],sizeof(uint8_t)*total_slot_num);
+    packetbuf_set_attr(PACKETBUF_ATTR_PACKET_TYPE,PACKETBUF_ATTR_PACKET_TYPE_DATA);
+  }
 
 
-	packetbuf_set_attr(PACKETBUF_ATTR_MAC_SEQNO,seq_num);
-	uint8_t hdr_len = NETSTACK_FRAMER.create();
+  packetbuf_set_attr(PACKETBUF_ATTR_MAC_SEQNO,seq_num);
+  uint8_t hdr_len = NETSTACK_FRAMER.create();
 
 
-	//send packet -- pushed to radio layer
-	if(NETSTACK_RADIO.send(packetbuf_hdrptr(),packetbuf_totlen()) != RADIO_TX_OK)
-		printf("TDMA RDC: BS fails to send packet\n");
-	else
-		printf("TDMA RDC: BS sends %d\n",seq_num);
+  //send packet -- pushed to radio layer
+  if(NETSTACK_RADIO.send(packetbuf_hdrptr(),packetbuf_totlen()) != RADIO_TX_OK)
+    printf("TDMA RDC: BS fails to send packet\n");
+  else
+    printf("TDMA RDC: BS sends %d\n",seq_num);
 }
 
 // TDMA_SN_send() -- called at a assigned time slot
 static void TDMA_SN_send(void)
 {
-	//tic(RTIMER_NOW(),"SN send");
+  //tic(RTIMER_NOW(),"SN send");
 
 
-	//set timer for open RADIO -- for opening earlier 2 ms
-	//uint16_t time = RTIMER_TIME(&SNTimer)+RTIMER_MS*(segment_period-BS_period-my_slot*TS_period);
-	radioontime = RTIMER_TIME(&SNTimer) + RTIMER_MS*(segment_period-BS_period-(my_slot)*TS_period - 2);
-	rtimer_set(&SNTimer,radioontime,0,NETSTACK_RADIO.on,NULL);
+  //set timer for open RADIO -- for opening earlier 2 ms
+  //uint16_t time = RTIMER_TIME(&SNTimer)+RTIMER_MS*(segment_period-BS_period-my_slot*TS_period);
+  radioontime = RTIMER_TIME(&SNTimer) + RTIMER_MS*(segment_period-BS_period-(my_slot)*TS_period - 2);
+  rtimer_set(&SNTimer,radioontime,0,NETSTACK_RADIO.on,NULL);
 
-	//pkt[SEQ_INDEX] = seq_num++;
+  //pkt[SEQ_INDEX] = seq_num++;
 
-	//update packet sequence number
-	seq_num++;
+  //update packet sequence number
+  seq_num++;
 
-	//wait if the tdma_rdc_buffer is accessing by other functions
-	while(tdma_rdc_buf_in_using_flg);
+  //wait if the tdma_rdc_buffer is accessing by other functions
+  while(tdma_rdc_buf_in_using_flg);
 
-	// lock tdma_rdc_buffer and preventing access from other functions.
+  // lock tdma_rdc_buffer and preventing access from other functions.
   tdma_rdc_buf_in_using_flg = 1;
 
 
-	if (tdma_rdc_buf_full_flg == 0)
-	{
-		packetbuf_copyfrom((void *)&tdma_rdc_buffer[0],sizeof(uint8_t)*tdma_rdc_buf_ptr);
-		packetbuf_set_datalen(tdma_rdc_buf_ptr);
-	}
-	else
-	{
-		uint8_t temp_len = MAX_PKT_PAYLOAD_SIZE - tdma_rdc_buf_send_ptr;
-		memcpy(packetbuf_dataptr(),tdma_rdc_buffer+tdma_rdc_buf_send_ptr,sizeof(uint8_t)*temp_len);
-		memcpy(packetbuf_dataptr()+temp_len,tdma_rdc_buffer,sizeof(uint8_t)*tdma_rdc_buf_send_ptr);
-		packetbuf_set_datalen(MAX_PKT_PAYLOAD_SIZE);
-	}
+  if (tdma_rdc_buf_full_flg == 0)
+  {
+    packetbuf_copyfrom((void *)&tdma_rdc_buffer[0],sizeof(uint8_t)*tdma_rdc_buf_ptr);
+    packetbuf_set_datalen(tdma_rdc_buf_ptr);
+  }
+  else
+  {
+    uint8_t temp_len = MAX_PKT_PAYLOAD_SIZE - tdma_rdc_buf_send_ptr;
+    memcpy(packetbuf_dataptr(),tdma_rdc_buffer+tdma_rdc_buf_send_ptr,sizeof(uint8_t)*temp_len);
+    memcpy(packetbuf_dataptr()+temp_len,tdma_rdc_buffer,sizeof(uint8_t)*tdma_rdc_buf_send_ptr);
+    packetbuf_set_datalen(MAX_PKT_PAYLOAD_SIZE);
+  }
 
 
-	// send packet -- pushed to radio layer
-	if(NETSTACK_RADIO.on())
-	{
-	  packetbuf_set_attr(PACKETBUF_ATTR_MAC_SEQNO,seq_num);
-	  uint8_t hdr_len = NETSTACK_FRAMER.create();
+  // send packet -- pushed to radio layer
+  if(NETSTACK_RADIO.on())
+  {
+    packetbuf_set_attr(PACKETBUF_ATTR_MAC_SEQNO,seq_num);
+    uint8_t hdr_len = NETSTACK_FRAMER.create();
 
 
-	  if(NETSTACK_RADIO.send(packetbuf_hdrptr(),packetbuf_totlen()) != RADIO_TX_OK)
-		{
-			printf("TDMA RDC: SN fails to send packet\n");
-		}
-		else
-		{
-			PRINTF("TDMA RDC: SN sends %d\n",seq_num);
-		}
-	  tdma_rdc_buf_full_flg = 0;
-	  tdma_rdc_buf_ptr = 0;
-	  tdma_rdc_buf_send_ptr = 0;
-	}
-	else
-	{
-		printf("TDMA RDC: SN fails to open radio\n");
-	}
-	// turn off radio
-	NETSTACK_RADIO.off();
+    if(NETSTACK_RADIO.send(packetbuf_hdrptr(),packetbuf_totlen()) != RADIO_TX_OK)
+    {
+      printf("TDMA RDC: SN fails to send packet\n");
+    }
+    else
+    {
+      PRINTF("TDMA RDC: SN sends %d\n",seq_num);
+    }
+    tdma_rdc_buf_full_flg = 0;
+    tdma_rdc_buf_ptr = 0;
+    tdma_rdc_buf_send_ptr = 0;
+  }
+  else
+  {
+    printf("TDMA RDC: SN fails to open radio\n");
+  }
+  // turn off radio
+  NETSTACK_RADIO.off();
 
-	// release tdma_rdc_buffer
+  // release tdma_rdc_buffer
   tdma_rdc_buf_in_using_flg = 0;
 }
 
@@ -224,7 +224,7 @@ static void TDMA_SN_send(void)
 static void send(mac_callback_t sent_callback, void *ptr_callback)
 {
 
-/*
+  /*
   uint8_t data_len = packetbuf_datalen();
 
 	uint8_t *ptr;
@@ -249,14 +249,14 @@ static void send(mac_callback_t sent_callback, void *ptr_callback)
 	if(tdma_rdc_buf_full_flg == 1)
 	  tdma_rdc_buf_send_ptr = tdma_rdc_buf_ptr;
 
-*/
+   */
 
 }
 /*-----------------------------------------------*/
 // send packet list -- not used in TDMA
 static void send_list(mac_callback_t sent_callback, void *ptr, struct rdc_buf_list *list)
 {
-	PRINTF("SEND_LIST NOT CALLED");
+  PRINTF("SEND_LIST NOT CALLED");
 }
 /*-----------------------------------------------*/
 // receives packet -- called in radio.c,radio.h
@@ -267,31 +267,32 @@ static void input(void)
     printf("Incorrect decode frame\n");
 
   uint8_t *rx_pkt = (uint8_t *)packetbuf_dataptr();
-//  printf("RX:%u %u %u %u %u ",rx_pkt[0],rx_pkt[1],rx_pkt[2],rx_pkt[3],rx_pkt[4]);
-//  printf("%u %u %u %u %u\n",rx_pkt[5],rx_pkt[6],rx_pkt[7],rx_pkt[8],rx_pkt[9]);
-//	uint16_t rx_pkt_len = rx_pkt[PKT_PAYLOAD_SIZE_INDEX];
+  //  printf("RX:%u %u %u %u %u ",rx_pkt[0],rx_pkt[1],rx_pkt[2],rx_pkt[3],rx_pkt[4]);
+  //  printf("%u %u %u %u %u\n",rx_pkt[5],rx_pkt[6],rx_pkt[7],rx_pkt[8],rx_pkt[9]);
+  //	uint16_t rx_pkt_len = rx_pkt[PKT_PAYLOAD_SIZE_INDEX];
   uint16_t rx_pkt_len = packetbuf_datalen();
 
-	/*-------------SN CODE----------------------*/
-	if (SN_ID != 0) // sensor node -- decide timeslot & schedule for TX
-	{
-		SN_RX_start_time = RTIMER_NOW();
+  /*-------------SN CODE----------------------*/
+  if (SN_ID != 0) // sensor node -- decide timeslot & schedule for TX
+  {
+    SN_RX_start_time = RTIMER_NOW();
 
-		//check if the packet is from BS
-		if (!rimeaddr_cmp(packetbuf_addr(PACKETBUF_ADDR_SENDER),&rimeaddr_null))
-		{
-		  return;
-		}
+    //check if the packet is from BS
+    if (!rimeaddr_cmp(packetbuf_addr(PACKETBUF_ADDR_SENDER),&rimeaddr_null))
+    {
+      return;
+    }
 
-		/*--------from BS------------*/
+    /*--------from BS------------*/
 
-		//turn off radio -- save power
-		if(NETSTACK_RADIO.off() != 1)
-		{
-			printf("TDMA RDC: SN fails to turn off radio");
-		}
+    //turn off radio -- save power
+    if(NETSTACK_RADIO.off() != 1)
+    {
+      printf("TDMA RDC: SN fails to turn off radio");
+    }
 
-		if (packetbuf_attr(PACKETBUF_ATTR_PACKET_TYPE) == PACKETBUF_ATTR_PACKET_TYPE_CMD)
+    PRINTF("Packet attr: %d\n",packetbuf_attr(PACKETBUF_ATTR_PACKET_TYPE));
+    if (packetbuf_attr(PACKETBUF_ATTR_PACKET_TYPE) == PACKETBUF_ATTR_PACKET_TYPE_CMD)
     {
 #ifdef SF_FEATURE_SHELL_OPT
       char command_string[128];
@@ -308,8 +309,8 @@ static void input(void)
       return;
 #endif
     }
-		else if(packetbuf_attr(PACKETBUF_ATTR_PACKET_TYPE) == PACKETBUF_ATTR_PACKET_TYPE_DATA)
-		{
+    else if(packetbuf_attr(PACKETBUF_ATTR_PACKET_TYPE) == PACKETBUF_ATTR_PACKET_TYPE_DATA)
+    {
       //first, check if BS assigns a slot
       unsigned char i = 0;
       char free_slot = 0;
@@ -326,7 +327,7 @@ static void input(void)
         else
         {
           if (rx_pkt[i] == FREE_SLOT_CONST) // exist free slot
-              free_slot++;
+            free_slot++;
 
           //my_slot = -1;
         }
@@ -350,44 +351,44 @@ static void input(void)
           }
         }
       }
-		}
-		//schedule for TX -- 2ms for guarding period (open radio earlier)
+    }
+    //schedule for TX -- 2ms for guarding period (open radio earlier)
 
-		if (my_slot != -1)
-		{
-			//PRINTF("Schedule for TX at Slot %d\n",my_slot);
-			uint16_t SN_TX_time = SN_RX_start_time + RTIMER_MS*(BS_period+TS_period * my_slot - 2);
-			rtimer_set(&SNTimer,SN_TX_time,0,TDMA_SN_send,NULL);
-		}
-	}
-	else if(SN_ID == 0) //BS
-		/*-----------------BS CODE---------------*/
-	{
+    if (my_slot != -1)
+    {
+      //PRINTF("Schedule for TX at Slot %d\n",my_slot);
+      uint16_t SN_TX_time = SN_RX_start_time + RTIMER_MS*(BS_period+TS_period * my_slot - 2);
+      rtimer_set(&SNTimer,SN_TX_time,0,TDMA_SN_send,NULL);
+    }
+  }
+  else if(SN_ID == 0) //BS
+    /*-----------------BS CODE---------------*/
+  {
     rimeaddr_t *sent_sn_addr = packetbuf_addr(PACKETBUF_ADDR_SENDER);
     uint8_t sent_sn_id = sent_sn_addr->u8[0];
 
-	  //set flag in pkt for TS occupancy
-		uint8_t current_TS = (RTIMER_NOW()-BS_RX_start_time)/(TS_period*RTIMER_MS);
-		if(node_list[current_TS] == FREE_SLOT_CONST) //collision -- ask the node to find a new available slot
-		{
-			//node_list[current_TS] = rx_pkt[NODE_INDEX];
-		  node_list[current_TS] = sent_sn_id;
-		}
+    //set flag in pkt for TS occupancy
+    uint8_t current_TS = (RTIMER_NOW()-BS_RX_start_time)/(TS_period*RTIMER_MS);
+    if(node_list[current_TS] == FREE_SLOT_CONST) //collision -- ask the node to find a new available slot
+    {
+      //node_list[current_TS] = rx_pkt[NODE_INDEX];
+      node_list[current_TS] = sent_sn_id;
+    }
 
 
 
-		PRINTF("[Sensor: %u] [Slot: %u] [Seq: %u]\n",
-				sent_sn_id,current_TS,packetbuf_attr(PACKETBUF_ATTR_PACKET_ID));
+    PRINTF("[Sensor: %u] [Slot: %u] [Seq: %u]\n",
+           sent_sn_id,current_TS,packetbuf_attr(PACKETBUF_ATTR_PACKET_ID));
 
-		PRINTF("Channel: %d;", cc2420_get_channel());
-		PRINTF("RSSI: %d\n", cc2420_last_rssi-45);
+    PRINTF("Channel: %d;", cc2420_get_channel());
+    PRINTF("RSSI: %d\n", cc2420_last_rssi-45);
 
-		if(packetbuf_attr(PACKETBUF_ATTR_PACKET_TYPE) == PACKETBUF_ATTR_PACKET_TYPE_DATA)
-		{
-		  // callback to application layer
-		  app_conn_input();
-		}
-	}
+    if(packetbuf_attr(PACKETBUF_ATTR_PACKET_TYPE) == PACKETBUF_ATTR_PACKET_TYPE_DATA)
+    {
+      // callback to application layer
+      app_conn_input();
+    }
+  }
 
 
 }
@@ -395,66 +396,66 @@ static void input(void)
 // turn on RDC layer
 static int on(void)
 {
-	PRINTF("turn on RDC layer\n");
-	if (SN_ID == 0) //BS sends packet
-	{
-		rtimer_set(&BSTimer,RTIMER_NOW()+RTIMER_MS*segment_period,0,TDMA_BS_send,NULL);
-	}
-	return NETSTACK_RADIO.on();
+  PRINTF("turn on RDC layer\n");
+  if (SN_ID == 0) //BS sends packet
+  {
+    rtimer_set(&BSTimer,RTIMER_NOW()+RTIMER_MS*segment_period,0,TDMA_BS_send,NULL);
+  }
+  return NETSTACK_RADIO.on();
 }
 /*-----------------------------------------------*/
 // turn off RDC layer
 static int off(int keep_radio_on)
 {
-	if (keep_radio_on)
-		return NETSTACK_RADIO.on();
-	else
-		return NETSTACK_RADIO.off();
+  if (keep_radio_on)
+    return NETSTACK_RADIO.on();
+  else
+    return NETSTACK_RADIO.off();
 }
 /*-----------------------------------------------*/
 // check channel -- do not need in TDMA implementation
 static unsigned short channel_check_interval(void)
 {
-	return 0;
+  return 0;
 }
 /*-----------------------------------------------*/
 // initalize RDC layer
 static void init(void)
 {
 
-	//reset rime & radio address
+  //reset rime & radio address
   sf_tdma_set_mac_addr();
 
-	//check the if the number of time slot is large enough
-	uint32_t min_segment_len = TS_period*total_slot_num + BS_period;
-	if (min_segment_len > segment_period)
-	{
-		printf("min_segment_len > segment_period\n");
-		assert(1);
-	}
+  //check the if the number of time slot is large enough
+  uint32_t min_segment_len = TS_period*total_slot_num + BS_period;
+  if (min_segment_len > segment_period)
+  {
+    printf("min_segment_len > segment_period\n");
+    assert(1);
+  }
 
 
-	//allocate node_list space
-	if (SN_ID == 0)
-	{
-		node_list = (uint8_t *)malloc(total_slot_num);
-		memset(node_list,FREE_SLOT_CONST,total_slot_num);
-	}
+  //allocate node_list space
+  if (SN_ID == 0)
+  {
+    node_list = (uint8_t *)malloc(total_slot_num);
+    memset(node_list,FREE_SLOT_CONST,total_slot_num);
+  }
 
-	// allocate packet space
-/*
+  // allocate packet space
+  /*
 	pkt = ( char *)malloc(pkt_size+1);
 	memcpy(pkt,pkt_hdr,PKT_HDR_SIZE);
 	if (SN_ID == 0)
 		memset(pkt+PKT_HDR_SIZE,FREE_SLOT_CONST,total_slot_num); //set free slot
 	else
 		memset(pkt+PKT_HDR_SIZE,(uint8_t)0x7F,total_slot_num); //free payload for SN
-*/
+   */
 
 
-	printf("Init RDC layer,packet size\n");
+  printf("Init RDC layer,packet size\n");
 
-	on();
+  on();
 }
 
 /*-----------------------------------------------*/
@@ -463,14 +464,14 @@ static void init(void)
 /*-----------------------------------------------*/
 const struct rdc_driver tdmardc_driver = 
 {
-		"tdmardc",
-		init, 		//Initialize the RDC driver
-		send, 		//send a packet from the rime buffer
-		send_list,	//send a packet list
-		input,		//callback for getting notified of incoming packet
-		on,		//turn the RDC layer on
-		off,		//turn the RDC layer off
-		channel_check_interval,		//returns the channel check interval,expressed in clock_time_t tick
+    "tdmardc",
+    init, 		//Initialize the RDC driver
+    send, 		//send a packet from the rime buffer
+    send_list,	//send a packet list
+    input,		//callback for getting notified of incoming packet
+    on,		//turn the RDC layer on
+    off,		//turn the RDC layer off
+    channel_check_interval,		//returns the channel check interval,expressed in clock_time_t tick
 
 };
 /*-----------------------------------------------*/
