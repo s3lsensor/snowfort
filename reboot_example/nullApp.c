@@ -7,10 +7,19 @@
 #include "sys/etimer.h"
 #include "appconn/app_conn.h"
 
+#ifdef SF_FEATURE_SHELL_OPT
+//include for shell
+#include "shell.h"
+#include "serial-shell.h"
+#include "remote-shell.h"
+#endif
+
 #include "app_util.h"
 //#include "i2c.h"
 
 #define DEBUG 1
+
+
 
 #define SIN_TAB_LEN 120
 #define RESOLUTION 7
@@ -118,6 +127,14 @@ PROCESS_THREAD(null_app_process, ev, data)
 	PROCESS_BEGIN();
 	printf("Null App Started\n");
 
+#ifdef SF_FEATURE_SHELL_OPT
+	serial_shell_init();
+	remote_shell_init();
+	shell_reboot_init();
+	shell_blink_init();
+	shell_sky_init();
+#endif
+
 	app_conn_open(&nullApp_callback);
 
 	static int8_t debug_buf[10] = {0};
@@ -129,7 +146,7 @@ PROCESS_THREAD(null_app_process, ev, data)
 	if (SN_ID != 0)
 		etimer_set(&rxtimer,CLOCK_SECOND);
 	else
-		etimer_set(&rxtimer,CLOCK_SECOND/20);
+		etimer_set(&rxtimer,CLOCK_SECOND*6);
 
 	//init_mpu6050();
 	//uint8_t rv;
@@ -162,6 +179,36 @@ PROCESS_THREAD(null_app_process, ev, data)
 	    app_conn_send(debug_buf,sizeof(int8_t)*10);
 
 	  }
+	}
+	else
+	{
+
+#ifdef SF_FEATURE_SHELL_OPT
+	  //static uint8_t tx_power_counter = 0;
+    //uint8_t tx_power = 0;
+
+
+	  // BS sends command to sensor every 10 seconds for rebooting
+	  while(1)
+	  {
+	    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&rxtimer));
+	    etimer_reset(&rxtimer);
+
+	    //reboot
+	    //char command[] = "reboot";
+
+	    // tx power
+	    //tx_power_counter += 5;
+	    //tx_power = 10 + (tx_power_counter % 21);
+	    //char command[20];
+	    //sprintf(command,"%s %d\0","txpower",tx_power);
+
+	    // blink
+	    char command[20];
+	    sprintf(command,"%s %d\0","blink",5);
+	    remote_shell_send(command,strlen(command));
+	  }
+#endif
 	}
 	PROCESS_END();
 }
