@@ -291,7 +291,6 @@ static void input(void)
       printf("TDMA RDC: SN fails to turn off radio");
     }
 
-    PRINTF("Packet attr: %d\n",packetbuf_attr(PACKETBUF_ATTR_PACKET_TYPE));
     if (packetbuf_attr(PACKETBUF_ATTR_PACKET_TYPE) == PACKETBUF_ATTR_PACKET_TYPE_CMD)
     {
 #ifdef SF_FEATURE_SHELL_OPT

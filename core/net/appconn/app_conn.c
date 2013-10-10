@@ -45,8 +45,9 @@ void app_conn_input(void)
 {
 	app_callback_API->recv();
 }
+
 /*---------------------------------------------------------------------------*/
-void app_conn_send(const void * ptr, uint16_t data_len)
+void app_conn_send(const void * ptr, const uint16_t data_len)
 {
 
   //add guard for tdma_rdc_buffer access
