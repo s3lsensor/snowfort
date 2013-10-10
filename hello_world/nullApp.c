@@ -96,14 +96,15 @@ static void app_recv(void)
 	PROCESS_CONTEXT_BEGIN(&null_app_process);
 	
 	char* data = packetbuf_dataptr();
-	uint8_t flag = 0;
-
+	//uint8_t flag = 0;
 
 	int i;
-	int node_id = data[NODE_INDEX];
-	int pkt_seq = data[SEQ_INDEX];
-	int payload_len = data[PKT_PAYLOAD_SIZE_INDEX];
-	app_output(data+PKT_HDR_SIZE,node_id,pkt_seq,payload_len);
+	rimeaddr_t *sent_sn_addr = packetbuf_addr(PACKETBUF_ADDR_SENDER);
+	int rx_sn_id = sent_sn_addr->u8[0];
+
+	int pkt_seq = packetbuf_attr(PACKETBUF_ATTR_PACKET_ID);
+	int payload_len = packetbuf_datalen();
+	app_output(data,rx_sn_id,pkt_seq,payload_len);
 
 	PROCESS_CONTEXT_END(&null_app_process);
 
@@ -158,8 +159,7 @@ PROCESS_THREAD(null_app_process, ev, data)
 		    counter++;
 		    debug_buf[i] = sin(counter);
 	    }
-	    packetbuf_copyfrom(debug_buf,sizeof(int8_t)*10);
-	    NETSTACK_RDC.send(NULL,NULL);
+	    app_conn_send(debug_buf,sizeof(int8_t)*10);
 
 	  }
 	}
