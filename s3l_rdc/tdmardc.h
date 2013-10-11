@@ -40,10 +40,12 @@ extern const struct rdc_driver tdmardc_driver;
 // time slot information -- default
 
 #ifndef SLOT_NUM
-#define SLOT_NUM 50 //edge slots don't work for 1/8s right now...(1, 62) before, (60,61) also have issues after framer was added
+#define SLOT_NUM 30 //test for edge slots (1,61,62) for 1/s seg. period
 #endif
 
+#ifndef FRAMES_PER_SEC
 #define FRAMES_PER_SEC 8.0
+#endif
 
 #ifndef SEGMENT_PERIOD
 #define SEGMENT_PERIOD	(RTIMER_SECOND/FRAMES_PER_SEC) //993//1092	//equivalent to 1100 ms, 33*1092~=1.1*32768
@@ -53,7 +55,9 @@ extern const struct rdc_driver tdmardc_driver;
 #define TOTAL_TS		62
 #endif
 
+#ifndef BKN_SLOTS
 #define BKN_SLOTS 		2
+#endif
 
 #ifndef TS_PERIOD
 #define TS_PERIOD 		(SEGMENT_PERIOD/(TOTAL_TS+BKN_SLOTS))//410//1638//3277//99		//100ms

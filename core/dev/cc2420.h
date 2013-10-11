@@ -60,6 +60,7 @@ void cc2420_set_pan_addr(unsigned pan,
 
 extern signed char cc2420_last_rssi;
 extern uint8_t cc2420_last_correlation;
+extern volatile rtimer_clock_t radio_TX_time;
 
 int cc2420_rssi(void);
 

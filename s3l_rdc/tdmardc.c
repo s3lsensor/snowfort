@@ -42,11 +42,11 @@ static const uint16_t TS_period = TS_PERIOD;         //one time-slot duration in
 static const uint16_t BS_period = BS_PERIOD;         //BS broadcasts duration in ms
 
 //slot information
-static const uint8_t total_slot_num = TOTAL_TS; // calculated in init()
-static int8_t my_slot=SLOT_NUM; // set in SN_send
+static const uint16_t total_slot_num = TOTAL_TS; // uint16_t to support > 256 slots
+static int16_t my_slot=SLOT_NUM; //
 
 //packet information
-static char seq_num = 0;
+static uint8_t seq_num = 0;
 
 // BS global variable
 static rtimer_clock_t BS_RX_start_time = 0;
@@ -272,17 +272,18 @@ static void input(void)
   if (SN_ID != 0) // sensor node -- decide timeslot & schedule for TX
   {
 
-    //turn off radio -- save power
+	  //check if the packet is from BS
+	if (!rimeaddr_cmp(packetbuf_addr(PACKETBUF_ADDR_SENDER),&rimeaddr_null))
+	{
+		  return;
+	}
+
+	//turn off radio -- save power
     if(NETSTACK_RADIO.off() != 1)
     {
       printf("TDMA RDC: SN fails to turn off radio");
     }
 
-    //check if the packet is from BS
-    if (!rimeaddr_cmp(packetbuf_addr(PACKETBUF_ADDR_SENDER),&rimeaddr_null))
-    {
-      return;
-    }
 
     SN_RX_start_time = packetbuf_attr(PACKETBUF_ATTR_TIMESTAMP);
 
@@ -302,8 +303,8 @@ static void input(void)
       remote_shell_input();
 
       //skip this period for TX
-      uint16_t SN_TX_time = SN_RX_start_time + SEGMENT_PERIOD - 32;
-      rtimer_set(&SNTimer,SN_TX_time,0,NETSTACK_RADIO.on,NULL);
+      rtimer_clock_t next_bkn_time = SN_RX_start_time + SEGMENT_PERIOD - GRD_PERIOD;
+      rtimer_set(&SNTimer,next_bkn_time,0,NETSTACK_RADIO.on,NULL);
 
       return;
 #endif
@@ -315,10 +316,11 @@ static void input(void)
       if (my_slot != -1)
       {
         //PRINTF("Schedule for TX at Slot %d\n",my_slot);
-        uint16_t SN_TX_time = SN_RX_start_time + (BS_period+TS_period * (my_slot-1))-32;//32 is for 16B payload, might need adjustment for other sizes
+    	rtimer_clock_t SN_TX_time = SN_RX_start_time + (BS_period+TS_period * (my_slot-1))-GRD_PERIOD+20;//20 might need to be changed later, do better calibration, increase to 33 if timing problems
         rtimer_set(&SNTimer,SN_TX_time,0,TDMA_SN_send,NULL);
       }
     }
+    app_conn_input(); //For debugging timing
   }
   else if(SN_ID == 0) //BS
     /*-----------------BS CODE---------------*/

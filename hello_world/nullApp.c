@@ -106,10 +106,18 @@ static void app_recv(void)
 
 	int i;
 	rimeaddr_t *sent_sn_addr = packetbuf_addr(PACKETBUF_ADDR_SENDER);
-	int rx_sn_id = sent_sn_addr->u8[0];
+	uint8_t rx_sn_id = sent_sn_addr->u8[0];
 
-	int pkt_seq = packetbuf_attr(PACKETBUF_ATTR_PACKET_ID);
-	int payload_len = packetbuf_datalen();
+	uint8_t pkt_seq = packetbuf_attr(PACKETBUF_ATTR_PACKET_ID);
+	uint8_t payload_len = packetbuf_datalen();
+
+
+//	printf("%u,%u,%u%c",rx_sn_id,pkt_seq,payload_len,'|');
+//	for(i=0;i<payload_len;i++){
+//		printf("%02x",data[i]);
+//	}
+//	printf("\n");
+
 	app_output(data,rx_sn_id,pkt_seq,payload_len);
 
 	PROCESS_CONTEXT_END(&null_app_process);
