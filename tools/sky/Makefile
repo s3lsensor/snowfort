@@ -11,7 +11,7 @@ ifeq ($(HOST_OS),Windows)
 endif
 
 ifeq ($(HOST_OS),Darwin)
-  SERIALDUMP = serialdump-macos
+  SERIALDUMP = serialdump-macos 
 endif
 
 ifndef SERIALDUMP
