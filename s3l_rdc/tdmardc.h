@@ -10,11 +10,16 @@
 
 #include "net/mac/rdc.h"
 #include "dev/radio.h"
+
+#include "sys/rtimer.h"
+
 #include "stdint.h"
+
 
 extern const struct rdc_driver tdmardc_driver;
 
-#define RTIMER_MS 33 // rtimer_second = 32768, closest integer estimate of ms. actually 1.0071 ms
+//#define RTIMER_MS 33 // rtimer_second = 32768, closest integer estimate of ms. actually 1.0071 ms
+//#define RTIMER_MS (RTIMER_SECOND/1000.0)
 
 // packet format -- removed when using Zigbee frame
 //static char pkt_hdr[] = {65,-120,-120,-51,-85,-1,-1, SN_ID, 0, 0};
@@ -30,23 +35,40 @@ extern const struct rdc_driver tdmardc_driver;
 
 #define FREE_SLOT_CONST 	0x7F
 #define MAX_PKT_SIZE		127
-#define MAX_PKT_PAYLOAD_SIZE	50		//should be 117, let's start from 50 right now
+#define MAX_PKT_PAYLOAD_SIZE	117		//should be 117, let's start from 50 right now
 
 // time slot information -- default
+
+#ifndef SLOT_NUM
+#define SLOT_NUM 30 //test for edge slots (1,61,62) for 1/s seg. period
+#endif
+
+#ifndef FRAMES_PER_SEC
+#define FRAMES_PER_SEC 8.0
+#endif
+
 #ifndef SEGMENT_PERIOD
-#define SEGMENT_PERIOD	1100	//1100ms
-#endif
-
-#ifndef TS_PERIOD
-#define TS_PERIOD 		100		//100ms
-#endif
-
-#ifndef BS_PERIOD
-#define BS_PERIOD		100		//100ms
+#define SEGMENT_PERIOD	(RTIMER_SECOND/FRAMES_PER_SEC) //993//1092	//equivalent to 1100 ms, 33*1092~=1.1*32768
 #endif
 
 #ifndef TOTAL_TS
-#define TOTAL_TS		10
+#define TOTAL_TS		62
+#endif
+
+#ifndef BKN_SLOTS
+#define BKN_SLOTS 		2
+#endif
+
+#ifndef TS_PERIOD
+#define TS_PERIOD 		(SEGMENT_PERIOD/(TOTAL_TS+BKN_SLOTS))//410//1638//3277//99		//100ms
+#endif
+
+#ifndef BS_PERIOD
+#define BS_PERIOD		(BKN_SLOTS*TS_PERIOD)//410//819//1638//3277//99		//100ms
+#endif
+
+#ifndef GRD_PERIOD
+#define GRD_PERIOD		65 //ticks for 2 ms
 #endif
 
 /* data structure for transferring data*/

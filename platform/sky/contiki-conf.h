@@ -87,6 +87,8 @@
 #define CC2420_CONF_SFD_TIMESTAMPS       1
 #endif /* TIMESYNCH_CONF_ENABLED */
 
+#define CC2420_CONF_SFD_TIMESTAMPS       1 //enable for time-stamping pkts
+
 #endif /* WITH_UIP6 */
 
 #define PACKETBUF_CONF_ATTRS_INLINE 1
