@@ -204,9 +204,9 @@ PROCESS_THREAD(null_app_process, ev, data)
 	    //sprintf(command,"%s %d\0","txpower",tx_power);
 
 	    // blink
-	    char command[20];
-	    sprintf(command,"%s %d\0","blink",5);
-	    remote_shell_send(command,strlen(command));
+	    //char command[20];
+	    //sprintf(command,"%s %d\0","blink",5);
+	    //remote_shell_send(command,strlen(command));
 	  }
 #endif
 	}
