@@ -10,6 +10,6 @@
 
 #include <stdio.h>
 
-void app_output(const uint8_t * data, const int sn_id, const int pkt_seq, const int payload_len);
+void app_output(const char * data, const int node_id, const int pkt_seq, const int payload_len);
 
 #endif /* APP_UTIL_H_ */
