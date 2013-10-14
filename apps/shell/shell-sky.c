@@ -45,6 +45,7 @@
 
 #include "net/rime.h"
 #include "net/netstack.h"
+#include "net/mac/tdmardc.h"
 #include "dev/cc2420.h"
 #include "dev/leds.h"
 #include "dev/sht11.h"
@@ -66,6 +67,7 @@ SHELL_COMMAND(nodeid_command,
 	      "nodeid",
 	      "nodeid: set node ID",
 	      &shell_nodeid_process);
+/*
 PROCESS(shell_sense_process, "sense");
 SHELL_COMMAND(sense_command,
 	      "sense",
@@ -76,6 +78,7 @@ SHELL_COMMAND(senseconv_command,
 	      "senseconv",
 	      "senseconv: convert 'sense' data to human readable format",
 	      &shell_senseconv_process);
+*/
 PROCESS(shell_txpower_process, "txpower");
 SHELL_COMMAND(txpower_command,
 	      "txpower",
@@ -91,9 +94,16 @@ SHELL_COMMAND(sendcmd_command,
          "sendcmd",
          "sendcmd <command>: send command to remote node",
          &shell_sendcmd_process);
+PROCESS(shell_timeslot_process, "timeslot");
+SHELL_COMMAND(timeslot_command,
+         "timeslot",
+         "timeslot <command>: set time slot for TDMA",
+         &shell_timeslot_process);
 /*---------------------------------------------------------------------------*/
 #define MAX(a, b) ((a) > (b)? (a): (b))
 #define MIN(a, b) ((a) < (b)? (a): (b))
+
+#if 0
 struct spectrum {
   int channel[16];
 };
@@ -131,7 +141,9 @@ do_rssi(void)
     return tot;
   }
 }
+
 /*---------------------------------------------------------------------------*/
+
 struct sense_msg {
   uint16_t len;
   uint16_t clock;
@@ -143,8 +155,9 @@ struct sense_msg {
   uint16_t rssi;
   uint16_t voltage;
 };
+#endif
 /*---------------------------------------------------------------------------*/
-#define REMOTE_CMD_NUM 5
+#define REMOTE_CMD_NUM 6
 char *remote_cmd_list[REMOTE_CMD_NUM]; //list of available remote command
 uint8_t
 shell_sky_is_remote_cmd(const char * str)
@@ -181,6 +194,7 @@ shell_sky_is_remote_cmd(const char * str)
 
 }
 /*---------------------------------------------------------------------------*/
+#if 0
 PROCESS_THREAD(shell_sense_process, ev, data)
 {
   struct sense_msg msg;
@@ -253,6 +267,7 @@ PROCESS_THREAD(shell_senseconv_process, ev, data)
   }
   PROCESS_END();
 }
+#endif
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(shell_txpower_process, ev, data)
 {
@@ -331,10 +346,43 @@ PROCESS_THREAD(shell_nodeid_process, ev, data)
     node_id_restore();
     leds_off(LEDS_RED + LEDS_BLUE);
     watchdog_start();
+    sf_tdma_set_mac_addr();
   }
 
   snprintf(buf, sizeof(buf), "%d", nodeid);
   shell_output_str(&nodeid_command, "Node ID: ", buf);
+
+  PROCESS_END();
+}
+/*---------------------------------------------------------------------------*/
+PROCESS_THREAD(shell_timeslot_process, ev, data)
+{
+
+  uint16_t time_slot;
+  char buf[20];
+  const char *newptr;
+
+  PROCESS_BEGIN();
+
+  time_slot = shell_strtolong(data,&newptr);
+
+  /* if no slot number was given on the command line, we print out
+   * the current time slot. Else change the time slot to new one.
+   */
+  if (newptr == data)
+  {
+    time_slot = sf_tdma_get_slot_num();
+  }
+  else
+  {
+    time_slot = shell_strtolong(data,&newptr);
+    NETSTACK_RDC.off(0);
+    sf_tdma_set_slot_num(time_slot);
+    NETSTACK_RDC.on();
+  }
+
+  snprintf(buf, sizeof(buf), "%d", time_slot);
+  shell_output_str(&timeslot_command, "Current time slot: ", buf);
 
   PROCESS_END();
 }
@@ -358,16 +406,18 @@ PROCESS_THREAD(shell_sendcmd_process, ev, data)
 
   PROCESS_END();
 }
+
 /*---------------------------------------------------------------------------*/
 void
 shell_sky_init(void)
 {
   shell_register_command(&txpower_command);
   shell_register_command(&rfchannel_command);
-  shell_register_command(&sense_command);
-  shell_register_command(&senseconv_command);
+//  shell_register_command(&sense_command);
+//  shell_register_command(&senseconv_command);
   shell_register_command(&nodeid_command);
   shell_register_command(&sendcmd_command);
+  shell_register_command(&timeslot_command);
 
   //remote command list
   remote_cmd_list[0] = "reboot";
@@ -375,6 +425,7 @@ shell_sky_init(void)
   remote_cmd_list[2] = "blink";
   remote_cmd_list[3] = "rfchannel";
   remote_cmd_list[4] = "nodeid";
+  remote_cmd_list[5] = "timeslot";
 
 }
 /*---------------------------------------------------------------------------*/

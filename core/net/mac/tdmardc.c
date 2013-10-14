@@ -81,7 +81,12 @@ volatile uint8_t tdma_rdc_buf_in_using_flg = 0;
 // set slot number
 void sf_tdma_set_slot_num(const uint16_t num)
 {
-  sf_tdma_slot_num = num;
+  if (num  == 0 && num > TOTAL_TS)
+    return;
+  else
+  {
+    sf_tdma_slot_num = num;
+  }
 }
 
 // get slot number
@@ -92,7 +97,7 @@ uint16_t sf_tdma_get_slot_num(void)
 
 
 // set_addr -- clean rime address and reset rime & cc2420 address
-static void sf_tdma_set_mac_addr(void)
+void sf_tdma_set_mac_addr(void)
 {
   rimeaddr_t addr;
   uint8_t longaddr[8];
@@ -378,7 +383,10 @@ static int off(int keep_radio_on)
   if (keep_radio_on)
     return NETSTACK_RADIO.on();
   else
+  {
+    PRINTF("turn off RDC layer\n");
     return NETSTACK_RADIO.off();
+  }
 }
 /*-----------------------------------------------*/
 // check channel -- do not need in TDMA implementation
