@@ -18,7 +18,7 @@
 
 
 
-#define FREE_SLOT_CONST 	0x7F
+//#define FREE_SLOT_CONST 	0x7F
 #define MAX_PKT_SIZE		127
 #define MAX_PKT_PAYLOAD_SIZE	117		//should be 117, let's start from 50 right now
 
@@ -69,6 +69,7 @@ extern const struct rdc_driver tdmardc_driver;
 /* extern function */
 extern void sf_tdma_set_slot_num(const uint16_t num);
 extern uint16_t sf_tdma_get_slot_num(void);
+extern void sf_tdma_set_mac_addr(void);
 
 #endif /* __TDMARDC_H__ */
 
