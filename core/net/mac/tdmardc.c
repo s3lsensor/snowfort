@@ -6,6 +6,7 @@
  */
 
 //#include "project-conf.h"
+#include "node-id.h"
 #include "net/mac/tdmardc.h"
 #include "lib/assert.h"
 #include "net/packetbuf.h"
@@ -25,7 +26,7 @@
 
 
 
-#define DEBUG 0
+#define DEBUG 1
 #if DEBUG
 #define PRINTF(...) printf(__VA_ARGS__)
 #else
@@ -44,7 +45,7 @@ static const uint16_t BS_period = BS_PERIOD;         //BS broadcasts duration in
 
 //slot information
 static const uint16_t total_slot_num = TOTAL_TS; // uint16_t to support > 256 slots
-static int16_t my_slot=SLOT_NUM; //
+static volatile uint16_t sf_tdma_slot_num; //
 
 //packet information
 static uint8_t seq_num = 0;
@@ -54,7 +55,7 @@ volatile rtimer_clock_t radio_TX_time;
 #ifdef SF_MOTE_TYPE_AP
 // BS global variable
 static rtimer_clock_t BS_RX_start_time = 0;
-static uint8_t *node_list; //allocated, initialized in init()
+//static uint8_t *node_list; //allocated, initialized in init()
 
 
 //Timer -- BS
@@ -77,6 +78,18 @@ volatile uint8_t tdma_rdc_buf_send_ptr = 0;
 volatile uint8_t tdma_rdc_buf_full_flg = 0;
 volatile uint8_t tdma_rdc_buf_in_using_flg = 0;
 
+// set slot number
+void sf_tdma_set_slot_num(const uint16_t num)
+{
+  sf_tdma_slot_num = num;
+}
+
+// get slot number
+uint16_t sf_tdma_get_slot_num(void)
+{
+  return sf_tdma_slot_num;
+}
+
 
 // set_addr -- clean rime address and reset rime & cc2420 address
 static void sf_tdma_set_mac_addr(void)
@@ -86,9 +99,16 @@ static void sf_tdma_set_mac_addr(void)
   uint16_t shortaddr;
 
   // reset rime address
+#ifdef SF_MOTE_TYPE_AP
+  memcpy(&addr,&rimeaddr_null,sizeof(rimeaddr_t));
+#endif
+
+#ifdef SF_MOTE_TYPE_SENSOR
   memset(&addr,0,sizeof(rimeaddr_t));
-  addr.u8[0] = SN_ID & 0xff;
-  addr.u8[1] = SN_ID >> 8;
+  addr.u8[0] = node_id & 0xff;
+  addr.u8[1] = node_id >> 8;
+#endif
+
   rimeaddr_set_node_addr(&addr);
   printf("Rime started with address ");
   printf("%u.%u\n",rimeaddr_node_addr.u8[0],rimeaddr_node_addr.u8[1]);
@@ -248,6 +268,7 @@ static void send_list(mac_callback_t sent_callback, void *ptr, struct rdc_buf_li
 static void input(void)
 {
 
+
   if(NETSTACK_FRAMER.parse() < 0)
     printf("Incorrect decode frame\n");
 
@@ -257,6 +278,7 @@ static void input(void)
   //check if the packet is from BS
   if (!rimeaddr_cmp(packetbuf_addr(PACKETBUF_ADDR_SENDER),&rimeaddr_null))
   {
+    printf("Packet is not from base station, rejected!\n");
     return;
   }
 
@@ -295,10 +317,10 @@ static void input(void)
   {
     //schedule for TX
 
-    if (my_slot != -1)
+    if (sf_tdma_slot_num != -1)
     {
       //PRINTF("Schedule for TX at Slot %d\n",my_slot);
-      rtimer_clock_t SN_TX_time = SN_RX_start_time + (BS_period+TS_period * (my_slot-1))-GRD_PERIOD+33;//20 might need to be changed later, do better calibration, increase to 33 if timing problems
+      rtimer_clock_t SN_TX_time = SN_RX_start_time + (BS_period+TS_period * (sf_tdma_slot_num-1))-GRD_PERIOD+33;//20 might need to be changed later, do better calibration, increase to 33 if timing problems
       rtimer_set(&SNTimer,SN_TX_time,0,TDMA_SN_send,NULL);
     }
   }
@@ -315,13 +337,13 @@ static void input(void)
   uint16_t current_TS = (uint16_t)((relFrameTime-BS_period)/TS_period )+1;
 
   //set flag in pkt for TS occupancy
+/*
   if(node_list[current_TS-1] == FREE_SLOT_CONST) //collision -- ask the node to find a new available slot
   {
     //node_list[current_TS] = rx_pkt[NODE_INDEX];
     node_list[current_TS-1] = sent_sn_id;
   }
-
-  printf("Slot: %u, \n",current_TS);
+*/
 
   PRINTF("[Sensor: %u] [Slot: %u] [Seq: %u]\n",
          sent_sn_id,current_TS,packetbuf_attr(PACKETBUF_ATTR_PACKET_ID));
@@ -368,6 +390,12 @@ static unsigned short channel_check_interval(void)
 // Initialize RDC layer
 static void init(void)
 {
+  //get node id
+  node_id_restore();
+
+  //set slot number
+  sf_tdma_set_slot_num(node_id);
+
 
   //reset rime & radio address
   sf_tdma_set_mac_addr();
@@ -379,6 +407,7 @@ static void init(void)
     printf("min_segment_len > segment_period\n");
     assert(1);
   }
+
 
 
   printf("Init RDC layer,packet size\n");
