@@ -227,8 +227,10 @@ main(int argc, char **argv)
   node_id = TOS_NODE_ID;
 #else /* WITH_TINYOS_AUTO_IDS */
 #ifdef SN_ID
+  watchdog_stop();
   node_id_burn(SN_ID);
   node_id_restore();
+  watchdog_start();
 #else /* SN_ID */
   /* Restore node id if such has been stored in external mem */
   node_id_restore();

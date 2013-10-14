@@ -102,7 +102,7 @@ AUTOSTART_PROCESSES(&null_app_process);
 //APP Callback function
 static void app_recv(void)
 {
-	printf("Received from RDC\n");
+//	printf("Received from RDC\n");
 	PROCESS_CONTEXT_BEGIN(&null_app_process);
 	
 	char* data = packetbuf_dataptr();
