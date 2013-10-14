@@ -6,6 +6,7 @@
 #include "net/mac/tdmardc.h" // for flags to sync with tdma 
 #include "sys/etimer.h"
 #include "appconn/app_conn.h"
+#include "node-id.h"
 
 #ifdef SF_FEATURE_SHELL_OPT
 //include for shell
@@ -92,7 +93,7 @@ static int8_t sin(uint16_t angleMilli)
 }
 
 /*---------------------------------------------------------------*/
-PROCESS(null_app_process, "Null App Process");
+PROCESS(null_app_process, "Command Example Process");
 //PROCESS(sensor_sampling_process, "Sensor Sampling Process");
 //AUTOSTART_PROCESSES(&null_app_process, &sensor_sampling_process);
 AUTOSTART_PROCESSES(&null_app_process);
@@ -125,7 +126,7 @@ static const struct app_callbacks nullApp_callback= {app_recv};
 PROCESS_THREAD(null_app_process, ev, data)
 {
 	PROCESS_BEGIN();
-	printf("Null App Started\n");
+	printf("Command Example Started\n");
 
 #ifdef SF_FEATURE_SHELL_OPT
 	serial_shell_init();
@@ -143,7 +144,7 @@ PROCESS_THREAD(null_app_process, ev, data)
 	static uint16_t counter = 0;
 
 
-	if (SN_ID != 0)
+	if (node_id != 0)
 		etimer_set(&rxtimer,CLOCK_SECOND);
 	else
 		etimer_set(&rxtimer,CLOCK_SECOND*6);
@@ -153,7 +154,7 @@ PROCESS_THREAD(null_app_process, ev, data)
 	//rv = read_(MPU_ADDRESS, 0x75, 0);
 	//printf("%d \n", rv);
 
-	if(SN_ID != 0)
+	if(node_id != 0)
 	{
 
 	  while(1)
