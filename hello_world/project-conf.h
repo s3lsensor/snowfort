@@ -1,3 +1,6 @@
+#ifndef __PROJECT_CONF_H__
+#define __PROJECT_CONF_H__
+
 #define NETSTACK_CONF_RDC     tdmardc_driver
 
 //TODO: change mac protocol to TDMA mac protocol -- yzliao
@@ -16,3 +19,5 @@
 
 //define feature
 #define SF_FEATURE_SHELL_OPT
+
+#endif /* __PROJECT_CONF_H__ */

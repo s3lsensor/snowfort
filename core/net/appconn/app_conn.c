@@ -13,6 +13,7 @@
 
 
 #include <stdlib.h>
+#include <string.h>
 #include "net/mac/tdmardc.h"
 #include "app_conn.h"
 
@@ -26,7 +27,7 @@
 
 /* Local Variable */
 // Local variable used to hold application callback pointer
-static struct app_callbacks* app_callback_API;
+static const struct app_callbacks* app_callback_API;
 
 /*---------------------------------------------------------------------------*/
 void app_conn_open(const struct app_callbacks *u)

@@ -37,6 +37,9 @@
  * \author
  *         Adam Dunkels <adam@sics.se>
  */
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
 
 #include "contiki.h"
 #include "shell-sky.h"
@@ -56,9 +59,6 @@
 #include "remote-shell.h"
 
 #include "node-id.h"
-
-#include <stdio.h>
-#include <string.h>
 
 
 /*---------------------------------------------------------------------------*/
@@ -162,13 +162,13 @@ char *remote_cmd_list[REMOTE_CMD_NUM]; //list of available remote command
 uint8_t
 shell_sky_is_remote_cmd(const char * str)
 {
-  char * strptr = str;
+  char * strptr = (char *)str;
   char command[20] = {'\0'};
   short counter = 0;
   short command_len;
   short i;
 
-  while((isalpha(*strptr) || *strptr == ' ') && counter < 20)
+  while((isalpha(*strptr)  == 1|| *strptr == ' ') && counter < 20)
   {
     if(isalpha(*strptr))
     {
@@ -396,12 +396,12 @@ PROCESS_THREAD(shell_sendcmd_process, ev, data)
 
   if(shell_sky_is_remote_cmd(data) != 0)
   {
-    printf("Send COMMAND \"%s\" to remote node\n",data);
+    printf("Send COMMAND \"%s\" to remote node\n",(char *)data);
     remote_shell_send(data,strlen(data));
   }
   else
   {
-    printf("\"%s\" is not a validate remote shell command\n",data);
+    printf("\"%s\" is not a validate remote shell command\n",(char *)data);
   }
 
   PROCESS_END();
