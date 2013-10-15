@@ -43,6 +43,7 @@
 #include "lib/random.h"
 #include "net/netstack.h"
 #include "net/mac/frame802154.h"
+#include "cc2420-arch-sfd.h"
 
 #if WITH_UIP6
 #include "net/uip-ds6.h"
@@ -226,8 +227,15 @@ main(int argc, char **argv)
 #if WITH_TINYOS_AUTO_IDS
   node_id = TOS_NODE_ID;
 #else /* WITH_TINYOS_AUTO_IDS */
+#ifdef SN_ID
+  watchdog_stop();
+  node_id_burn(SN_ID);
+  node_id_restore();
+  watchdog_start();
+#else /* SN_ID */
   /* Restore node id if such has been stored in external mem */
   node_id_restore();
+#endif /* SN_ID */
 #endif /* WITH_TINYOS_AUTO_IDS */
 
   /* for setting "hardcoded" IEEE 802.15.4 MAC addresses */

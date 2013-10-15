@@ -40,7 +40,7 @@
  *   http://www.esacademy.com/faq/i2c/
  */
 
-#include <stdio.h>
+//#include <stdio.h>
 #include <contiki.h>
 #include <dev/spi.h>
 #include <dev/leds.h>
@@ -55,19 +55,26 @@ void     i2c_enable(void);
 void     i2c_disable(void);
 int      i2c_start(void);
 unsigned i2c_read(int send_ack);
-int      i2c_write(unsigned);
+int      i2c_write(unsigned char);
 void     i2c_stop(void);
 
-#define I2C_PxDIR   P3DIR
-#define I2C_PxIN    P3IN
-#define I2C_PxOUT   P3OUT
-#define I2C_PxSEL   P3SEL
+//#define I2C_PxDIR   P3DIR
+//#define I2C_PxIN    P3IN
+//#define I2C_PxOUT   P3OUT
+//#define I2C_PxSEL   P3SEL
+
+
+#define I2C_PxDIR   P2DIR
+#define I2C_PxIN    P2IN
+#define I2C_PxOUT   P2OUT
+#define I2C_PxSEL   P2SEL
+
 /*
- * SDA == P3.1
- * SCL == P3.3
+ * SDA == P3.1/P3.4-UART0TX-4/P2.6-GIO1
+ * SCL == P3.3/P3.5-IART0RX-2/P2.3-GIO0
  */
-#define SDA       1
-#define SCL       3
+#define SDA      6 //4//1
+#define SCL      3 //5//3
 
 #define SDA_0()   (I2C_PxDIR |=  BV(SDA))		/* SDA Output */
 #define SDA_1()   (I2C_PxDIR &= ~BV(SDA))		/* SDA Input */
@@ -168,7 +175,7 @@ i2c_stop(void)
  * Return true if we received an ACK.
  */
 int
-i2c_write(unsigned _c)
+i2c_write(unsigned char _c)
 {
   unsigned char c = _c;
   unsigned long n;
@@ -223,4 +230,134 @@ i2c_read(int send_ack)
   SCL_0();
 
   return c;
+}
+
+unsigned 
+read_(unsigned slave_address, unsigned register_address, int send_ack){
+	unsigned rv;
+//	int suc;
+
+	unsigned slave_address_w = slave_address;
+	unsigned slave_address_r = slave_address+1;
+	
+//	i2c_enable();
+	// start
+	i2c_start();
+	/*
+	suc = i2c_start();
+	while(suc == -1){
+		printf("start failed!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+		suc=i2c_start();
+	}
+	// */
+	// slave address	
+	if (i2c_write(slave_address_w)==0)
+	{
+		i2c_stop();
+		//printf("read_ slave_address_w unsuccessful\n");
+		return 0;
+	}		
+	// register address
+	if (i2c_write(register_address)==0){
+		i2c_stop();
+		//printf("read_ register unsuccessful\n");
+		return 0;
+	}
+	// restart
+	//i2c_stop();
+	i2c_start();
+	// load slave read address
+	if (i2c_write(slave_address_r)==0){
+		i2c_stop();
+		//printf("read_ slave_address_r unsuccessful\n");
+		return 0;
+	}
+	// read
+	rv = i2c_read(send_ack);
+	// stop
+	i2c_stop();
+		
+//	i2c_disable();
+	return rv;
+}
+
+void 
+read_multibyte(unsigned slave_address, unsigned register_address, int numbytes, unsigned char read_bytes[]){
+	unsigned char rv;
+	//int suc;
+
+	unsigned slave_address_w = slave_address;
+	unsigned slave_address_r = slave_address+1;
+	
+	i2c_start();
+	// slave address	
+	if (i2c_write(slave_address_w)==0){
+		i2c_stop();
+		//printf("read_ slave_address_w unsuccessful\n");
+		return;
+	}		
+	// register address
+	if (i2c_write(register_address)==0){
+		i2c_stop();
+		//printf("read_ register unsuccessful\n");
+		return;
+	}
+	// restart
+	i2c_start();
+	// load slave read address
+	if (i2c_write(slave_address_r)==0){
+		i2c_stop();
+		//printf("read_ slave_address_r unsuccessful\n");
+		return;
+	}	
+
+	int ii;
+	for (ii = 0; ii < (numbytes-1); ii++){	
+		// read
+		rv = i2c_read(1);
+		read_bytes[ii] = rv;
+	}
+	rv = i2c_read(0);
+	read_bytes[ii] = rv;
+	// stop
+	i2c_stop();
+}
+
+void write_(unsigned slave_address_w, unsigned register_address, unsigned value){
+
+	//int suc;
+
+	
+	//i2c_enable();
+	// start
+	/*
+	suc = i2c_start();
+	while(suc == -1){
+		printf("start failed!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+		suc=i2c_start();
+	}
+	// */
+	i2c_start();
+	
+	// slave address	
+	if (i2c_write(slave_address_w)==0)
+	{
+		i2c_stop();
+		//printf("read_ slave_address_w unsuccessful\n");
+		return;
+	}
+	// register address
+	if (i2c_write(register_address)==0){
+		i2c_stop();
+		//printf("read_ register unsuccessful\n");
+		return;
+	}
+	// write
+	if (i2c_write(value)==0){
+		i2c_stop();		
+		//printf("write_ value unsuccessful\n");
+		return;
+	}
+	// stop
+	i2c_stop();
 }
