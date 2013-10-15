@@ -43,6 +43,7 @@
 #include "lib/random.h"
 #include "net/netstack.h"
 #include "net/mac/frame802154.h"
+#include "cc2420-arch-sfd.h"
 
 #if WITH_UIP6
 #include "net/uip-ds6.h"

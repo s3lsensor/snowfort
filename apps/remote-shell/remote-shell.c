@@ -82,7 +82,7 @@ PROCESS_THREAD(remote_shell_process,ev,data)
   while(1)
   {
     PROCESS_WAIT_EVENT_UNTIL(ev == remote_command_event_message && data != NULL);
-    printf("Rx message %s\n",data);
+    printf("Rx message %s\n",(char *)data);
     shell_input(data,strlen(data));
   }
 
@@ -98,7 +98,9 @@ void remote_shell_init(void)
 void remote_shell_send(const char* cmd, const uint16_t len)
 {
   PRINTF("Remote shell command: %s -- sent\n",cmd);
-  app_conn_send(cmd,len);
+  //app_conn_send(cmd,len);
+  packetbuf_copyfrom((void *)&cmd[0],len*sizeof(char));
+  packetbuf_set_attr(PACKETBUF_ATTR_PACKET_TYPE,PACKETBUF_ATTR_PACKET_TYPE_CMD);
 }
 /*---------------------------------------------------------------------------*/
 void remote_shell_input(void)

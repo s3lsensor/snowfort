@@ -79,15 +79,16 @@ static const int8_t SIN_TAB[] =
 		-114,-110,-107,-103,-99,-95,-90,-85,-80,-75,
 		-69,-63,-58,-52,-45,-39,-33,-26,-20,-13,-6
 };
-
+/*
 static int8_t sinI(uint16_t angleMilli)
 {
 	uint16_t pos;
 	pos = (uint16_t) ((SIN_TAB_LEN * (uint32_t) angleMilli)/1000);
 	return SIN_TAB[pos%SIN_TAB_LEN];
 }
+*/
 
-static int8_t sin(uint16_t angleMilli)
+static int8_t sinI(uint16_t angleMilli)
 {
 	return SIN_TAB[angleMilli%SIN_TAB_LEN];
 }
@@ -108,8 +109,7 @@ static void app_recv(void)
 	char* data = packetbuf_dataptr();
 	//uint8_t flag = 0;
 
-	int i;
-	rimeaddr_t *sent_sn_addr = packetbuf_addr(PACKETBUF_ADDR_SENDER);
+	rimeaddr_t *sent_sn_addr = (rimeaddr_t *)packetbuf_addr(PACKETBUF_ADDR_SENDER);
 	int rx_sn_id = sent_sn_addr->u8[0];
 
 	int pkt_seq = packetbuf_attr(PACKETBUF_ATTR_PACKET_ID);
@@ -140,7 +140,7 @@ PROCESS_THREAD(null_app_process, ev, data)
 
 	static int8_t debug_buf[10] = {0};
 	static struct etimer rxtimer;
-	static char input_buf[MAX_PKT_PAYLOAD_SIZE] = {0};
+//	static char input_buf[MAX_PKT_PAYLOAD_SIZE] = {0};
 	static uint16_t counter = 0;
 
 
@@ -175,7 +175,7 @@ PROCESS_THREAD(null_app_process, ev, data)
 	    for(i = 0; i < 10; i++)
 	    {
 		    counter++;
-		    debug_buf[i] = sin(counter);
+		    debug_buf[i] = sinI(counter);
 	    }
 	    app_conn_send(debug_buf,sizeof(int8_t)*10);
 

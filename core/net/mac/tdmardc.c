@@ -48,7 +48,7 @@ static const uint16_t total_slot_num = TOTAL_TS; // uint16_t to support > 256 sl
 static volatile uint16_t sf_tdma_slot_num; //
 
 //packet information
-static uint8_t seq_num = 0;
+static uint8_t seq_num;
 
 volatile rtimer_clock_t radio_TX_time;
 
@@ -145,18 +145,19 @@ static void TDMA_BS_send(void)
   rtimer_set(&BSTimer,RTIMER_TIME(&BSTimer)+segment_period,0,TDMA_BS_send,NULL);
 
   //update packet sequence number
-  seq_num++;
+  seq_num = seq_num + 1;
 
-  if(tdma_rdc_buf_ptr != 0) // has command to send
+  if(packetbuf_attr(PACKETBUF_ATTR_PACKET_TYPE) == PACKETBUF_ATTR_PACKET_TYPE_CMD) // has command to send
   {
     // Assume for BS, if the tdma_rdc_buf is not empty, then the payload should be command.
     // Should be changed if BS can send other types of data.
-
+/*
     packetbuf_copyfrom((void *)&tdma_rdc_buffer[0],sizeof(uint8_t)*tdma_rdc_buf_ptr);
     packetbuf_set_attr(PACKETBUF_ATTR_PACKET_TYPE,PACKETBUF_ATTR_PACKET_TYPE_CMD);
     tdma_rdc_buf_full_flg = 0;
     tdma_rdc_buf_ptr = 0;
     tdma_rdc_buf_send_ptr = 0;
+*/
     PRINTF("send command %s %d\n",tdma_rdc_buffer,packetbuf_attr(PACKETBUF_ATTR_PACKET_TYPE));
   }
   else
@@ -200,7 +201,7 @@ static void TDMA_SN_send(void)
 
 
   //update packet sequence number
-  seq_num++;
+  seq_num = seq_num + 1;
 
   //wait if the tdma_rdc_buffer is accessing by other functions
   while(tdma_rdc_buf_in_using_flg);
@@ -272,8 +273,6 @@ static void send_list(mac_callback_t sent_callback, void *ptr, struct rdc_buf_li
 // receives packet -- called in radio.c,radio.h
 static void input(void)
 {
-
-
   if(NETSTACK_FRAMER.parse() < 0)
     printf("Incorrect decode frame\n");
 
@@ -407,6 +406,9 @@ static void init(void)
 
   //reset rime & radio address
   sf_tdma_set_mac_addr();
+
+  //reset packet number
+  seq_num = 0;
 
   //check the if the number of time slot is large enough
   uint32_t min_segment_len = TS_period*total_slot_num + BS_period;
