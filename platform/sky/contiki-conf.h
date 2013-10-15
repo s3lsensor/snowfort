@@ -87,6 +87,10 @@
 #define CC2420_CONF_SFD_TIMESTAMPS       1
 #endif /* TIMESYNCH_CONF_ENABLED */
 
+// enable for time-stamping packets. 
+// Do not use TIMESYNCH_CONF_ENABLED to aovid confusion in rime/timesync.c
+#define CC2420_CONF_SFD_TIMESTAMPS       1 
+
 #endif /* WITH_UIP6 */
 
 #define PACKETBUF_CONF_ATTRS_INLINE 1
