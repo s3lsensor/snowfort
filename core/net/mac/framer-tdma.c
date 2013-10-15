@@ -15,6 +15,7 @@
 #include "net/mac/framer-tdma.h"
 #include "net/mac/frame802154.h"
 #include "net/packetbuf.h"
+#include <string.h> /* for memset */
 
 #define DEBUG 0
 
