@@ -65,10 +65,15 @@ static struct rtimer BSTimer;
 #ifdef SF_MOTE_TYPE_SENSOR
 // SN global variable
 static rtimer_clock_t SN_RX_start_time = 0;
-static uint16_t radioontime;
+static rtimer_clock_t next_bkn_time;
+static uint8_t bknReceived=0;
+static uint8_t numOfMissedBkns=0;
+static uint8_t lostSync = 1;
+static uint8_t TX_enabled = 1;
 
 //Timer -- SN
 static struct rtimer SNTimer;
+static struct ctimer BknRecTimer;
 #endif
 
 // RDC buffer
@@ -78,10 +83,12 @@ volatile uint8_t tdma_rdc_buf_send_ptr = 0;
 volatile uint8_t tdma_rdc_buf_full_flg = 0;
 volatile uint8_t tdma_rdc_buf_in_using_flg = 0;
 
+static void receive_bkn(void);
+
 // set slot number
 void sf_tdma_set_slot_num(const uint16_t num)
 {
-  if (num  == 0 && num > TOTAL_TS)
+  if (num  == 0 || num > TOTAL_TS)
     return;
   else
   {
@@ -127,6 +134,8 @@ void sf_tdma_set_mac_addr(void)
          longaddr[4], longaddr[5], longaddr[6], longaddr[7]);
   cc2420_set_pan_addr(IEEE802154_PANID, shortaddr, longaddr);
 }
+
+
 
 #ifdef SF_MOTE_TYPE_AP
 // TDMA_BS_send() -- called at a specific time
@@ -195,9 +204,9 @@ static void TDMA_SN_send(void)
 {
   //set timer for open RADIO -- for opening earlier 2 ms
   //uint16_t time = RTIMER_TIME(&SNTimer)+RTIMER_MS*(segment_period-BS_period-my_slot*TS_period);
-  uint16_t callBkTime = RTIMER_NOW();
-  radioontime = SN_RX_start_time+segment_period-GRD_PERIOD;//RTIMER_TIME(&SNTimer) + (total_slot_num-my_slot)*TS_period-GRD_PERIOD;//(segment_period-BS_period-(my_slot)*TS_period - GRD_PERIOD);
-  rtimer_set(&SNTimer,radioontime,0,NETSTACK_RADIO.on,NULL);
+  //uint16_t callBkTime = RTIMER_NOW();
+  //next_bkn_time = SN_RX_start_time+segment_period-GRD_PERIOD;//RTIMER_TIME(&SNTimer) + (total_slot_num-my_slot)*TS_period-GRD_PERIOD;//(segment_period-BS_period-(my_slot)*TS_period - GRD_PERIOD);
+  rtimer_set(&SNTimer,next_bkn_time,0,receive_bkn,NULL);
 
 
   //update packet sequence number
@@ -237,7 +246,7 @@ static void TDMA_SN_send(void)
     }
     else
     {
-      PRINTF("TDMA RDC: SN sends %d\n",seq_num);
+      //PRINTF("TDMA RDC: SN sends %d\n",seq_num);
     }
     tdma_rdc_buf_full_flg = 0;
     tdma_rdc_buf_ptr = 0;
@@ -269,6 +278,63 @@ static void send_list(mac_callback_t sent_callback, void *ptr, struct rdc_buf_li
 {
   PRINTF("SEND_LIST NOT CALLED");
 }
+
+#ifdef SF_MOTE_TYPE_SENSOR
+static void handle_missed_bkn(void * m)
+{
+	//printf("Enter missed bkn: %u\n",bknReceived);
+	rtimer_clock_t nw=RTIMER_NOW();
+	if(bknReceived)
+	{
+		numOfMissedBkns=0;
+				//SN_RX_start_time = packetbuf_attr(PACKETBUF_ATTR_TIMESTAMP);
+		next_bkn_time = SN_RX_start_time + segment_period - GRD_PERIOD;
+	}
+	else
+	{
+		//printf("Missed Bkn\n");
+		numOfMissedBkns++;
+		int i=NETSTACK_RADIO.off();
+		next_bkn_time += segment_period;
+		SN_RX_start_time +=segment_period; //expected bkn time
+	}
+
+	if (TX_enabled && (sf_tdma_slot_num != -1))
+	{
+		//PRINTF("Schedule for TX at Slot %d\n",my_slot);
+		rtimer_clock_t SN_TX_time = SN_RX_start_time + (BS_period+TS_period * (sf_tdma_slot_num-1))-GRD_PERIOD+33;//20 might need to be changed later, do better calibration, increase to 33 if timing problems
+		rtimer_set(&SNTimer,SN_TX_time,0,TDMA_SN_send,NULL);
+		//printf("Bkn Handle: en=%u,now=%u,rx=%u,bkn=%u\n",nw,RTIMER_NOW(),SN_RX_start_time,next_bkn_time);
+	}
+	else
+	{
+		rtimer_set(&SNTimer,next_bkn_time,0,receive_bkn,NULL);
+	}
+
+
+	return;
+}
+
+static void receive_bkn(void)
+{
+
+	bknReceived=0; //will be set to 1 in input() if a packet is received
+	int i=NETSTACK_RADIO.on() ;
+
+
+	rtimer_clock_t nw=RTIMER_NOW();
+	rtimer_clock_t radioOffTime = RTIMER_NOW()+BS_PERIOD;
+	rtimer_set(&SNTimer,radioOffTime,0,handle_missed_bkn,NULL);
+
+	//printf("BR:now=%u,off=%u\n",nw, radioOffTime);
+
+
+	return;
+}
+#endif
+
+
+
 /*-----------------------------------------------*/
 // receives packet -- called in radio.c,radio.h
 static void input(void)
@@ -295,15 +361,16 @@ static void input(void)
     printf("TDMA RDC: SN fails to turn off radio");
   }
 
-
   SN_RX_start_time = packetbuf_attr(PACKETBUF_ATTR_TIMESTAMP);
 
   /*--------from BS------------*/
   if (packetbuf_attr(PACKETBUF_ATTR_PACKET_TYPE) == PACKETBUF_ATTR_PACKET_TYPE_CMD)
   {
-    //skip this period for TX
-    rtimer_clock_t next_bkn_time = SN_RX_start_time + SEGMENT_PERIOD - GRD_PERIOD;
-    rtimer_set(&SNTimer,next_bkn_time,0,NETSTACK_RADIO.on,NULL);
+	  //This is now done in handle_missed_bkn
+    //skip this period for TX and schedule RX
+    /*next_bkn_time = SN_RX_start_time + SEGMENT_PERIOD - GRD_PERIOD;
+    rtimer_set(&SNTimer,next_bkn_time,0,receive_bkn,NULL);*/
+	bknReceived=1;
 
 #ifdef SF_FEATURE_SHELL_OPT
     char command_string[128];
@@ -319,14 +386,21 @@ static void input(void)
   }
   else if(packetbuf_attr(PACKETBUF_ATTR_PACKET_TYPE) == PACKETBUF_ATTR_PACKET_TYPE_DATA)
   {
-    //schedule for TX
+	bknReceived=1;
+	printf("Input: rx=%u,now=%u\n",SN_RX_start_time,RTIMER_NOW());
+	//next_bkn_time = SN_RX_start_time + SEGMENT_PERIOD - GRD_PERIOD;
+	if(lostSync){ //only set this timer for the first bkn received
+		rtimer_set(&SNTimer,SN_RX_start_time+SEGMENT_PERIOD-GRD_PERIOD,0,receive_bkn,NULL);
+	}
+	lostSync =0;
+	//schedule for TX
 
-    if (sf_tdma_slot_num != -1)
+    /*if (sf_tdma_slot_num != -1)
     {
       //PRINTF("Schedule for TX at Slot %d\n",my_slot);
       rtimer_clock_t SN_TX_time = SN_RX_start_time + (BS_period+TS_period * (sf_tdma_slot_num-1))-GRD_PERIOD+33;//20 might need to be changed later, do better calibration, increase to 33 if timing problems
       rtimer_set(&SNTimer,SN_TX_time,0,TDMA_SN_send,NULL);
-    }
+    }*/
   }
   app_conn_input(); //For debugging timing
 #endif /* SF_MOTE_TYPE_SENSOR */
