@@ -69,11 +69,11 @@ static rtimer_clock_t next_bkn_time;
 static uint8_t bknReceived=0;
 static uint8_t numOfMissedBkns=0;
 static uint8_t lostSync = 1;
-static uint8_t TX_enabled = 1;
+static uint8_t TX_enabled = 1; //this can be turned off for idle mode
 
 //Timer -- SN
 static struct rtimer SNTimer;
-static struct ctimer BknRecTimer;
+static struct ctimer BkOffTimer;
 #endif
 
 // RDC buffer
@@ -202,10 +202,6 @@ static void TDMA_BS_send(void)
 // TDMA_SN_send() -- called at a assigned time slot
 static void TDMA_SN_send(void)
 {
-  //set timer for open RADIO -- for opening earlier 2 ms
-  //uint16_t time = RTIMER_TIME(&SNTimer)+RTIMER_MS*(segment_period-BS_period-my_slot*TS_period);
-  //uint16_t callBkTime = RTIMER_NOW();
-  //next_bkn_time = SN_RX_start_time+segment_period-GRD_PERIOD;//RTIMER_TIME(&SNTimer) + (total_slot_num-my_slot)*TS_period-GRD_PERIOD;//(segment_period-BS_period-(my_slot)*TS_period - GRD_PERIOD);
   rtimer_set(&SNTimer,next_bkn_time,0,receive_bkn,NULL);
 
 
@@ -219,13 +215,11 @@ static void TDMA_SN_send(void)
   tdma_rdc_buf_in_using_flg = 1;
 
 
-  if (tdma_rdc_buf_full_flg == 0)
-  {
+  if (tdma_rdc_buf_full_flg == 0) {
     packetbuf_copyfrom((void *)&tdma_rdc_buffer[0],sizeof(uint8_t)*tdma_rdc_buf_ptr);
     packetbuf_set_datalen(tdma_rdc_buf_ptr);
   }
-  else
-  {
+  else {
     uint8_t temp_len = MAX_PKT_PAYLOAD_SIZE - tdma_rdc_buf_send_ptr;
     memcpy(packetbuf_dataptr(),tdma_rdc_buffer+tdma_rdc_buf_send_ptr,sizeof(uint8_t)*temp_len);
     memcpy(packetbuf_dataptr()+temp_len,tdma_rdc_buffer,sizeof(uint8_t)*tdma_rdc_buf_send_ptr);
@@ -280,52 +274,74 @@ static void send_list(mac_callback_t sent_callback, void *ptr, struct rdc_buf_li
 }
 
 #ifdef SF_MOTE_TYPE_SENSOR
-static void handle_missed_bkn(void * m)
+static void back_off(void)
+{
+	uint16_t bt_in_secs = 60;
+	ctimer_set(&BkOffTimer,bt_in_secs*CLOCK_SECOND,receive_bkn,NULL);
+}
+
+static void handle_missed_bkn(void)
 {
 	//printf("Enter missed bkn: %u\n",bknReceived);
-	rtimer_clock_t nw=RTIMER_NOW();
-	if(bknReceived)
-	{
-		numOfMissedBkns=0;
-				//SN_RX_start_time = packetbuf_attr(PACKETBUF_ATTR_TIMESTAMP);
-		next_bkn_time = SN_RX_start_time + segment_period - GRD_PERIOD;
-	}
-	else
-	{
-		//printf("Missed Bkn\n");
-		numOfMissedBkns++;
-		int i=NETSTACK_RADIO.off();
-		next_bkn_time += segment_period;
-		SN_RX_start_time +=segment_period; //expected bkn time
-	}
+	//rtimer_clock_t nw=RTIMER_NOW();
 
-	if (TX_enabled && (sf_tdma_slot_num != -1))
-	{
-		//PRINTF("Schedule for TX at Slot %d\n",my_slot);
-		rtimer_clock_t SN_TX_time = SN_RX_start_time + (BS_period+TS_period * (sf_tdma_slot_num-1))-GRD_PERIOD+33;//20 might need to be changed later, do better calibration, increase to 33 if timing problems
-		rtimer_set(&SNTimer,SN_TX_time,0,TDMA_SN_send,NULL);
-		//printf("Bkn Handle: en=%u,now=%u,rx=%u,bkn=%u\n",nw,RTIMER_NOW(),SN_RX_start_time,next_bkn_time);
+	if(lostSync && !bknReceived) {
+		NETSTACK_RADIO.off();
+		back_off();
+		return;
 	}
-	else
-	{
+	else if(lostSync && bknReceived){
+		lostSync=0;
+		numOfMissedBkns=0;
+		//2 segment periods because one has passed before calling this function
+		next_bkn_time = SN_RX_start_time + 2*segment_period - GRD_PERIOD;
 		rtimer_set(&SNTimer,next_bkn_time,0,receive_bkn,NULL);
 	}
+	else {
+		if(!bknReceived){
+			numOfMissedBkns++;
+			NETSTACK_RADIO.off();
+			next_bkn_time += segment_period;
+			SN_RX_start_time +=segment_period; //expected bkn time
+			if(numOfMissedBkns>10)
+				lostSync=1;
+		}
+		else {
+			numOfMissedBkns=0;
+			next_bkn_time = SN_RX_start_time + segment_period - GRD_PERIOD;
+		}
 
+		if (TX_enabled && (sf_tdma_slot_num != -1)){
+			//PRINTF("Schedule for TX at Slot %d\n",my_slot);
+			rtimer_clock_t SN_TX_time = SN_RX_start_time + (BS_period+TS_period * (sf_tdma_slot_num-1))-GRD_PERIOD+33;//20 might need to be changed later, do better calibration, increase to 33 if timing problems
+			rtimer_set(&SNTimer,SN_TX_time,0,TDMA_SN_send,NULL);
+			//printf("Bkn Handle: en=%u,now=%u,rx=%u,bkn=%u\n",nw,RTIMER_NOW(),SN_RX_start_time,next_bkn_time);
+		}
+		else
+		{
+			rtimer_set(&SNTimer,next_bkn_time,0,receive_bkn,NULL);
+		}
+	}
 
 	return;
 }
 
 static void receive_bkn(void)
 {
-
+	rtimer_clock_t radioOffTime;
 	bknReceived=0; //will be set to 1 in input() if a packet is received
 	int i=NETSTACK_RADIO.on() ;
 
 
 	rtimer_clock_t nw=RTIMER_NOW();
-	rtimer_clock_t radioOffTime = RTIMER_NOW()+BS_PERIOD;
+	if(lostSync)
+		radioOffTime= RTIMER_NOW()+SEGMENT_PERIOD+GRD_PERIOD;
+	else
+		radioOffTime= RTIMER_NOW()+BS_PERIOD; //no need to add guard period with 2 slots assigned for BS_PERIOD
+
 	rtimer_set(&SNTimer,radioOffTime,0,handle_missed_bkn,NULL);
 
+	printf("Receive Beacon\n");
 	//printf("BR:now=%u,off=%u\n",nw, radioOffTime);
 
 
@@ -384,24 +400,11 @@ static void input(void)
     return;
 #endif /* SF_FEATURE_SHELL_OPT */
   }
-  else if(packetbuf_attr(PACKETBUF_ATTR_PACKET_TYPE) == PACKETBUF_ATTR_PACKET_TYPE_DATA)
-  {
+  else if(packetbuf_attr(PACKETBUF_ATTR_PACKET_TYPE) == PACKETBUF_ATTR_PACKET_TYPE_DATA){
 	bknReceived=1;
-	printf("Input: rx=%u,now=%u\n",SN_RX_start_time,RTIMER_NOW());
-	//next_bkn_time = SN_RX_start_time + SEGMENT_PERIOD - GRD_PERIOD;
-	if(lostSync){ //only set this timer for the first bkn received
-		rtimer_set(&SNTimer,SN_RX_start_time+SEGMENT_PERIOD-GRD_PERIOD,0,receive_bkn,NULL);
-	}
-	lostSync =0;
-	//schedule for TX
-
-    /*if (sf_tdma_slot_num != -1)
-    {
-      //PRINTF("Schedule for TX at Slot %d\n",my_slot);
-      rtimer_clock_t SN_TX_time = SN_RX_start_time + (BS_period+TS_period * (sf_tdma_slot_num-1))-GRD_PERIOD+33;//20 might need to be changed later, do better calibration, increase to 33 if timing problems
-      rtimer_set(&SNTimer,SN_TX_time,0,TDMA_SN_send,NULL);
-    }*/
+	//printf("Input: rx=%u,now=%u\n",SN_RX_start_time,RTIMER_NOW());
   }
+
   app_conn_input(); //For debugging timing
 #endif /* SF_MOTE_TYPE_SENSOR */
 
@@ -446,8 +449,11 @@ static int on(void)
   PRINTF("turn on RDC layer\n");
 #ifdef SF_MOTE_TYPE_AP
     rtimer_set(&BSTimer,RTIMER_NOW()+segment_period,0,TDMA_BS_send,NULL);
+    return NETSTACK_RADIO.on();
+#else
+    rtimer_set(&SNTimer,RTIMER_NOW()+segment_period,0,receive_bkn,NULL);
+    return 1;
 #endif
-  return NETSTACK_RADIO.on();
 }
 /*-----------------------------------------------*/
 // turn off RDC layer
