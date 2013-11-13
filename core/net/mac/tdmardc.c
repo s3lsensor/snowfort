@@ -276,7 +276,7 @@ static void send_list(mac_callback_t sent_callback, void *ptr, struct rdc_buf_li
 #ifdef SF_MOTE_TYPE_SENSOR
 static void back_off(void)
 {
-	uint16_t bt_in_secs = 60;
+	uint16_t bt_in_secs = 10;
 	ctimer_set(&BkOffTimer,bt_in_secs*CLOCK_SECOND,receive_bkn,NULL);
 }
 
