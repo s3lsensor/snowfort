@@ -26,7 +26,7 @@
 
 
 
-#define DEBUG 1
+#define DEBUG 0
 #if DEBUG
 #define PRINTF(...) printf(__VA_ARGS__)
 #else
@@ -122,14 +122,14 @@ void sf_tdma_set_mac_addr(void)
 #endif
 
   rimeaddr_set_node_addr(&addr);
-  printf("Rime started with address ");
+  printf("[TRACE]Rime started with address ");
   printf("%u.%u\n",rimeaddr_node_addr.u8[0],rimeaddr_node_addr.u8[1]);
 
   // reset CC2420 address
   shortaddr = (rimeaddr_node_addr.u8[0] << 8) + rimeaddr_node_addr.u8[1];
   memset(longaddr,0,sizeof(longaddr));
   rimeaddr_copy((rimeaddr_t *)&longaddr,&rimeaddr_node_addr);
-  printf("MAC %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x ",
+  printf("[TRACE]MAC %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x ",
          longaddr[0], longaddr[1], longaddr[2], longaddr[3],
          longaddr[4], longaddr[5], longaddr[6], longaddr[7]);
   cc2420_set_pan_addr(IEEE802154_PANID, shortaddr, longaddr);
@@ -189,9 +189,9 @@ static void TDMA_BS_send(void)
 
   //send packet -- pushed to radio layer
   if(NETSTACK_RADIO.send(packetbuf_hdrptr(),packetbuf_totlen()) != RADIO_TX_OK)
-    printf("TDMA RDC: BS fails to send packet\n");
+    printf("[ERROR]TDMA RDC: BS fails to send packet\n");
   else
-    printf("TDMA RDC: BS sends %u\n",seq_num);
+    printf("[TRACE]TDMA RDC: BS sends %u\n",seq_num);
 
 
 
@@ -236,11 +236,11 @@ static void TDMA_SN_send(void)
 
     if(NETSTACK_RADIO.send(packetbuf_hdrptr(),packetbuf_totlen()) != RADIO_TX_OK)
     {
-      printf("TDMA RDC: SN fails to send packet\n");
+      printf("[ERROR]TDMA RDC: SN fails to send packet\n");
     }
     else
     {
-      //PRINTF("TDMA RDC: SN sends %d\n",seq_num);
+      //printf("[TRACE]TDMA RDC: SN sends %d\n",seq_num);
     }
     tdma_rdc_buf_full_flg = 0;
     tdma_rdc_buf_ptr = 0;
@@ -248,7 +248,7 @@ static void TDMA_SN_send(void)
   }
   else
   {
-    printf("TDMA RDC: SN fails to open radio\n");
+    printf("[ERROR]TDMA RDC: SN fails to open radio\n");
   }
   // turn off radio
   NETSTACK_RADIO.off();
@@ -341,7 +341,7 @@ static void receive_bkn(void)
 
 	rtimer_set(&SNTimer,radioOffTime,0,handle_missed_bkn,NULL);
 
-	printf("Receive Beacon\n");
+	//printf("Receive Beacon\n");
 	//printf("BR:now=%u,off=%u\n",nw, radioOffTime);
 
 
@@ -356,7 +356,7 @@ static void receive_bkn(void)
 static void input(void)
 {
   if(NETSTACK_FRAMER.parse() < 0)
-    printf("Incorrect decode frame\n");
+    printf("[Error]Incorrect decode frame\n");
 
 
 #ifdef SF_MOTE_TYPE_SENSOR
@@ -364,7 +364,7 @@ static void input(void)
   //check if the packet is from BS
   if (!rimeaddr_cmp(packetbuf_addr(PACKETBUF_ADDR_SENDER),&rimeaddr_null))
   {
-    printf("Packet is not from base station, rejected!\n");
+    printf("[ERROR]Packet is not from base station, rejected!\n");
     return;
   }
 
@@ -374,7 +374,7 @@ static void input(void)
   //turn off radio -- save power
   if(NETSTACK_RADIO.off() != 1)
   {
-    printf("TDMA RDC: SN fails to turn off radio");
+    printf("[ERROR]TDMA RDC: SN fails to turn off radio");
   }
 
   SN_RX_start_time = packetbuf_attr(PACKETBUF_ATTR_TIMESTAMP);
@@ -405,7 +405,7 @@ static void input(void)
 	//printf("Input: rx=%u,now=%u\n",SN_RX_start_time,RTIMER_NOW());
   }
 
-  app_conn_input(); //For debugging timing
+  //app_conn_input(); //For debugging timing
 #endif /* SF_MOTE_TYPE_SENSOR */
 
 #ifdef SF_MOTE_TYPE_AP
@@ -494,13 +494,13 @@ static void init(void)
   uint32_t min_segment_len = TS_period*total_slot_num + BS_period;
   if (min_segment_len > segment_period)
   {
-    printf("min_segment_len > segment_period\n");
+    printf("[ERROR]min_segment_len > segment_period\n");
     assert(1);
   }
 
 
 
-  printf("Init RDC layer,packet size\n");
+  printf("[TRACE]Init RDC layer,packet size\n");
 
   on();
 }

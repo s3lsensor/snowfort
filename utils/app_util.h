@@ -8,7 +8,7 @@
 #ifndef APP_UTIL_H_
 #define APP_UTIL_H_
 
-#include <stdio.h>
+//#include <stdio.h>
 
 void app_output(const char * data, const int node_id, const int pkt_seq, const int payload_len);
 

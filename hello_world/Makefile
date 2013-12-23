@@ -1,4 +1,4 @@
-CONTIKI=/home/user/WSNprojects/snowflake
+CONTIKI=/home/user/snowflake
 APPS = serial-shell shell remote-shell
 
 CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\"
