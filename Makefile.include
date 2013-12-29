@@ -57,6 +57,7 @@ CFLAGS += -DCONTIKI=1 -DCONTIKI_TARGET_$(TARGET_UPPERCASE)=1
 include $(CONTIKI)/core/net/rime/Makefile.rime
 include $(CONTIKI)/core/net/mac/Makefile.mac
 include $(CONTIKI)/core/net/appconn/Makefile.appconn
+include $(CONTIKI)/core/net/coder/Makefile.coder
 
 SYSTEM  = process.c procinit.c autostart.c elfloader.c profile.c \
           timetable.c timetable-aggregate.c compower.c serial-line.c
@@ -94,7 +95,7 @@ endif
 
 CONTIKI_SOURCEFILES += $(CONTIKIFILES)
 
-CONTIKIDIRS += ${addprefix $(CONTIKI)/core/,dev lib net net/mac net/rime net/appconn \
+CONTIKIDIRS += ${addprefix $(CONTIKI)/core/,dev lib net net/mac net/rime net/appconn net/coder \
                  net/rpl sys cfs ctk lib/ctk loader . }
 
 oname = ${patsubst %.c,%.o,${patsubst %.S,%.o,$(1)}}
