@@ -65,6 +65,8 @@ uint8_t huffman_encoder_8bit(int8_t di)
     di_abs = sf_coder_math_8bit_abs(di);
     ni = sf_coder_math_8bit_counting_bits(di_abs);
   }
+
+  PRINTF("di %d, di_abs %d, ni %u\n",di,di_abs,ni);
   si = huffman_code_header[ni];
 
   if(ni == 0)
@@ -87,6 +89,8 @@ uint8_t huffman_encoder_8bit(int8_t di)
     //set bsi
     bsi = (si << ni) | ai;
   }
+
+  PRINTF("si %x, ai %x, bsi %x",si,ai,bsi);
 
   return bsi;
 
