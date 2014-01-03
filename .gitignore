@@ -28,3 +28,10 @@ contiki*.a
 
 # Log files
 log*
+
+# Ctags files
+*.tags
+*.tags*
+
+# Sublime text
+*.sublime-*
