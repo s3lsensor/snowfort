@@ -3,7 +3,7 @@
 #include "contiki.h"
 #include "net/packetbuf.h"
 #include "net/mac/tdmardc.h" // for flags to sync with tdma 
-#include "net/encode/huffman_code.h"
+#include "net/coder/huffman_code.h"
 #include "sys/etimer.h"
 #include "appconn/app_conn.h"
 #include "node-id.h"
@@ -42,16 +42,25 @@ PROCESS_THREAD(null_app_process, ev, data)
 	PROCESS_BEGIN();
 	printf("Encoder Example Started\n");
 
-	app_conn_open(&nullApp_callback);
+	//app_conn_open(&nullApp_callback);
 
 	if (node_id == 0)
 	{
-		int8_t num = 0;
-		uint8_t encode_num = 0;
-		for(num = -128; num < 128; num++)
+		// int8_t num = 0;
+		// uint16_t encode_num = 0;
+		// for(num = -128; num < 127; num++)
+		// {
+		// 	encode_num = huffman_encoder_8bit(num);
+		// 	printf("1origin:%d, encode: 0x%x\n",num,encode_num);
+		// }
+
+		printf("---------------------------\n");
+		int16_t num2 = 0;
+		uint32_t encode_num2 = 0;
+		for (num2 = 1000; num2 <= 3500; num2++)
 		{
-			encode_num = huffman_encoder_8bit(num);
-			printf("origin:%d, encode: %u\n");
+			encode_num2 = huffman_encoder_16bit(num2);
+			printf("2origin:%d, encode: 0x%lx\n",num2,encode_num2);
 		}
 	}
 

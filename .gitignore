@@ -25,6 +25,7 @@ contiki*.a
 *.ce
 *.co
 *.map
+*.flash
 
 # Log files
 log*

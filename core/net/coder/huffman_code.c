@@ -18,7 +18,7 @@
 
 #define HUFFMAN_CODE_HEADER_LEN 16
 
-#define DEBUG 1
+#define DEBUG 0
 #if DEBUG
 #include <stdio.h>
 #define PRINTF(...) printf(__VA_ARGS__)
@@ -47,12 +47,12 @@ static const uint8_t huffman_code_header[HUFFMAN_CODE_HEADER_LEN] = {
 };
 
 /*---------------------------------------------------------------------------*/
-uint8_t huffman_encoder_8bit(int8_t di)
+uint16_t huffman_encoder_8bit(int8_t di)
 {
   uint8_t ni;
   uint8_t si;
   uint8_t ai;
-  uint8_t bsi;  //max size is 4+8=12 bits
+  uint16_t bsi;  //max size is 4+8=12 bits
   uint8_t di_abs;
   uint8_t ai_mask;
 
@@ -71,7 +71,7 @@ uint8_t huffman_encoder_8bit(int8_t di)
 
   if(ni == 0)
   {
-    bsi = si;
+    bsi = (uint16_t)si;
   }
   else
   {
@@ -87,10 +87,12 @@ uint8_t huffman_encoder_8bit(int8_t di)
     }
 
     //set bsi
-    bsi = (si << ni) | ai;
+    //bsi = (si << ni) | ai;
+    bsi = (uint16_t)si;
+    bsi = (bsi << ni) | ai;
   }
 
-  PRINTF("si %x, ai %x, bsi %x",si,ai,bsi);
+  PRINTF("si 0x%x, ai 0x%x, bsi 0x%x\n",si,ai,bsi);
 
   return bsi;
 
@@ -98,14 +100,52 @@ uint8_t huffman_encoder_8bit(int8_t di)
 }
 
 /*---------------------------------------------------------------------------*/
-uint16_t huffman_encoder_16bit(int16_t di)
+uint32_t huffman_encoder_16bit(int16_t di)
 {
     uint8_t ni;
     uint16_t si;
     uint16_t ai;
-    uint16_t bsi = 0;
+    uint32_t bsi = 0;
     uint16_t di_abs;
     uint16_t ai_mask;
+
+    if (di == 0)
+    {
+      ni = 0;
+    }
+    else
+    {
+      di_abs = sf_coder_math_16bit_abs(di);
+      ni = sf_coder_math_16bit_counting_bits(di_abs);
+    }
+
+    PRINTF("di %d, di_abs %d, ni %u\n",di,di_abs,ni);
+
+    si = huffman_code_header[ni];
+
+    if (ni == 0)
+    {
+      bsi = (uint32_t)si;
+    }
+    else
+    {
+      if (di > 0)
+      {
+        ai_mask = (1 << ni) - 1;
+        ai = di & ai_mask;
+      }
+      else
+      {
+        ai_mask = (1 << ni) - 1;
+        ai = (di - 1) & ai_mask;
+      }
+    }
+
+    // set bsi
+    bsi = (uint32_t)si;
+    bsi = (bsi << ni) | ai;
+
+    PRINTF("si 0x%x, ai 0x%x, bsi 0x%x\n",si,ai,bsi);
 
     return bsi;
 }

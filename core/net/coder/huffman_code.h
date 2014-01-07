@@ -19,12 +19,12 @@
 /**
  * \brief 8 bits signed integer huffman code encoder
  */
-uint8_t huffman_encoder_8bit(int8_t di);
+uint16_t huffman_encoder_8bit(int8_t di);
 
 /**
  * \brief 16 bits signed integer huffman code encoder
  */
-uint16_t huffman_encoder_16bit(int16_t di);
+uint32_t huffman_encoder_16bit(int16_t di);
 
 
 

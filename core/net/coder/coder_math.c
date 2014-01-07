@@ -48,7 +48,7 @@ uint16_t sf_coder_math_16bit_counting_bits(const uint16_t val)
     uint16_t v = val;
     while(v)
     {
-      count += v & 0x1u;
+      count++;
       v >>= 1;
     }
 
