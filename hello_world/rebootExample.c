@@ -88,10 +88,12 @@ static int8_t sinI(uint16_t angleMilli)
 }
 */
 
-static int8_t sinI(uint16_t angleMilli)
+static uint8_t sinI(uint16_t angleMilli)
 {
 	return SIN_TAB[angleMilli%SIN_TAB_LEN];
 }
+
+//uint16_t counter_array[50] = {0};
 
 /*---------------------------------------------------------------*/
 PROCESS(null_app_process, "Command Example Process");
@@ -106,14 +108,23 @@ static void app_recv(void)
 //	printf("Received from RDC\n");
 	PROCESS_CONTEXT_BEGIN(&null_app_process);
 	
-	char* data = packetbuf_dataptr();
-	//uint8_t flag = 0;
+	uint8_t* data = packetbuf_dataptr();
 
 	rimeaddr_t *sent_sn_addr = (rimeaddr_t *)packetbuf_addr(PACKETBUF_ADDR_SENDER);
-	int rx_sn_id = sent_sn_addr->u8[0];
+	uint8_t rx_sn_id = sent_sn_addr->u8[0];
 
-	int pkt_seq = packetbuf_attr(PACKETBUF_ATTR_PACKET_ID);
-	int payload_len = packetbuf_datalen();
+	uint8_t pkt_seq = packetbuf_attr(PACKETBUF_ATTR_PACKET_ID);
+	uint8_t payload_len = packetbuf_datalen();
+/*
+	printf("%u,%u,",rx_sn_id,pkt_seq);
+	uint8_t i = 0;
+
+	for(i = 0; i < payload_len; i++)
+	{
+	  printf("%02x",data[i]);
+	}
+	printf("\n");
+*/
 	app_output(data,rx_sn_id,pkt_seq,payload_len);
 
 	PROCESS_CONTEXT_END(&null_app_process);
@@ -138,7 +149,7 @@ PROCESS_THREAD(null_app_process, ev, data)
 
 	app_conn_open(&nullApp_callback);
 
-	static int8_t debug_buf[10] = {0};
+	static uint8_t debug_buf[10] = {0};
 	static struct etimer rxtimer;
 //	static char input_buf[MAX_PKT_PAYLOAD_SIZE] = {0};
 	static uint16_t counter = 0;
@@ -175,9 +186,9 @@ PROCESS_THREAD(null_app_process, ev, data)
 	    for(i = 0; i < 10; i++)
 	    {
 		    counter++;
-		    debug_buf[i] = sinI(counter);
+		    debug_buf[i] = sinI(counter)+127;
 	    }
-	    app_conn_send(debug_buf,sizeof(int8_t)*10);
+	    app_conn_send(debug_buf,sizeof(uint8_t)*10);
 
 	  }
 	}

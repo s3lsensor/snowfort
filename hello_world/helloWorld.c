@@ -148,6 +148,7 @@ PROCESS_THREAD(null_app_process, ev, data)
 	static struct etimer rxtimer;
 
 	PROCESS_BEGIN();
+
 	printf("Hello world Started.\n");
 
 #ifdef SF_FEATURE_SHELL_OPT
