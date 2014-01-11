@@ -14,7 +14,7 @@
 
 #include <stdlib.h>
 #include "huffman_code.h"
-#include "coder_math.h"
+#include "snowfort/sf_math.h"
 
 #define HUFFMAN_CODE_HEADER_LEN 16
 
@@ -62,8 +62,8 @@ uint16_t huffman_encoder_8bit(int8_t di)
   }
   else
   {
-    di_abs = sf_coder_math_8bit_abs(di);
-    ni = sf_coder_math_8bit_counting_bits(di_abs);
+    di_abs = sf_math_8bit_abs(di);
+    ni = sf_math_8bit_counting_bits(di_abs);
   }
 
   PRINTF("di %d, di_abs %d, ni %u\n",di,di_abs,ni);
@@ -115,8 +115,8 @@ uint32_t huffman_encoder_16bit(int16_t di)
     }
     else
     {
-      di_abs = sf_coder_math_16bit_abs(di);
-      ni = sf_coder_math_16bit_counting_bits(di_abs);
+      di_abs = sf_math_16bit_abs(di);
+      ni = sf_math_16bit_counting_bits(di_abs);
     }
 
     PRINTF("di %d, di_abs %d, ni %u\n",di,di_abs,ni);

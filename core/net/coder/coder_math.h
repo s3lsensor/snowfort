@@ -14,6 +14,44 @@
 #define CODER_MATH_H_
 
 /**
+ * \brief structure for bit
+ */
+typedef struct 
+{
+	/* data */
+	uint8_t bit : 1;
+}bit_t;
+
+/**
+ * \brief union of 8 bits integer
+ */
+typedef union
+{
+	bit_t 		bits[8];
+	uint8_t 	int_val; 
+}bit8_t;
+
+
+/**
+ * \brief union of 16 bits integer
+ */
+typedef union
+{
+	bit_t 		bits[16];
+	uint16_t    int_val;
+}bit16_t;
+
+
+/**
+ * \brief union of 32 bits integer
+ */
+typedef union
+{
+	bit_t 		bits[32];
+	uint32_t 	int_val;
+}bit32_t;
+
+/**
  * \brief 8 bits signed number absolute value
  */
 uint8_t sf_coder_math_8bit_abs(const int8_t val);
