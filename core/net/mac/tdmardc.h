@@ -22,14 +22,12 @@
 #define MAX_PKT_SIZE		127
 #define MAX_PKT_PAYLOAD_SIZE	117		//should be 117, let's start from 50 right now
 
-// time slot information -- default
 /*
-#ifndef SLOT_NUM
-#define SLOT_NUM SN_ID //test for edge slots (1,61,62) for 1/s seg. period
-#endif
-*/
+ * Use 1 or 2. This can be changed to 0.5 (2^-1) but
+ * typecast appropriately in tdmardc.c and application layer
+ */
 #ifndef FRAMES_PER_SEC
-#define FRAMES_PER_SEC 4.0 //keep this as float
+#define FRAMES_PER_SEC 1
 #endif
 
 #ifndef SEGMENT_PERIOD
@@ -37,7 +35,7 @@
 #endif
 
 #ifndef TOTAL_TS
-#define TOTAL_TS		62
+#define TOTAL_TS		126
 #endif
 
 #ifndef BKN_SLOTS
@@ -70,6 +68,9 @@ extern const struct rdc_driver tdmardc_driver;
 extern void sf_tdma_set_slot_num(const uint16_t num);
 extern uint16_t sf_tdma_get_slot_num(void);
 extern void sf_tdma_set_mac_addr(void);
+
+void sf_tdma_enable_tx(void);
+void sf_tdma_disable_tx(void);
 
 #endif /* __TDMARDC_H__ */
 

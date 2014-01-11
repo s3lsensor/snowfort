@@ -9,7 +9,10 @@
 #include "node-id.h"
 
 #include "app_util.h"
-//#include "i2c.h"
+#include "dev/adc.h"
+#include "dev/leds.h"
+#include "dev/i2c.h"
+#include "dev/mpu-6050.h"
 
 #define DEBUG 1
 #if DEBUG
@@ -21,45 +24,25 @@
 #define SIN_TAB_LEN 120
 #define RESOLUTION 7
 
-#define MPU_ADDRESS 0xD0
-/*
-static int16_t accx, accy, accz;
-static int16_t gyrx, gyry, gyrz;
 
-static uint8_t measurevector[14];
+#define ADC_SAMPLING_FREQ 8 //use power of 2 in Hz (tested 1, 2, 4...32)
+#define ADC_SAMPLES_PER_FRAME (ADC_SAMPLING_FREQ/FRAMES_PER_SEC)
 
-static void init_mpu6050(){
-	write_(MPU_ADDRESS, 0x6B, 0x01); //clear sleep bit, set clock to 0x01 (x-gyro)
-	write_(MPU_ADDRESS, 0x1B, 0x00); //fs_250 for gyro
-	write_(MPU_ADDRESS, 0x1C, 0x00); //fs_2 for accel
+#define MPU_SAMPLING_FREQ 2 //tested 1, 2, and 4
+#define MPU_SAMPLES_PER_FRAME (MPU_SAMPLING_FREQ/FRAMES_PER_SEC)
+
+#define I2C_SENSOR
+//#define ADC_SENSOR
+
+#define DATA_COMPRESSION_ENABLED 1
+
+unsigned int abs_value(int a)
+{
+	if(a<0)
+		return -a;
+	else
+		return a;
 }
-
-static void measure_mpu(){
-//	uint8_t measurevector[14];
-	read_multibyte(MPU_ADDRESS, 0x3B, 14, measurevector);
-
-	accx = 0;
-	accx |= measurevector[0];
-	accx = (accx<<8) | measurevector[1];
-	accy = 0;
-	accy |= measurevector[2];
-	accy = (accy<<8) | measurevector[3];
-	accz = 0;
-	accz |= measurevector[4];
-	accz = (accz<<8) | measurevector[5];
-
-	gyrx = 0;
-	gyrx |= measurevector[8];
-	gyrx = (gyrx<<8) | measurevector[9];
-	gyry = 0;
-	gyry |= measurevector[10];
-	gyry = (gyry<<8) | measurevector[11];
-	gyrz = 0;
-	gyrz |= measurevector[12];
-	gyrz = (gyrz<<8) | measurevector[13];
-
-}
- */
 
 static const int8_t SIN_TAB[] =
 {
@@ -88,6 +71,36 @@ static int8_t sin(uint16_t angleMilli)
 	return SIN_TAB[angleMilli%SIN_TAB_LEN];
 }
 
+void copy_byte_array(uint8_t * from, uint8_t * to, const uint8_t len)
+{
+	int i;
+	for(i=0;i<len;i++)
+		*(to+i)=*(from+i);
+}
+
+void compress_data(const uint8_t *uncomp_data, uint8_t data_len, const uint8_t *comp_data, uint8_t *comp_data_len)
+{
+
+#ifdef I2C_SENSOR
+	int acc_y, acc_z;
+	acc_y = (uncomp_data[2]<<8)+uncomp_data[3];
+	acc_z = (uncomp_data[4]<<8)+uncomp_data[5];
+	if(abs_value(acc_y)>=abs_value(acc_z)){
+		*comp_data_len= data_len;
+		copy_byte_array(uncomp_data,comp_data,data_len);
+	}
+	else{
+		*comp_data_len = 0;
+	}
+#endif
+
+#ifdef ADC_SENSOR
+	*comp_data_len= data_len;
+	copy_byte_array(uncomp_data,comp_data,data_len);
+#endif
+
+}
+
 /*---------------------------------------------------------------*/
 PROCESS(null_app_process, "Hello world Process");
 //PROCESS(sensor_sampling_process, "Sensor Sampling Process");
@@ -102,6 +115,7 @@ static void app_recv(void)
 	PROCESS_CONTEXT_BEGIN(&null_app_process);
 	
 	uint8_t *data = packetbuf_dataptr();
+
 	uint8_t flag = 0;
 
 
@@ -130,27 +144,36 @@ static const struct app_callbacks nullApp_callback= {app_recv};
 /*---------------------------------------------------------------*/
 PROCESS_THREAD(null_app_process, ev, data)
 {
+
+	static struct etimer rxtimer;
+
 	PROCESS_BEGIN();
-	printf("Hello world Started\n");
+	printf("Hello world Started.\n");
+
+#ifdef SF_FEATURE_SHELL_OPT
+	serial_shell_init();
+	remote_shell_init();
+	shell_reboot_init();
+	shell_blink_init();
+	shell_sky_init();
+#endif
 
 	app_conn_open(&nullApp_callback);
 
-	static uint8_t debug_buf[10] = {0};
-	static struct etimer rxtimer;
-	static char input_buf[MAX_PKT_PAYLOAD_SIZE] = {0};
-	static uint16_t counter = 0;
+
+#ifdef ADC_SENSOR
+	static unsigned short samples[ADC_SAMPLES_PER_FRAME]={0}, i;
+	static uint8_t samples_sorted_bytes[2*ADC_SAMPLES_PER_FRAME];
+	static uint8_t sample_num = 0; //increments from 0 to samples_per_frame-1
 
 
-	if (node_id != 0)
-		//etimer_set(&rxtimer,(unsigned long)(SEGMENT_PERIOD));
-		etimer_set( &rxtimer, (unsigned long)(CLOCK_SECOND/(FRAMES_PER_SEC)));
+	if (node_id != 0){
+		adc_on();
+		//adc_configure(11); //to sample reference voltage (Vref/2), ~2048.
+		etimer_set( &rxtimer, (unsigned long)(CLOCK_SECOND/(ADC_SAMPLING_FREQ)));
+	}
 	else
 		etimer_set(&rxtimer,CLOCK_SECOND/20);
-
-	//init_mpu6050();
-	//uint8_t rv;
-	//rv = read_(MPU_ADDRESS, 0x75, 0);
-	//printf("%d \n", rv);
 
 	if(node_id != 0)
 	{
@@ -159,28 +182,92 @@ PROCESS_THREAD(null_app_process, ev, data)
 	  {
 
 	    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&rxtimer));
-
 	    etimer_reset(&rxtimer);
 
-	    //measure_mpu();
-	    //printf("Accel value: %d\tY value: %d\tZ value: %d\n",accx,accy,accz);
+	    samples[sample_num]=adc_sample();
+	    sample_num++;
+	    if(sample_num == ADC_SAMPLES_PER_FRAME){
+	    	sample_num=0;
+	    	/*
+	    	 * Byte order needs to be reversed because of low-endian system.
+	    	 * Can be done at AP level too, if needed.
+	    	 */
+	    	for(i=0;i<ADC_SAMPLES_PER_FRAME;i++){
+	    		samples_sorted_bytes[2*i]=(samples[i]>>8);
+	    		samples_sorted_bytes[2*i+1]= (samples[i]& 0xff);
+	    	}
 
-	    //      packetbuf_copyfrom(debug_buf,sizeof(int8_t)*10);
-	    //      NETSTACK_RDC.send(NULL,NULL);
 
-	    //printf("NULLAPP: %d %d %d\n", debug_buf[0],debug_buf[1],debug_buf[2]);
-	    int i = 0;
-	    for(i = 0; i < 10; i++)
-	    {
-		    counter++;
-		    debug_buf[i] = sin(counter)+127;
+	    	app_conn_send(samples_sorted_bytes,sizeof(uint8_t)*ADC_SAMPLES_PER_FRAME*2);
 	    }
-
-	    app_conn_send(debug_buf,sizeof(int8_t)*10);
 
 	  }
 	}
+#endif
+
+
+#ifdef I2C_SENSOR
+	static rtimer_clock_t rt, del;
+	static struct mpu_data samples;
+	static int i;
+	static uint8_t samples_sorted_bytes[14*MPU_SAMPLES_PER_FRAME],comp_samples_sorted_bytes[14*MPU_SAMPLES_PER_FRAME];
+	static uint8_t sample_num=0, uncomp_data_len=14*MPU_SAMPLES_PER_FRAME,comp_data_len;
+	static uint8_t *st;
+
+	if (node_id != 0){
+		while(!mpu_enable()){
+			printf("MPU could not be enabled.\n");
+		}
+
+		while(!mpu_wakeup()){
+			printf("MPU could not be awakened.\n");
+		}
+
+		etimer_set(&rxtimer, (unsigned long)(CLOCK_SECOND/MPU_SAMPLING_FREQ));
+		}
+	else
+		etimer_set(&rxtimer,CLOCK_SECOND/20);
+
+	if(node_id != 0)
+	{
+
+		while(1){
+			PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&rxtimer));
+			etimer_reset(&rxtimer);
+
+			int m=mpu_sample_all(&samples);
+
+			st = &samples;
+			for(i=0;i<7;i++){
+				samples_sorted_bytes[2*i+14*sample_num]=*(st+2*i+1);
+				samples_sorted_bytes[2*i+1+14*sample_num]= *(st+2*i);
+			}
+			sample_num++;
+
+			if(sample_num==MPU_SAMPLES_PER_FRAME){
+				sample_num=0;
+#if DATA_COMPRESSION_ENABLED
+				compress_data(samples_sorted_bytes, uncomp_data_len, comp_samples_sorted_bytes,&comp_data_len);
+				if(comp_data_len==0){
+					sf_tdma_disable_tx(); //should we access this via app_connection?
+					leds_off(LEDS_GREEN);
+				}
+				else{
+					leds_on(LEDS_GREEN);
+					sf_tdma_enable_tx();
+					app_conn_send(comp_samples_sorted_bytes,sizeof(uint8_t)*comp_data_len);
+				}
+#else
+				app_conn_send(samples_sorted_bytes,sizeof(uint8_t)*14*MPU_SAMPLES_PER_FRAME);
+#endif
+			}
+		}
+	}
+
+#endif
+
 	PROCESS_END();
+
 }
 
 /*

@@ -26,7 +26,7 @@
 
 
 
-#define DEBUG 1
+#define DEBUG 0
 #if DEBUG
 #define PRINTF(...) printf(__VA_ARGS__)
 #else
@@ -84,6 +84,19 @@ volatile uint8_t tdma_rdc_buf_full_flg = 0;
 volatile uint8_t tdma_rdc_buf_in_using_flg = 0;
 
 static void receive_bkn(void);
+
+void sf_tdma_enable_tx(void)
+{
+#ifdef SF_MOTE_TYPE_SENSOR
+	TX_enabled=1;
+#endif
+}
+void sf_tdma_disable_tx(void)
+{
+#ifdef SF_MOTE_TYPE_SENSOR
+	TX_enabled=0;
+#endif
+}
 
 // set slot number
 void sf_tdma_set_slot_num(const uint16_t num)
@@ -290,14 +303,15 @@ static void handle_missed_bkn(void)
 		back_off();
 		return;
 	}
-	else if(lostSync && bknReceived){
+
+	if(lostSync && bknReceived){
 		lostSync=0;
 		numOfMissedBkns=0;
 		//2 segment periods because one has passed before calling this function
 		next_bkn_time = SN_RX_start_time + 2*segment_period - GRD_PERIOD;
 		rtimer_set(&SNTimer,next_bkn_time,0,receive_bkn,NULL);
 	}
-	else {
+	else { //if sync not lost
 		if(!bknReceived){
 			numOfMissedBkns++;
 			NETSTACK_RADIO.off();
