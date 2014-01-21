@@ -125,6 +125,9 @@ int mpu_sample_all(struct mpu_data * sampled_data)
 	sampled_data->gyro_y = (buffer[10]<<8)+buffer[11];
 	sampled_data->gyro_z = (buffer[12]<<8)+buffer[13];
 
+	printf("%d,%d,%d,%d\n",sampled_data->accel_x,
+		sampled_data->accel_y,sampled_data->accel_z,sampled_data->temperature);
+
 	return 1;
 }
 

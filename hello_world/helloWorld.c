@@ -34,7 +34,7 @@
 #define I2C_SENSOR
 //#define ADC_SENSOR
 
-#define DATA_COMPRESSION_ENABLED 1
+#define DATA_COMPRESSION_ENABLED 0
 
 unsigned int abs_value(int a)
 {
@@ -170,7 +170,7 @@ PROCESS_THREAD(null_app_process, ev, data)
 
 	if (node_id != 0){
 		adc_on();
-		//adc_configure(11); //to sample reference voltage (Vref/2), ~2048.
+		//adc_configure(0); //to sample reference voltage (Vref/2), ~2048.
 		etimer_set( &rxtimer, (unsigned long)(CLOCK_SECOND/(ADC_SAMPLING_FREQ)));
 	}
 	else
@@ -200,6 +200,7 @@ PROCESS_THREAD(null_app_process, ev, data)
 
 
 	    	app_conn_send(samples_sorted_bytes,sizeof(uint8_t)*ADC_SAMPLES_PER_FRAME*2);
+	    	printf("\n");
 	    }
 
 	  }
@@ -208,27 +209,30 @@ PROCESS_THREAD(null_app_process, ev, data)
 
 
 #ifdef I2C_SENSOR
-	static rtimer_clock_t rt, del;
+	//static rtimer_clock_t rt, del;
 	static struct mpu_data samples;
 	static int i;
 	static uint8_t samples_sorted_bytes[14*MPU_SAMPLES_PER_FRAME],comp_samples_sorted_bytes[14*MPU_SAMPLES_PER_FRAME];
 	static uint8_t sample_num=0, uncomp_data_len=14*MPU_SAMPLES_PER_FRAME,comp_data_len;
 	static uint8_t *st;
 
+	printf("1\n");
 	if (node_id != 0){
 		while(!mpu_enable()){
 			printf("MPU could not be enabled.\n");
 		}
+		printf("2\n");
 
 		while(!mpu_wakeup()){
 			printf("MPU could not be awakened.\n");
 		}
-
+		printf("3\n");
 		etimer_set(&rxtimer, (unsigned long)(CLOCK_SECOND/MPU_SAMPLING_FREQ));
 		}
 	else
 		etimer_set(&rxtimer,CLOCK_SECOND/20);
 
+	printf("4\n");
 	if(node_id != 0)
 	{
 
