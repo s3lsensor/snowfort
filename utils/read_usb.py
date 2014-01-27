@@ -49,7 +49,8 @@ while True:
     f.write(output_line_corr)
     f.close()
 
-    fn_name = str(datetime.date.today())+'-S'+tmp[0]+'format'
+    #fn_name = str(datetime.date.today())+'-S'+tmp[0]+'format'
+    fn_name = 'test1'
     f = open(fn_name +'.csv','a+')
     output_line = ','.join(tmp[3:len(tmp)])
     output_line_corr = output_line.replace("\x00","");

@@ -17,6 +17,7 @@
 #include "appconn/app_conn.h"
 #include "net/mac/framer-tdma.h"
 #include "frame802154.h"
+#include "dev/leds.h"
 #include <string.h>
 #include <stdio.h>
 
@@ -270,6 +271,10 @@ static void TDMA_SN_send(void)
   // release tdma_rdc_buffer
   tdma_rdc_buf_in_using_flg = 0;
 
+  leds_on(LEDS_GREEN);
+  clock_delay(1000);
+  leds_off(LEDS_GREEN);
+
 }
 #endif /*SF_MOTE_TYPE_SENSOR*/
 
@@ -395,6 +400,11 @@ static void input(void)
 
 
   SN_RX_start_time = packetbuf_attr(PACKETBUF_ATTR_TIMESTAMP);
+
+  //show RX signal
+  leds_on(LEDS_BLUE);
+  clock_delay(1000);
+  leds_off(LEDS_BLUE);
 
   /*--------from BS------------*/
   if (packetbuf_attr(PACKETBUF_ATTR_PACKET_TYPE) == PACKETBUF_ATTR_PACKET_TYPE_CMD)

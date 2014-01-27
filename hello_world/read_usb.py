@@ -42,15 +42,17 @@ while True:
 	#	  'temperature'    : hex(data)}
 	#data_id = data_collection.insert(values)
 	
-    fn_name = str(datetime.date.today())+'-S'+tmp[0]
+    #fn_name = str(datetime.date.today())+'-S'+tmp[0]
+    fn_name = 'test5'
     f = open(fn_name +'.csv','a+')
     output_line = ','.join(tmp[3:len(tmp)])
     output_line_corr = output_line.replace("\x00","");
     f.write(output_line_corr)
     f.close()
 
-    fn_name = str(datetime.date.today())+'-S'+tmp[0]+'format'
-    f = open(fn_name +'.csv','a+')
+    #fn_name = str(datetime.date.today())+'-S'+tmp[0]+'format'
+    #fn_name = 'test1_format'
+    f = open(fn_name +'_format'+'.csv','a+')
     output_line = ','.join(tmp[3:len(tmp)])
     output_line_corr = output_line.replace("\x00","");
     output_line_corr = str(localtime)+','+output_line_corr
