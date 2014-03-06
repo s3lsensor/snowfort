@@ -21,6 +21,7 @@
 
 static int16_t accx, accy, accz;
 static int16_t gyrx, gyry, gyrz;
+static int16_t temp;
 
 static uint8_t measurevector[14];
 
@@ -43,6 +44,10 @@ static void measure_mpu(){
 	accz = 0;
 	accz |= measurevector[4];
 	accz = (accz<<8) | measurevector[5];
+
+	temp = 0;
+	temp |= measurevector[6];
+	temp = (temp<<8) | measurevector[7];	
 
 	gyrx = 0;
 	gyrx |= measurevector[8];
@@ -198,7 +203,9 @@ PROCESS_THREAD(sensor_sampling_process, ev, data)
       
   	    measure_mpu();
 	    #if DEBUG
-  	    printf("Accel value: %d\tY value: %d\tZ value: %d\n",accx,accy,accz);
+  	    printf("Accel X value: %d\tY value: %d\tZ value: %d\n",accx,accy,accz);
+	    printf("Gyro X value: %d\tY value: %d\tZ value: %d\n",gyrx,gyry,gyrz);
+	    printf("temperature: %d",temp);
 	    #endif
 
 	    packetbuf_copyfrom(measurevector,sizeof(int8_t)*10);
