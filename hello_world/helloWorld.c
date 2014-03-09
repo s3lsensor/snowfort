@@ -31,8 +31,8 @@
 #define MPU_SAMPLING_FREQ 2 //tested 1, 2, and 4
 #define MPU_SAMPLES_PER_FRAME (MPU_SAMPLING_FREQ/FRAMES_PER_SEC)
 
-//#define I2C_SENSOR
-#define ADC_SENSOR
+#define I2C_SENSOR
+//#define ADC_SENSOR
 
 #define DATA_COMPRESSION_ENABLED 0
 
