@@ -112,7 +112,7 @@ i2c_enable(void)
   old_pxout = I2C_PxOUT & sda_scl;
   old_pxdir = I2C_PxDIR & sda_scl;
 
-  spi_busy = 1;
+  //spi_busy = 1;
 
   I2C_PxSEL &= ~sda_scl;
 
@@ -135,7 +135,7 @@ i2c_disable(void)
   I2C_PxOUT = (I2C_PxOUT & not_sda_scl) | old_pxout;
   I2C_PxSEL = (I2C_PxSEL & not_sda_scl) | old_pxsel;
 
-  spi_busy = 0;
+  //spi_busy = 0;
 }
 
 int

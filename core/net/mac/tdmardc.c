@@ -17,6 +17,7 @@
 #include "appconn/app_conn.h"
 #include "net/mac/framer-tdma.h"
 #include "frame802154.h"
+#include "dev/leds.h"
 #include <string.h>
 #include <stdio.h>
 
@@ -238,7 +239,8 @@ static void TDMA_SN_send(void)
     memcpy(packetbuf_dataptr()+temp_len,tdma_rdc_buffer,sizeof(uint8_t)*tdma_rdc_buf_send_ptr);
     packetbuf_set_datalen(MAX_PKT_PAYLOAD_SIZE);
   }
-
+  uint16_t *data = (uint16_t *)packetbuf_dataptr();
+  printf("%x %x %x %x\n",data[0],data[1],data[2],data[3]);
 
   // send packet -- pushed to radio layer
   if(NETSTACK_RADIO.on())
@@ -253,7 +255,7 @@ static void TDMA_SN_send(void)
     }
     else
     {
-      //printf("[TRACE]TDMA RDC: SN sends %d\n",seq_num);
+      printf("[TRACE]TDMA RDC: SN sends packet %d, total %d bits\n",seq_num,packetbuf_totlen());
     }
     tdma_rdc_buf_full_flg = 0;
     tdma_rdc_buf_ptr = 0;
@@ -268,6 +270,10 @@ static void TDMA_SN_send(void)
 
   // release tdma_rdc_buffer
   tdma_rdc_buf_in_using_flg = 0;
+
+  leds_on(LEDS_GREEN);
+  clock_delay(1000);
+  leds_off(LEDS_GREEN);
 
 }
 #endif /*SF_MOTE_TYPE_SENSOR*/
@@ -391,7 +397,14 @@ static void input(void)
     printf("[ERROR]TDMA RDC: SN fails to turn off radio");
   }
 
+
+
   SN_RX_start_time = packetbuf_attr(PACKETBUF_ATTR_TIMESTAMP);
+
+  //show RX signal
+  leds_on(LEDS_BLUE);
+  clock_delay(1000);
+  leds_off(LEDS_BLUE);
 
   /*--------from BS------------*/
   if (packetbuf_attr(PACKETBUF_ATTR_PACKET_TYPE) == PACKETBUF_ATTR_PACKET_TYPE_CMD)
@@ -419,12 +432,13 @@ static void input(void)
 	//printf("Input: rx=%u,now=%u\n",SN_RX_start_time,RTIMER_NOW());
   }
 
+  handle_missed_bkn();
+
   //app_conn_input(); //For debugging timing
 #endif /* SF_MOTE_TYPE_SENSOR */
 
 #ifdef SF_MOTE_TYPE_AP
   /*-----------------BS CODE---------------*/
-
   rimeaddr_t *sent_sn_addr = packetbuf_addr(PACKETBUF_ADDR_SENDER);
   uint8_t sent_sn_id = sent_sn_addr->u8[0];
 
@@ -514,7 +528,7 @@ static void init(void)
 
 
 
-  printf("[TRACE]Init RDC layer,packet size\n");
+  printf("[TRACE]Init RDC layer\n");
 
   on();
 }
