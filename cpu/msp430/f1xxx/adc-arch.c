@@ -46,5 +46,6 @@ unsigned short adc_arch_sample(void)
 {
 	ADC12CTL0 |=ENC + ADC12SC;
 	while(ADC12CTL1 & ADC12BUSY);
+	//printf("%d\n",ADC12MEM0);
 	return ADC12MEM0;
 }

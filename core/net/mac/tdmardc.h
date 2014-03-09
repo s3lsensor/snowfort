@@ -27,7 +27,7 @@
  * typecast appropriately in tdmardc.c and application layer
  */
 #ifndef FRAMES_PER_SEC
-#define FRAMES_PER_SEC 1
+#define FRAMES_PER_SEC 2
 #endif
 
 #ifndef SEGMENT_PERIOD
@@ -35,7 +35,7 @@
 #endif
 
 #ifndef TOTAL_TS
-#define TOTAL_TS		126
+#define TOTAL_TS		10
 #endif
 
 #ifndef BKN_SLOTS

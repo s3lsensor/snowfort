@@ -4,18 +4,17 @@ import serial
 import time;
 import datetime;
 
-import pymongo;
-from pymongo import MongoClient
+#import pymongo;
+#from pymongo import MongoClient
 
 s = serial.Serial('/dev/ttyUSB0',115200,timeout=None)
-client = MongoClient('54.215.19.254',27017)
-db = client['snowflake_ui_development']
+#client = MongoClient('54.215.19.254',27017)
+#db = client['snowflake_ui_development']
 
 
-data_collection = db.data
+#data_collection = db.data
 #post_id = data_collection.insert(data_input)
 #print post_id
-
 
 
 if not s.isOpen():
@@ -35,19 +34,29 @@ while True:
     slot_num = tmp[1].replace("\x00","");
     
     
-    for i in range(3,len(tmp)-1):
-	data = tmp[i].replace("\x00","");
-	values = {'sensor_id'    : int(sensor_id),
-		  'slot'  : int(slot_num),
-		  'timestamp'    : datetime.datetime.utcnow(),
-		  'temperature'    : int(data)}
-	data_id = data_collection.insert(values)
+    #for i in range(3,len(tmp)-1):
+	#data = tmp[i].replace("\x00","");
+	#values = {'sensor_id'    : int(sensor_id),
+	#	  'slot'  : int(slot_num),
+	#	  'timestamp'    : datetime.datetime.utcnow(),
+	#	  'temperature'    : hex(data)}
+	#data_id = data_collection.insert(values)
 	
-    fn_name = str(datetime.date.today())+'-S'+tmp[0];
+    fn_name = str(datetime.date.today())+'-S'+tmp[0]
     f = open(fn_name +'.csv','a+')
     output_line = ','.join(tmp[3:len(tmp)])
     output_line_corr = output_line.replace("\x00","");
     f.write(output_line_corr)
+    f.close()
+
+    #fn_name = str(datetime.date.today())+'-S'+tmp[0]+'format'
+    fn_name = 'test1'
+    f = open(fn_name +'.csv','a+')
+    output_line = ','.join(tmp[3:len(tmp)])
+    output_line_corr = output_line.replace("\x00","");
+    output_line_corr = str(localtime)+','+output_line_corr
+    f.write(output_line_corr)
+
     f.close()
 
 s.close()
