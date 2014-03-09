@@ -5,7 +5,8 @@
  *
  * Author: Ronnie Bajwa
  */
-
+#ifndef MPU_6050_H
+#define MPU_6050_H
 
 #define I2C_READ_SEND_ACK 1
 
@@ -58,3 +59,4 @@ int mpu_enable(void);
 int mpu_wakeup(void);
 int mpu_sleep(void);
 
+#endif /*MPU_6050_H*/
