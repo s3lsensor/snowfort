@@ -7,7 +7,7 @@
  */
 
 #include "contiki.h"
-#include "dev/adc.h"
+#include "dev/adc-arch.h"
 
 void adc_arch_on(void)
 {
