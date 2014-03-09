@@ -293,13 +293,13 @@ read_multibyte(unsigned slave_address, unsigned register_address, int numbytes, 
 	// slave address	
 	if (i2c_write(slave_address_w)==0){
 		i2c_stop();
-		//printf("read_ slave_address_w unsuccessful\n");
+		printf("read_ slave_address_w unsuccessful\n");
 		return;
 	}		
 	// register address
 	if (i2c_write(register_address)==0){
 		i2c_stop();
-		//printf("read_ register unsuccessful\n");
+		printf("read_ register unsuccessful\n");
 		return;
 	}
 	// restart
@@ -307,7 +307,7 @@ read_multibyte(unsigned slave_address, unsigned register_address, int numbytes, 
 	// load slave read address
 	if (i2c_write(slave_address_r)==0){
 		i2c_stop();
-		//printf("read_ slave_address_r unsuccessful\n");
+		printf("read_ slave_address_r unsuccessful\n");
 		return;
 	}	
 

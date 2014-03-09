@@ -111,11 +111,13 @@ int read_mpu_reg_burst(unsigned char mpu_reg_addr_start, unsigned num, uint8_t *
 }
 
 //Takes about 1.4 ms to finish
-int mpu_sample_all(struct mpu_data * sampled_data)
+int mpu_sample_all(mpu_data * sampled_data)
 {
 	uint8_t buffer[14];
 	if(!read_mpu_reg_burst(MPU_RA_ACCEL_XOUT_H,14,buffer))
 		return 0;
+
+
 
 	sampled_data->accel_x = (buffer[0]<<8)+buffer[1];
 	sampled_data->accel_y = (buffer[2]<<8)+buffer[3];
@@ -139,9 +141,13 @@ int mpu_reset(void)
 	int ret=0;
 
 	if(write_mpu_reg(MPU_RA_PWR_MGMT1,MPU_RESET_BIT)){
-		clock_delay(100000);
+		clock_delay(10000);
 		ret=1;
 	}
+/*
+	write_(MPU_ADDR_W,MPU_RA_PWR_MGMT1,MPU_RESET_BIT);
+	ret = 1;
+*/
 
 	return ret;
 }

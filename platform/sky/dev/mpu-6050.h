@@ -40,7 +40,7 @@
 #define MPU_RV_PWR_MGMT1_AWAKE 0x00
 #define MPU_RA_PWR_MGMT2 0x6c
 
-struct mpu_data{
+typedef struct{
 	short accel_x;
 	short accel_y;
 	short accel_z;
@@ -48,12 +48,12 @@ struct mpu_data{
 	short gyro_x;
 	short gyro_y;
 	short gyro_z;
-};
+}mpu_data;
 
 int read_mpu_reg(unsigned char mpu_reg_addr, unsigned char* buffer);
 int read_mpu_reg_burst(unsigned char mpu_reg_addr_start, unsigned num, unsigned char* buffer);
 int write_mpu_reg(unsigned char mpu_reg_addr,unsigned char mpu_reg_val);
-int mpu_sample_all(struct mpu_data * sampled_data);
+int mpu_sample_all(mpu_data * sampled_data);
 int mpu_reset(void);
 int mpu_enable(void);
 int mpu_wakeup(void);

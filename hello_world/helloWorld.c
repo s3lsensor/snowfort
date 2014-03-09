@@ -31,18 +31,10 @@
 #define MPU_SAMPLING_FREQ 2 //tested 1, 2, and 4
 #define MPU_SAMPLES_PER_FRAME (MPU_SAMPLING_FREQ/FRAMES_PER_SEC)
 
-//#define I2C_SENSOR
-#define ADC_SENSOR
+#define I2C_SENSOR
+//#define ADC_SENSOR
 
-#define DATA_COMPRESSION_ENABLED 0
 
-unsigned int abs_value(int a)
-{
-	if(a<0)
-		return -a;
-	else
-		return a;
-}
 
 static const int8_t SIN_TAB[] =
 {
@@ -69,36 +61,6 @@ static int8_t sinI(uint16_t angleMilli)
 static int8_t sin(uint16_t angleMilli)
 {
 	return SIN_TAB[angleMilli%SIN_TAB_LEN];
-}
-
-void copy_byte_array(uint8_t * from, uint8_t * to, const uint8_t len)
-{
-	int i;
-	for(i=0;i<len;i++)
-		*(to+i)=*(from+i);
-}
-
-void compress_data(const uint8_t *uncomp_data, uint8_t data_len, const uint8_t *comp_data, uint8_t *comp_data_len)
-{
-
-#ifdef I2C_SENSOR
-	int acc_y, acc_z;
-	acc_y = (uncomp_data[2]<<8)+uncomp_data[3];
-	acc_z = (uncomp_data[4]<<8)+uncomp_data[5];
-	if(abs_value(acc_y)>=abs_value(acc_z)){
-		*comp_data_len= data_len;
-		copy_byte_array(uncomp_data,comp_data,data_len);
-	}
-	else{
-		*comp_data_len = 0;
-	}
-#endif
-
-#ifdef ADC_SENSOR
-	*comp_data_len= data_len;
-	copy_byte_array(uncomp_data,comp_data,data_len);
-#endif
-
 }
 
 /*---------------------------------------------------------------*/
@@ -148,6 +110,7 @@ PROCESS_THREAD(null_app_process, ev, data)
 	static struct etimer rxtimer;
 
 	PROCESS_BEGIN();
+
 
 	printf("Hello world Started.\n");
 
@@ -214,22 +177,36 @@ PROCESS_THREAD(null_app_process, ev, data)
 
 #ifdef I2C_SENSOR
 	//static rtimer_clock_t rt, del;
-	static struct mpu_data samples;
+	static mpu_data samples;
 	static int i;
+	static uint8_t MPU_status = 0;
 	static uint8_t samples_sorted_bytes[14*MPU_SAMPLES_PER_FRAME],comp_samples_sorted_bytes[14*MPU_SAMPLES_PER_FRAME];
 	static uint8_t sample_num=0, uncomp_data_len=14*MPU_SAMPLES_PER_FRAME,comp_data_len;
 	static uint8_t *st;
 
 	printf("1\n");
 	if (node_id != 0){
-		while(!mpu_enable()){
-			printf("MPU could not be enabled.\n");
+
+		MPU_status = 0;
+		for(i = 0; i < 100 & ~MPU_status;i++)
+		{
+			MPU_status = mpu_enable();
 		}
+
+		if (MPU_status == 0)
+			printf("MPU could not be enabled.\n");
+
 		printf("2\n");
 
-		while(!mpu_wakeup()){
-			printf("MPU could not be awakened.\n");
+		MPU_status = 0;
+		for(i = 0; i < 100 & ~MPU_status;i++)
+		{
+			MPU_status = mpu_wakeup();
 		}
+
+		if (MPU_status == 0)
+			printf("MPU could not be awakened.\n");
+
 		printf("3\n");
 		etimer_set(&rxtimer, (unsigned long)(CLOCK_SECOND/MPU_SAMPLING_FREQ));
 		}
@@ -255,20 +232,8 @@ PROCESS_THREAD(null_app_process, ev, data)
 
 			if(sample_num==MPU_SAMPLES_PER_FRAME){
 				sample_num=0;
-#if DATA_COMPRESSION_ENABLED
-				compress_data(samples_sorted_bytes, uncomp_data_len, comp_samples_sorted_bytes,&comp_data_len);
-				if(comp_data_len==0){
-					sf_tdma_disable_tx(); //should we access this via app_connection?
-					leds_off(LEDS_GREEN);
-				}
-				else{
-					leds_on(LEDS_GREEN);
-					sf_tdma_enable_tx();
-					app_conn_send(comp_samples_sorted_bytes,sizeof(uint8_t)*comp_data_len);
-				}
-#else
+
 				app_conn_send(samples_sorted_bytes,sizeof(uint8_t)*14*MPU_SAMPLES_PER_FRAME);
-#endif
 			}
 		}
 	}
