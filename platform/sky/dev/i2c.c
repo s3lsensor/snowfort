@@ -87,7 +87,7 @@ void     i2c_stop(void);
 /*
  * Should avoid infinite looping while waiting for SCL_IS_1. xxx/bg
  */
-#define SCL_WAIT_FOR_1() do{}while (!SCL_IS_1)
+//#define SCL_WAIT_FOR_1() do{}while (!SCL_IS_1)
 
 #define delay_4_7us() do{ _NOP(); _NOP(); _NOP(); _NOP(); \
                           _NOP(); _NOP(); _NOP(); _NOP(); \
@@ -144,7 +144,11 @@ i2c_start(void)
   SDA_1();
   SCL_1();
 #if 1
-  SCL_WAIT_FOR_1();
+  //SCL_WAIT_FOR_1();
+  uint8_t n;
+  for (n = 0; n < 1000 && !SCL_IS_1; n++);
+  if (!SCL_IS_1)
+  	return 1;
 #else
   {
     unsigned long n;
@@ -167,7 +171,13 @@ i2c_stop(void)
   SDA_0();
   delay_4us();
   SCL_1();
-  SCL_WAIT_FOR_1();
+  //SCL_WAIT_FOR_1();
+
+  uint8_t n;
+  for (n = 0; n < 1000 && !SCL_IS_1; n++);
+//  if (!SLC_IS_1)
+ // 	return 0;
+
   SDA_1();
 }
 
@@ -188,7 +198,10 @@ i2c_write(unsigned char _c)
     else
       SDA_0();
     SCL_1();
-    SCL_WAIT_FOR_1();
+    //SCL_WAIT_FOR_1();
+  	for (n = 0; n < 1000 && !SCL_IS_1; n++);
+ 	if (!SCL_IS_1)
+  		return 1;
     SCL_0();
   }
 
@@ -201,7 +214,10 @@ i2c_write(unsigned char _c)
       break;
     }
   }
-  SCL_WAIT_FOR_1();		/* clock stretching? */
+  //SCL_WAIT_FOR_1();		/* clock stretching? */
+  for (n = 0; n < 1000 && !SCL_IS_1; n++);
+  if (!SCL_IS_1)
+  	return 1;
   SCL_0();
 
   return ret;
@@ -212,12 +228,17 @@ i2c_read(int send_ack)
 {
   int i;
   unsigned char c = 0x00;
+  uint8_t n;
 
   SDA_1();
   for (i = 0; i < 8; i++) {
     c <<= 1;
     SCL_1();
-    SCL_WAIT_FOR_1();
+    //SCL_WAIT_FOR_1();
+  	for (n = 0; n < 1000 && !SCL_IS_1; n++);
+ 	if (!SCL_IS_1)
+  		return 1;
+
     if (SDA_IS_1)
       c |= 0x1;
     SCL_0();
@@ -226,7 +247,10 @@ i2c_read(int send_ack)
   if (send_ack)
     SDA_0();
   SCL_1();
-  SCL_WAIT_FOR_1();
+  //SCL_WAIT_FOR_1();
+  for (n = 0; n < 1000 && !SCL_IS_1; n++);
+  if (!SCL_IS_1)
+	return 1;
   SCL_0();
 
   return c;
