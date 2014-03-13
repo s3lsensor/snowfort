@@ -16,7 +16,7 @@
 #include "contiki.h"
 #include "shell.h"
 #include "remote-shell.h"
-
+#include "node-id.h"
 #include "net/mac/tdmardc.h"
 #include "appconn/app_conn.h"
 #include "net/packetbuf.h"
@@ -105,8 +105,37 @@ void remote_shell_send(const char* cmd, const uint16_t len)
 /*---------------------------------------------------------------------------*/
 void remote_shell_input(void)
 {
-  char command[30];
-  strncpy(command,(char *)packetbuf_dataptr(),packetbuf_datalen());
-  command[packetbuf_datalen()] = '\0';
-  process_post(&remote_shell_process,remote_command_event_message,command);
+  char * strptr = (char*)packetbuf_dataptr();
+  char id[4] = {'\0'};
+  int isValid = 1;
+  int index = 0;
+  int pos = 0;
+  if(isalpha(strptr[0]) == 0) {
+    isValid = 0; // p2p 
+    while(isalpha(strptr[pos]) == 0) {
+      if(strptr[pos] == ' ') {
+	index = 0;
+	if(atoi(id) == node_id) isValid = 1;
+      
+      } else {
+	id[index] = strptr[pos];
+	index++;
+      }
+      pos++;
+    }
+  }
+  if(isValid == 1) {
+    char command[80];
+    strncpy(command, (char *)(packetbuf_dataptr()),packetbuf_datalen());
+    command[packetbuf_datalen()] = '\0';
+    process_post(&remote_shell_process,remote_command_event_message,command+pos);
+  } else {
+    printf("Command is not for me, ignoring.\n");
+    char command[80] = {'\0'};
+    process_post(&remote_shell_process, remote_command_event_message, command);
+    //strptr = (char*)packetbuf_dataptr();
+    //int k = 0;
+    //for (k = 0; k < packetbuf_datalen(); k++) strptr[k] = '\0';
+    // packetbuf_clear();
+  }
 }
