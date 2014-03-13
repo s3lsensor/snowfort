@@ -98,7 +98,6 @@ void remote_shell_init(void)
 void remote_shell_send(const char* cmd, const uint16_t len)
 {
   PRINTF("Remote shell command: %s -- sent\n",cmd);
-  //app_conn_send(cmd,len);
   packetbuf_copyfrom((void *)&cmd[0],len*sizeof(char));
   packetbuf_set_attr(PACKETBUF_ATTR_PACKET_TYPE,PACKETBUF_ATTR_PACKET_TYPE_CMD);
 }
@@ -133,9 +132,5 @@ void remote_shell_input(void)
     printf("Command is not for me, ignoring.\n");
     char command[80] = {'\0'};
     process_post(&remote_shell_process, remote_command_event_message, command);
-    //strptr = (char*)packetbuf_dataptr();
-    //int k = 0;
-    //for (k = 0; k < packetbuf_datalen(); k++) strptr[k] = '\0';
-    // packetbuf_clear();
   }
 }
