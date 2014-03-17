@@ -18,12 +18,17 @@
 #define RTIMER_MS (RTIMER_SECOND/1000.0)
 
 static uint16_t beacon_period=500; // Beacon period in ms
-static uint16_t slot_period=5; // Slot duration in ms
-static uint16_t beacon_duration=30; //duration of Beacon Transmission
+static uint16_t slot_period=50; // Slot duration in ms
+static uint16_t beacon_duration=50; //duration of Beacon Transmission
+static uint8_t num_slots;
+static uint8_t pkt_sz;
+static uint8_t my_slot;
+
 
 #define NODE_INDEX 7
 #define SEQ_INDEX 8
 #define PKT_SZ 9
+#define PKT_HDR_SZ 9
 static char pkt[] = {65, -120, -120, -51, -85, -1, -1, SN_ID, 0};
 
 static struct rtimer beaconTimer;
@@ -42,7 +47,8 @@ simple_send()
 {
   tic(RTIMER_NOW(), "send");
   // Set Timer for next expected Beacon RTIMER_MS must be before the slot_period
-  uint16_t time =  RTIMER_NOW()+RTIMER_MS*(beacon_period-beacon_duration-(slot_period*SN_ID));
+  //  uint16_t time =  RTIMER_NOW()+RTIMER_MS*(beacon_period-beacon_duration-(slot_period*SN_ID));
+  uint16_t time =  RTIMER_NOW()+RTIMER_MS*(beacon_period-beacon_duration-(slot_period*my_slot));
   rtimer_set(&beaconTimer,time, 0, NETSTACK_RADIO.on, NULL);
 
   int ret;
@@ -54,7 +60,7 @@ simple_send()
       ret =  MAC_TX_ERR;
     }
     NETSTACK_RADIO.off();
-    printf("Sensor Data Sent: %d\n", pkt[SEQ_INDEX]);
+    printf("Sensor Sent: %d\n", pkt[SEQ_INDEX]);
   }
   else {
     // Error 
@@ -81,11 +87,44 @@ packet_input(void)
   
   NETSTACK_RADIO.off();
 
-  // Set Timer for the timeslot - This must be scheduled before beacon
-  uint16_t time = RTIMER_NOW()+RTIMER_MS*(beacon_duration-1.5+(SN_ID*slot_period));
-  rtimer_set(&slotTimer, time, 0, simple_send, NULL);
+  uint8_t free_slots = 0;
+  uint8_t alloc = 0;
 
-  printf("Beacon Seq: %d \n", rx_data[SEQ_INDEX]);
+  my_slot = 0xff; //don't have a slot yet
+  // count number of free slots
+  // or slot already allocated to me
+  int i=0;
+  for (i=0; i<num_slots; i++) {
+    alloc = rx_data[PKT_HDR_SZ+i];
+    if (alloc == 0xff) {
+      free_slots++;
+    } else if (alloc == SN_ID) {
+      my_slot = i;
+    }
+  }
+
+  //I don't have a slot yet, select a random free slot
+  uint8_t my_slot_index = RTIMER_NOW()%free_slots;
+  if (my_slot == 0xff) {
+    // not allocated yet
+    // loop for all free slots
+    for (i=0; i<num_slots; i++) {
+      alloc = rx_data[PKT_HDR_SZ+i];
+      if (alloc == 0xff && my_slot_index==0) {
+	my_slot=i;
+	//	printf("Selected a random slot: %d\n", my_slot);
+	break;
+      } else if (alloc == 0xff) {
+	my_slot_index--;
+      }
+    }
+  }
+
+  // Set Timer for the timeslot - This must be scheduled before beacon
+  //  uint16_t time = RTIMER_NOW()+RTIMER_MS*(beacon_duration-2+(SN_ID*slot_period));
+  uint16_t time = RTIMER_NOW()+RTIMER_MS*(beacon_duration-2+(my_slot*slot_period));
+  rtimer_set(&slotTimer, time, 0, simple_send, NULL);
+  printf("Beacon: %d\n", rx_data[SEQ_INDEX]);
   print_tics();
 }
 /*---------------------------------------------------------------------------*/
@@ -115,6 +154,8 @@ channel_check_interval(void)
 static void
 init(void)
 {
+  num_slots = (beacon_period-beacon_duration)/slot_period ;
+  pkt_sz = num_slots + PKT_HDR_SZ;
   on();
 }
 /*---------------------------------------------------------------------------*/

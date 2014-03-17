@@ -15,3 +15,23 @@
 *.exe
 *.out
 *.app
+*.pyc
+# Target objects
+*.sky
+*.d
+*.ihex
+*.data
+contiki*.a
+*.ce
+*.co
+*.map
+
+# Log files
+log*
+
+# Ctags files
+*.tags
+*.tags*
+
+# Sublime text
+*.sublime-*
