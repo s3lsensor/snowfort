@@ -100,8 +100,9 @@ SHELL_COMMAND(timeslot_command,
          "timeslot <command>: set time slot for TDMA",
          &shell_timeslot_process);
 PROCESS(shell_sendp2pcmd_process, "sendp2pcmd");
-SHELL_COMMAND(sendp2pcmd_command, "sendp2pcmd", 
-	      "sendp2pcmd <command>: send command to specific remote notes", 
+SHELL_COMMAND(sendp2pcmd_command, 
+	      "sendp2pcmd", 
+	      "sendp2pcmd <command>: send command to specific remote nodes", 
 	      &shell_sendp2pcmd_process);
 /*---------------------------------------------------------------------------*/
 #define MAX(a, b) ((a) > (b)? (a): (b))
@@ -425,6 +426,7 @@ PROCESS_THREAD(shell_sendp2pcmd_process, ev, data)
   while((isalpha(cmd[index]) == 0) && (cmd[index] != '\0')) {
     if((isdigit(cmd[index])==0) && (cmd[index] != ' ')){
       isValid = 0;
+      printf("Invalid node id.\n");
       break;
     }
     node_nums[index] = cmd[index];
