@@ -23,7 +23,7 @@
 
 #include <stdio.h>
 #include <string.h>
-
+#include <stdlib.h>
 #define DEBUG 1
 #if DEBUG
 #define PRINTF(...) printf(__VA_ARGS__)
@@ -104,33 +104,32 @@ void remote_shell_send(const char* cmd, const uint16_t len)
 /*---------------------------------------------------------------------------*/
 void remote_shell_input(void)
 {
-  char * strptr = (char*)packetbuf_dataptr();
+  char command[80];
+  strncpy(command, (char*)(packetbuf_dataptr()), packetbuf_datalen());
   char id[4] = {'\0'};
   int isValid = 1;
   int index = 0;
   int pos = 0;
-  if(isalpha(strptr[0]) == 0) {
+  if(isalpha(command[0]) == 0) {
     isValid = 0; // p2p 
-    while(isalpha(strptr[pos]) == 0) {
-      if(strptr[pos] == ' ') {
+    while(isalpha(command[pos]) == 0) {
+      if(command[pos] == ' ') {
 	index = 0;
-	if(atoi(id) == node_id) isValid = 1;
-      
+	if(atoi(id) == node_id){ //found node id in list.
+	  isValid = 1;
+	  break;
+	}
       } else {
-	id[index] = strptr[pos];
+	id[index] = command[pos];
 	index++;
       }
       pos++;
     }
   }
   if(isValid == 1) {
-    char command[80];
-    strncpy(command, (char *)(packetbuf_dataptr()),packetbuf_datalen());
     command[packetbuf_datalen()] = '\0';
     process_post(&remote_shell_process,remote_command_event_message,command+pos);
   } else {
     printf("Command is not for me, ignoring.\n");
-    char command[80] = {'\0'};
-    process_post(&remote_shell_process, remote_command_event_message, command);
   }
 }
