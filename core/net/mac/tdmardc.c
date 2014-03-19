@@ -37,7 +37,6 @@
 #endif
 
 
-
 /*-----------------------------------------------*/
 // Global Variables
 
@@ -73,12 +72,12 @@ static uint16_t radioontime;
 
 //Timer -- SN
 
-uint8_t nMissedBeacons =0;
-uint8_t rxData = 0;
-const uint8_t maxMissedBeacons = 10; //max beacons to miss before sleeping.
-const uint8_t nSleepCycles = 50; //number of cycles to sleep after missing maxMissedBeacons beacons.
+uint8_t nMissedBeacons =0; // number of missed beacons - global
+uint8_t rxData = 0; // received data indicator - global
 static struct rtimer SNTimer;
-static struct rtimer listen_timer;
+static struct etimer sleeptimer; // timer for sleep state.
+#define maxMissedBeacons 10 // beacons to miss before sleeping
+#define sleep_time_s 300 // time to sleep after missing maxMissedBeacons beacons.
 
 #endif
 
@@ -268,15 +267,34 @@ static void TDMA_SN_send(void)
 
 }
 
+
+// Process for the radio to sleep after missing too many beacons.
+PROCESS(SN_sleep_process, "SN Sleep Process");
+PROCESS_THREAD(SN_sleep_process, ev, data){
+  PROCESS_BEGIN();
+  while(1){
+    etimer_set(&sleeptimer,CLOCK_SECOND*sleep_time_s);
+    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&sleeptimer));
+    etimer_set(&sleeptimer, SEGMENT_PERIOD);
+    NETSTACK_RADIO.on();
+    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&sleeptimer));
+    if(nMissedBeacons == 0) { //rediscovered base
+      PROCESS_EXIT();
+    } 
+  }
+  PROCESS_END();
+}
+
 // This function turns the radio off after a period of listening if no data has been received by the node. It then sets the timer to start listening again at a later time.
-static void TDMA_SN_wait(void) {
+static void TDMA_SN_scheduleNextEvent(void) {
   if(rxData == 1) { // schedule transmission.
     if (sf_tdma_slot_num != -1){
-      printf("Schedule for TX at Slot %d\n",sf_tdma_slot_num);
+      // printf("Schedule for TX at Slot %d\n",sf_tdma_slot_num);
       rtimer_clock_t SN_TX_time = SN_RX_start_time + (BS_period+TS_period * (sf_tdma_slot_num-1))-GRD_PERIOD+33;//20 might need to be changed later, do better calibration, increase to 33 if timing problems
       rtimer_set(&SNTimer,SN_TX_time,0,TDMA_SN_send,NULL);
     }
     rxData = 0;
+    app_conn_input();
     return;
   } else { // no data, increment missed beacons and turn off radio.
     NETSTACK_RADIO.off();
@@ -284,10 +302,8 @@ static void TDMA_SN_wait(void) {
     nMissedBeacons++;
     printf("Missed beacon, total missed: %d\n", nMissedBeacons);
     if(nMissedBeacons >= maxMissedBeacons) { // sleep for longer time.
-      rtimer_clock_t next_bkn_time = SN_RX_start_time - GRD_PERIOD + nSleepCycles*SEGMENT_PERIOD;
-      printf("Missed %d beacons, going to sleep.\n", nMissedBeacons);
-      rtimer_set(&SNTimer, next_bkn_time, 0, TDMA_SN_listen, NULL);
-      nMissedBeacons = 0;
+       printf("Missed %d beacons, going to sleep.\n", nMissedBeacons);
+      process_start(&SN_sleep_process, NULL); // go to sleep.
     } else { //wake up again in one cycle.
       rtimer_clock_t next_bkn_time = SN_RX_start_time + SEGMENT_PERIOD - GRD_PERIOD;
       rtimer_set(&SNTimer,next_bkn_time,0,TDMA_SN_listen,NULL);
@@ -298,10 +314,11 @@ static void TDMA_SN_wait(void) {
 //Turns on the radio to listen for new data from the base and sets the timer to turn off the radio if no data is received.
 static void TDMA_SN_listen(void) {
   clock_time_t listen_interval = BS_period*2 + SN_RX_start_time + SEGMENT_PERIOD - GRD_PERIOD; //assume no packets more than 2*base transmit period after expected time.
-  rtimer_set(&listen_timer, listen_interval, 0, TDMA_SN_wait, NULL);
+  rtimer_set(&SNTimer, listen_interval, 0, TDMA_SN_scheduleNextEvent, NULL);
   NETSTACK_RADIO.on(); //activate radio to listen for data.
 }
 
+    
 #endif /*SF_MOTE_TYPE_SENSOR*/
 
 /*-----------------------------------------------*/
@@ -376,11 +393,10 @@ static void input(void)
     // schedule end of wait function, which will schedule transmit (prevents TDMA_SN_wait function from altering transmit timing).
     nMissedBeacons = 0;
     rxData = 1;
-    rtimer_clock_t SN_TX_time = SN_RX_start_time + BS_period*3;
-    rtimer_set(&SNTimer, SN_TX_time, 0, TDMA_SN_wait, NULL);
+    rtimer_set(&SNTimer, clock_time(), 0, TDMA_SN_scheduleNextEvent, NULL);
     return;
   }
-  //app_conn_input(); //For debugging timing
+  
 #endif /* SF_MOTE_TYPE_SENSOR */
 
 #ifdef SF_MOTE_TYPE_AP
