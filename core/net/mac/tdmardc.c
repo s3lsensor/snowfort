@@ -12,6 +12,9 @@
 #include "net/packetbuf.h"
 #include "net/netstack.h"
 #include "sys/rtimer.h"
+#include "sys/timer.h"
+#include "sys/etimer.h"
+#include "clock.h"
 #include "net/queuebuf.h"
 #include "dev/cc2420.h"
 #include "appconn/app_conn.h"
@@ -66,9 +69,17 @@ static struct rtimer BSTimer;
 // SN global variable
 static rtimer_clock_t SN_RX_start_time = 0;
 static uint16_t radioontime;
+//static unit16_t radioofftime;
 
 //Timer -- SN
+
+uint8_t nMissedBeacons =0;
+uint8_t rxData = 0;
+const uint8_t maxMissedBeacons = 10; //max beacons to miss before sleeping.
+const uint8_t nSleepCycles = 50; //number of cycles to sleep after missing maxMissedBeacons beacons.
 static struct rtimer SNTimer;
+static struct rtimer listen_timer;
+
 #endif
 
 // RDC buffer
@@ -183,13 +194,15 @@ static void TDMA_BS_send(void)
     printf("TDMA RDC: BS fails to send packet\n");
   else
     printf("TDMA RDC: BS sends %u\n",seq_num);
-
+  packetbuf_clear(); // clear buffer so we don't get false commands later.
 
 
 }
 #endif /* SF_MOTE_TYPE_AP */
 
 #ifdef SF_MOTE_TYPE_SENSOR
+
+
 // TDMA_SN_send() -- called at a assigned time slot
 static void TDMA_SN_send(void)
 {
@@ -197,8 +210,8 @@ static void TDMA_SN_send(void)
   //uint16_t time = RTIMER_TIME(&SNTimer)+RTIMER_MS*(segment_period-BS_period-my_slot*TS_period);
   uint16_t callBkTime = RTIMER_NOW();
   radioontime = SN_RX_start_time+segment_period-GRD_PERIOD;//RTIMER_TIME(&SNTimer) + (total_slot_num-my_slot)*TS_period-GRD_PERIOD;//(segment_period-BS_period-(my_slot)*TS_period - GRD_PERIOD);
-  rtimer_set(&SNTimer,radioontime,0,NETSTACK_RADIO.on,NULL);
-
+  // rtimer_set(&SNTimer,radioontime,0,NETSTACK_RADIO.on,NULL);
+  rtimer_set(&SNTimer, radioontime, 0, TDMA_SN_listen, NULL);
 
   //update packet sequence number
   seq_num = seq_num + 1;
@@ -254,6 +267,41 @@ static void TDMA_SN_send(void)
   tdma_rdc_buf_in_using_flg = 0;
 
 }
+
+// This function turns the radio off after a period of listening if no data has been received by the node. It then sets the timer to start listening again at a later time.
+static void TDMA_SN_wait(void) {
+  if(rxData == 1) { // schedule transmission.
+    if (sf_tdma_slot_num != -1){
+      printf("Schedule for TX at Slot %d\n",sf_tdma_slot_num);
+      rtimer_clock_t SN_TX_time = SN_RX_start_time + (BS_period+TS_period * (sf_tdma_slot_num-1))-GRD_PERIOD+33;//20 might need to be changed later, do better calibration, increase to 33 if timing problems
+      rtimer_set(&SNTimer,SN_TX_time,0,TDMA_SN_send,NULL);
+    }
+    rxData = 0;
+    return;
+  } else { // no data, increment missed beacons and turn off radio.
+    NETSTACK_RADIO.off();
+    SN_RX_start_time = SN_RX_start_time + SEGMENT_PERIOD; //assumed new bkn
+    nMissedBeacons++;
+    printf("Missed beacon, total missed: %d\n", nMissedBeacons);
+    if(nMissedBeacons >= maxMissedBeacons) { // sleep for longer time.
+      rtimer_clock_t next_bkn_time = SN_RX_start_time - GRD_PERIOD + nSleepCycles*SEGMENT_PERIOD;
+      printf("Missed %d beacons, going to sleep.\n", nMissedBeacons);
+      rtimer_set(&SNTimer, next_bkn_time, 0, TDMA_SN_listen, NULL);
+      nMissedBeacons = 0;
+    } else { //wake up again in one cycle.
+      rtimer_clock_t next_bkn_time = SN_RX_start_time + SEGMENT_PERIOD - GRD_PERIOD;
+      rtimer_set(&SNTimer,next_bkn_time,0,TDMA_SN_listen,NULL);
+    }
+  }
+}
+
+//Turns on the radio to listen for new data from the base and sets the timer to turn off the radio if no data is received.
+static void TDMA_SN_listen(void) {
+  clock_time_t listen_interval = BS_period*2 + SN_RX_start_time + SEGMENT_PERIOD - GRD_PERIOD; //assume no packets more than 2*base transmit period after expected time.
+  rtimer_set(&listen_timer, listen_interval, 0, TDMA_SN_wait, NULL);
+  NETSTACK_RADIO.on(); //activate radio to listen for data.
+}
+
 #endif /*SF_MOTE_TYPE_SENSOR*/
 
 /*-----------------------------------------------*/
@@ -273,11 +321,14 @@ static void send_list(mac_callback_t sent_callback, void *ptr, struct rdc_buf_li
 // receives packet -- called in radio.c,radio.h
 static void input(void)
 {
-  if(NETSTACK_FRAMER.parse() < 0)
+  uint8_t incorrectDecode = 0;
+  if(NETSTACK_FRAMER.parse() < 0){
     printf("Incorrect decode frame\n");
-
+    incorrectDecode = 1;
+  }
 
 #ifdef SF_MOTE_TYPE_SENSOR
+  
   /*-------------SN CODE----------------------*/
   //check if the packet is from BS
   if (!rimeaddr_cmp(packetbuf_addr(PACKETBUF_ADDR_SENDER),&rimeaddr_null))
@@ -288,30 +339,33 @@ static void input(void)
 
   uint8_t *rx_pkt = (uint8_t *)packetbuf_dataptr();
   uint16_t rx_pkt_len = packetbuf_datalen();
-
+ 
+ if(rx_pkt_len == 0 || incorrectDecode == 1) {
+    rxData = 0;
+    return;
+  }
+ 
   //turn off radio -- save power
   if(NETSTACK_RADIO.off() != 1)
   {
     printf("TDMA RDC: SN fails to turn off radio");
   }
 
-
   SN_RX_start_time = packetbuf_attr(PACKETBUF_ATTR_TIMESTAMP);
-
+ 
   /*--------from BS------------*/
   if (packetbuf_attr(PACKETBUF_ATTR_PACKET_TYPE) == PACKETBUF_ATTR_PACKET_TYPE_CMD)
-  {
+    { //Received command.
+    nMissedBeacons = 0;
+    rxData = 1;
     //skip this period for TX
     rtimer_clock_t next_bkn_time = SN_RX_start_time + SEGMENT_PERIOD - GRD_PERIOD;
-    rtimer_set(&SNTimer,next_bkn_time,0,NETSTACK_RADIO.on,NULL);
-
+    rtimer_set(&SNTimer, next_bkn_time, 0, TDMA_SN_listen, NULL);
 #ifdef SF_FEATURE_SHELL_OPT
     char command_string[128];
     strncpy(command_string,rx_pkt,rx_pkt_len);
     command_string[rx_pkt_len] = (uint8_t)'\0';
     PRINTF("RX Command: %s %d\n",command_string,strlen(command_string));
-
-    //process_post(&remote_shell_process,remote_command_event_message,command_string);
     remote_shell_input();
 
     return;
@@ -319,16 +373,14 @@ static void input(void)
   }
   else if(packetbuf_attr(PACKETBUF_ATTR_PACKET_TYPE) == PACKETBUF_ATTR_PACKET_TYPE_DATA)
   {
-    //schedule for TX
-
-    if (sf_tdma_slot_num != -1)
-    {
-      //PRINTF("Schedule for TX at Slot %d\n",my_slot);
-      rtimer_clock_t SN_TX_time = SN_RX_start_time + (BS_period+TS_period * (sf_tdma_slot_num-1))-GRD_PERIOD+33;//20 might need to be changed later, do better calibration, increase to 33 if timing problems
-      rtimer_set(&SNTimer,SN_TX_time,0,TDMA_SN_send,NULL);
-    }
+    // schedule end of wait function, which will schedule transmit (prevents TDMA_SN_wait function from altering transmit timing).
+    nMissedBeacons = 0;
+    rxData = 1;
+    rtimer_clock_t SN_TX_time = SN_RX_start_time + BS_period*3;
+    rtimer_set(&SNTimer, SN_TX_time, 0, TDMA_SN_wait, NULL);
+    return;
   }
-  app_conn_input(); //For debugging timing
+  //app_conn_input(); //For debugging timing
 #endif /* SF_MOTE_TYPE_SENSOR */
 
 #ifdef SF_MOTE_TYPE_AP

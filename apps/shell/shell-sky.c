@@ -99,10 +99,6 @@ SHELL_COMMAND(timeslot_command,
          "timeslot",
          "timeslot <command>: set time slot for TDMA",
          &shell_timeslot_process);
-PROCESS(shell_sendp2pcmd_process, "sendp2pcmd");
-SHELL_COMMAND(sendp2pcmd_command, "sendp2pcmd", 
-	      "sendp2pcmd <command>: send command to specific remote notes", 
-	      &shell_sendp2pcmd_process);
 /*---------------------------------------------------------------------------*/
 #define MAX(a, b) ((a) > (b)? (a): (b))
 #define MIN(a, b) ((a) < (b)? (a): (b))
@@ -411,40 +407,6 @@ PROCESS_THREAD(shell_sendcmd_process, ev, data)
   PROCESS_END();
 }
 
-PROCESS_THREAD(shell_sendp2pcmd_process, ev, data)
-{
-
-  PROCESS_BEGIN();
-
-  char isValid = 1;
-  
-  // skip past the node values.
-  char node_nums[60] = {'\0'};
-  int index = 0;
-  char * cmd = data;
-  while((isalpha(cmd[index]) == 0) && (cmd[index] != '\0')) {
-    if((isdigit(cmd[index])==0) && (cmd[index] != ' ')){
-      isValid = 0;
-      break;
-    }
-    node_nums[index] = cmd[index];
-    index++;
-  } 
-
-  //verify command is valid.
-  if((shell_sky_is_remote_cmd(cmd) != 0) && (isValid != 0))
-  {
-    printf("Send COMMAND \"%s\" to remote nodes %s\n",(char *)cmd, (char*)node_nums);
-    remote_shell_send(data,strlen(data));
-  }
-  else
-  {
-    printf("\"%s\" is not a validate remote shell command\n",(char *)data);
-  }
-
-  PROCESS_END();
-}
-
 /*---------------------------------------------------------------------------*/
 void
 shell_sky_init(void)
@@ -455,7 +417,6 @@ shell_sky_init(void)
 //  shell_register_command(&senseconv_command);
   shell_register_command(&nodeid_command);
   shell_register_command(&sendcmd_command);
-  shell_register_command(&sendp2pcmd_command);
   shell_register_command(&timeslot_command);
 
   //remote command list

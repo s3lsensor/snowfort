@@ -62,6 +62,7 @@ extern volatile uint8_t tdma_rdc_buf_ptr; //updated when send() called (RDC_send
 extern volatile uint8_t tdma_rdc_buf_send_ptr; //updated when send() called (RDC_send()) directly
 extern volatile uint8_t tdma_rdc_buf_full_flg; //updated when send() called RDC_send()) directly
 extern volatile uint8_t tdma_rdc_buf_in_using_flg;
+//extern  nMissedBeacons; //for counting number of beacon misses for transition to sleep state.
 
 /* tdma rdc driver */
 extern const struct rdc_driver tdmardc_driver;
@@ -70,6 +71,11 @@ extern const struct rdc_driver tdmardc_driver;
 extern void sf_tdma_set_slot_num(const uint16_t num);
 extern uint16_t sf_tdma_get_slot_num(void);
 extern void sf_tdma_set_mac_addr(void);
+
+#ifdef SF_MOTE_TYPE_SENSOR
+static void TDMA_SN_wait(void);
+static void TDMA_SN_listen(void);
+#endif /* SF_MOTE_TYPE_SENSOR */
 
 #endif /* __TDMARDC_H__ */
 
