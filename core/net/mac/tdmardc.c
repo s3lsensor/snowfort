@@ -209,7 +209,6 @@ static void TDMA_SN_send(void)
   //uint16_t time = RTIMER_TIME(&SNTimer)+RTIMER_MS*(segment_period-BS_period-my_slot*TS_period);
   uint16_t callBkTime = RTIMER_NOW();
   radioontime = SN_RX_start_time+segment_period-GRD_PERIOD;//RTIMER_TIME(&SNTimer) + (total_slot_num-my_slot)*TS_period-GRD_PERIOD;//(segment_period-BS_period-(my_slot)*TS_period - GRD_PERIOD);
-  // rtimer_set(&SNTimer,radioontime,0,NETSTACK_RADIO.on,NULL);
   rtimer_set(&SNTimer, radioontime, 0, TDMA_SN_listen, NULL);
 
   //update packet sequence number
