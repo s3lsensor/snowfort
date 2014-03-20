@@ -12,9 +12,7 @@
 #include "net/packetbuf.h"
 #include "net/netstack.h"
 #include "sys/rtimer.h"
-#include "sys/timer.h"
 #include "sys/etimer.h"
-#include "clock.h"
 #include "net/queuebuf.h"
 #include "dev/cc2420.h"
 #include "appconn/app_conn.h"
@@ -76,8 +74,10 @@ uint8_t nMissedBeacons =0; // number of missed beacons - global
 uint8_t rxData = 0; // received data indicator - global
 static struct rtimer SNTimer;
 static struct etimer sleeptimer; // timer for sleep state.
-#define maxMissedBeacons 10 // beacons to miss before sleeping
-#define sleep_time_s 300 // time to sleep after missing maxMissedBeacons beacons.
+
+//Functions - SN
+static void TDMA_SN_scheduleNextEvent(void);
+static void TDMA_SN_listen(void);
 
 #endif
 
@@ -274,7 +274,7 @@ PROCESS_THREAD(SN_sleep_process, ev, data){
   while(1){
     etimer_set(&sleeptimer,CLOCK_SECOND*sleep_time_s);
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&sleeptimer));
-    etimer_set(&sleeptimer, SEGMENT_PERIOD);
+    etimer_set(&sleeptimer, 3*SEGMENT_PERIOD);
     NETSTACK_RADIO.on();
     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&sleeptimer));
     if(nMissedBeacons == 0) { //rediscovered base
@@ -312,7 +312,7 @@ static void TDMA_SN_scheduleNextEvent(void) {
 
 //Turns on the radio to listen for new data from the base and sets the timer to turn off the radio if no data is received.
 static void TDMA_SN_listen(void) {
-  clock_time_t listen_interval = BS_period*2 + SN_RX_start_time + SEGMENT_PERIOD - GRD_PERIOD; //assume no packets more than 2*base transmit period after expected time.
+  clock_time_t listen_interval = BS_period + SN_RX_start_time + SEGMENT_PERIOD - GRD_PERIOD; //assume no packets more than base transmit period after expected time.
   rtimer_set(&SNTimer, listen_interval, 0, TDMA_SN_scheduleNextEvent, NULL);
   NETSTACK_RADIO.on(); //activate radio to listen for data.
 }

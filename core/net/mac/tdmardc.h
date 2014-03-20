@@ -72,8 +72,8 @@ extern uint16_t sf_tdma_get_slot_num(void);
 extern void sf_tdma_set_mac_addr(void);
 
 #ifdef SF_MOTE_TYPE_SENSOR
-static void TDMA_SN_wait(void);
-static void TDMA_SN_listen(void);
+#define maxMissedBeacons 10 // beacons to miss before sleeping
+#define sleep_time_s 300 // time to sleep after missing maxMissedBeacons beacons
 #endif /* SF_MOTE_TYPE_SENSOR */
 
 #endif /* __TDMARDC_H__ */
