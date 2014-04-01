@@ -6,6 +6,20 @@
  */
 
 #include "app_util.h"
+#include <stdio.h>
+
+#ifdef MSP430DEF_H
+int putint(int c)
+{
+  uart1_writeb((char)c);
+  return c;
+}
+
+void putchar(char c)
+{
+  uart1_writeb(c);
+}
+#endif
 
 /*
  * Function: app_output
@@ -15,11 +29,16 @@
  */
 void app_output(const char * data, const int node_id, const int pkt_seq, const int payload_len)
 {
-	printf("%u,%d,%u",node_id,pkt_seq,0);
+	printf("%u,%d",node_id,pkt_seq);
 	int i;
 	for(i = 0; i < payload_len; i++)
 	{
-		printf(",%d",data[i]);
+#ifdef MSP430DEF_H
+	  putchar(',');
+	  putint(data[i]);
+#else
+	  printf(",%d",data[i]);
+#endif
 	}
 	printf("\n");
 }

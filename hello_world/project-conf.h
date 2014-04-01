@@ -18,6 +18,6 @@
 #endif /* SN_ID >0: Sensor node*/
 
 //define feature
-#define SF_FEATURE_SHELL_OPT
+//#define SF_FEATURE_SHELL_OPT
 
 #endif /* __PROJECT_CONF_H__ */
