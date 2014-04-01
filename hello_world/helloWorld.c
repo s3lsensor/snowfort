@@ -28,11 +28,26 @@
 #define ADC_SAMPLING_FREQ 64 //use power of 2 in Hz (tested 1, 2, 4...32)
 #define ADC_SAMPLES_PER_FRAME (ADC_SAMPLING_FREQ/FRAMES_PER_SEC)
 
-#define MPU_SAMPLING_FREQ 2 //tested 1, 2, and 4
+#define MPU_SAMPLING_FREQ 16 //tested 1, 2, and 4
 #define MPU_SAMPLES_PER_FRAME (MPU_SAMPLING_FREQ/FRAMES_PER_SEC)
 
 #define I2C_SENSOR
 //#define ADC_SENSOR
+
+#ifdef I2C_SENSOR
+#define DATA_SIZE sizeof(uint16_t)/sizeof(uint8_t);
+#define SAMPLING_FREQ MPU_SAMPLING_FREQ
+#endif /*I2C_SENSOR*/
+
+#ifdef ADC_SENSOR
+#define DATA_SIZE sizeof(uint16_t)/sizeof(uint8_t);
+#define SAMPLING_FREQ ADC_SAMPLES_PER_FRAME
+#endif /*ADC_SENSOR*/
+
+#ifndef DATA_SIZE
+#define DATA_SIZE 1 //size of uint8_t (1 bit)
+#endif /*DATA_SIZE*/
+
 
 
 
@@ -86,14 +101,16 @@ static void app_recv(void)
 	uint8_t rx_sn_id = sent_sn_addr->u8[0];
 
 	uint8_t pkt_seq = packetbuf_attr(PACKETBUF_ATTR_PACKET_ID);
-	uint8_t payload_len = packetbuf_datalen()/2;
+	uint8_t payload_len = packetbuf_datalen()/DATA_SIZE;
 
 
 	printf("%u,%u,%u,",rx_sn_id,pkt_seq,payload_len);
+	/*
 	for(i=0;i<payload_len;i++){
-		printf("%x,",data[i]);
+		printf("%u,",data[i]);
 	}
 	printf("\n");
+	*/
 
 	//app_output(data,rx_sn_id,pkt_seq,payload_len);
 
@@ -180,11 +197,12 @@ PROCESS_THREAD(null_app_process, ev, data)
 	static mpu_data samples;
 	static int i;
 	static uint8_t MPU_status = 0;
+/*
 	static uint8_t samples_sorted_bytes[14*MPU_SAMPLES_PER_FRAME],comp_samples_sorted_bytes[14*MPU_SAMPLES_PER_FRAME];
 	static uint8_t sample_num=0, uncomp_data_len=14*MPU_SAMPLES_PER_FRAME,comp_data_len;
 	static uint8_t *st;
+*/
 
-	printf("1\n");
 	if (node_id != 0){
 
 		MPU_status = 0;
@@ -196,7 +214,6 @@ PROCESS_THREAD(null_app_process, ev, data)
 		if (MPU_status == 0)
 			printf("MPU could not be enabled.\n");
 
-		printf("2\n");
 
 		MPU_status = 0;
 		for(i = 0; i < 100 & ~MPU_status;i++)
@@ -207,13 +224,11 @@ PROCESS_THREAD(null_app_process, ev, data)
 		if (MPU_status == 0)
 			printf("MPU could not be awakened.\n");
 
-		printf("3\n");
 		etimer_set(&rxtimer, (unsigned long)(CLOCK_SECOND/MPU_SAMPLING_FREQ));
 		}
 	else
 		etimer_set(&rxtimer,CLOCK_SECOND/20);
 
-	printf("4\n");
 	if(node_id != 0)
 	{
 
@@ -222,7 +237,7 @@ PROCESS_THREAD(null_app_process, ev, data)
 			etimer_reset(&rxtimer);
 
 			int m=mpu_sample_all(&samples);
-
+/*
 			st = &samples;
 			for(i=0;i<7;i++){
 				samples_sorted_bytes[2*i+14*sample_num]=*(st+2*i+1);
@@ -235,6 +250,8 @@ PROCESS_THREAD(null_app_process, ev, data)
 
 				app_conn_send(samples_sorted_bytes,sizeof(uint8_t)*14*MPU_SAMPLES_PER_FRAME);
 			}
+*/
+			app_conn_send((uint8_t*)&samples,sizeof(mpu_data)/sizeof(uint8_t));
 		}
 	}
 

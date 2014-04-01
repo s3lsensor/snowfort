@@ -127,8 +127,8 @@ int mpu_sample_all(mpu_data * sampled_data)
 	sampled_data->gyro_y = (buffer[10]<<8)+buffer[11];
 	sampled_data->gyro_z = (buffer[12]<<8)+buffer[13];
 
-	printf("acc: %u,%u,%u,temp: %u\n",sampled_data->accel_x,
-		sampled_data->accel_y,sampled_data->accel_z,sampled_data->temperature);
+	printf("%u,%u,%u,%u,%u,%u,%u\n",sampled_data->accel_x,sampled_data->accel_y,sampled_data->accel_z,sampled_data->gyro_x,sampled_data->gyro_y,
+		sampled_data->gyro_z,sampled_data->temperature);
 
 	return 1;
 }

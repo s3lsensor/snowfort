@@ -27,7 +27,7 @@
 
 
 
-#define DEBUG 0
+#define DEBUG 1
 #if DEBUG
 #define PRINTF(...) printf(__VA_ARGS__)
 #else
@@ -46,7 +46,7 @@ static const uint16_t BS_period = BS_PERIOD;         //BS broadcasts duration in
 
 //slot information
 static const uint16_t total_slot_num = TOTAL_TS; // uint16_t to support > 256 slots
-static volatile uint16_t sf_tdma_slot_num; //
+static volatile uint16_t sf_tdma_slot_num = 0; //
 
 //packet information
 static uint8_t seq_num;
@@ -239,8 +239,8 @@ static void TDMA_SN_send(void)
     memcpy(packetbuf_dataptr()+temp_len,tdma_rdc_buffer,sizeof(uint8_t)*tdma_rdc_buf_send_ptr);
     packetbuf_set_datalen(MAX_PKT_PAYLOAD_SIZE);
   }
-  uint16_t *data = (uint16_t *)packetbuf_dataptr();
-  printf("%x %x %x %x\n",data[0],data[1],data[2],data[3]);
+  //uint16_t *data = (uint16_t *)packetbuf_dataptr();
+  //printf("%x %x %x %x\n",data[0],data[1],data[2],data[3]);
 
   // send packet -- pushed to radio layer
   if(NETSTACK_RADIO.on())
@@ -331,8 +331,9 @@ static void handle_missed_bkn(void)
 			next_bkn_time = SN_RX_start_time + segment_period - GRD_PERIOD;
 		}
 
-		if (TX_enabled && (sf_tdma_slot_num != -1)){
+		if (TX_enabled && (sf_tdma_slot_num > 0)){
 			//PRINTF("Schedule for TX at Slot %d\n",my_slot);
+      printf("slot number2 %u\n",sf_tdma_slot_num);
 			rtimer_clock_t SN_TX_time = SN_RX_start_time + (BS_period+TS_period * (sf_tdma_slot_num-1))-GRD_PERIOD+33;//20 might need to be changed later, do better calibration, increase to 33 if timing problems
 			rtimer_set(&SNTimer,SN_TX_time,0,TDMA_SN_send,NULL);
 			//printf("Bkn Handle: en=%u,now=%u,rx=%u,bkn=%u\n",nw,RTIMER_NOW(),SN_RX_start_time,next_bkn_time);
@@ -511,6 +512,8 @@ static void init(void)
   //set slot number
   sf_tdma_set_slot_num(node_id);
 
+  //debug
+  printf("slot number1 %u",sf_tdma_slot_num);
 
   //reset rime & radio address
   sf_tdma_set_mac_addr();
