@@ -12,6 +12,14 @@
 #include "dev/i2c.h"
 #include "dev/mpu-6050.h"
 
+#define SWAP(a,b) a = a^b; b = a^b; a = a^b;
+
+#define DEBUG 0
+#if DEBUG
+#define PRINTF(...) printf(__VA_ARGS__)
+#else
+#define PRINTF(...)
+#endif
 
 
 /*
@@ -111,24 +119,33 @@ int read_mpu_reg_burst(unsigned char mpu_reg_addr_start, unsigned num, uint8_t *
 }
 
 //Takes about 1.4 ms to finish
-int mpu_sample_all(mpu_data * sampled_data)
+int mpu_sample_all(mpu_data_union *sampled_data)
 {
-	uint8_t buffer[14];
-	if(!read_mpu_reg_burst(MPU_RA_ACCEL_XOUT_H,14,buffer))
+	//uint8_t buffer[14];
+	if(!read_mpu_reg_burst(MPU_RA_ACCEL_XOUT_H,14,(uint8_t*)sampled_data))
 		return 0;
 
-
+/*
 
 	sampled_data->accel_x = (buffer[0]<<8)+buffer[1];
 	sampled_data->accel_y = (buffer[2]<<8)+buffer[3];
 	sampled_data->accel_z = (buffer[4]<<8)+buffer[5];
-	sampled_data->temperature = (buffer[6]<<8)+buffer[7];
+	sampled_data->temperature = (buffer[6]<<6)+buffer[7];
 	sampled_data->gyro_x = (buffer[8]<<8)+buffer[9];
 	sampled_data->gyro_y = (buffer[10]<<8)+buffer[11];
 	sampled_data->gyro_z = (buffer[12]<<8)+buffer[13];
+*/
+	SWAP(sampled_data->reg.x_accel_h,sampled_data->reg.x_accel_l);
+	SWAP(sampled_data->reg.y_accel_h,sampled_data->reg.y_accel_l);
+	SWAP(sampled_data->reg.z_accel_h,sampled_data->reg.z_accel_l);
+	SWAP(sampled_data->reg.t_h,sampled_data->reg.t_l);
+	SWAP(sampled_data->reg.x_gyro_h,sampled_data->reg.x_gyro_l);
+	SWAP(sampled_data->reg.y_gyro_h,sampled_data->reg.y_gyro_l);
+	SWAP(sampled_data->reg.z_gyro_h,sampled_data->reg.z_gyro_l);
 
-	printf("%u,%u,%u,%u,%u,%u,%u\n",sampled_data->accel_x,sampled_data->accel_y,sampled_data->accel_z,sampled_data->gyro_x,sampled_data->gyro_y,
-		sampled_data->gyro_z,sampled_data->temperature);
+
+	PRINTF("%d,%d,%d,%d,%d,%d,%d\n",sampled_data->data.accel_x,sampled_data->data.accel_y,sampled_data->data.accel_z,sampled_data->data.gyro_x,sampled_data->data.gyro_y,
+		sampled_data->data.gyro_z,sampled_data->data.temperature);
 
 	return 1;
 }

@@ -39,21 +39,44 @@
 #define MPU_RA_PWR_MGMT1 0x6b
 #define MPU_RV_PWR_MGMT1_AWAKE 0x00
 #define MPU_RA_PWR_MGMT2 0x6c
-
-typedef struct{
-	short accel_x;
-	short accel_y;
-	short accel_z;
-	short temperature;
-	short gyro_x;
-	short gyro_y;
-	short gyro_z;
+typedef struct
+{
+    /* data */
+    uint8_t x_accel_h;
+    uint8_t x_accel_l;
+    uint8_t y_accel_h;
+    uint8_t y_accel_l;
+    uint8_t z_accel_h;
+    uint8_t z_accel_l;
+    uint8_t t_h;
+    uint8_t t_l;
+    uint8_t x_gyro_h;
+    uint8_t x_gyro_l;
+    uint8_t y_gyro_h;
+    uint8_t y_gyro_l;
+    uint8_t z_gyro_h;
+    uint8_t z_gyro_l;
+}mpu_lh;
+typedef struct
+{
+    int16_t accel_x;
+    int16_t accel_y;
+    int16_t accel_z;
+    int16_t temperature;
+    int16_t gyro_x;
+    int16_t gyro_y;
+    int16_t gyro_z;
 }mpu_data;
 
+typedef union
+{
+    mpu_lh reg;
+    mpu_data data; 
+}mpu_data_union;
 int read_mpu_reg(unsigned char mpu_reg_addr, unsigned char* buffer);
 int read_mpu_reg_burst(unsigned char mpu_reg_addr_start, unsigned num, unsigned char* buffer);
 int write_mpu_reg(unsigned char mpu_reg_addr,unsigned char mpu_reg_val);
-int mpu_sample_all(mpu_data * sampled_data);
+int mpu_sample_all(mpu_data_union *sampled_data);
 int mpu_reset(void);
 int mpu_enable(void);
 int mpu_wakeup(void);
