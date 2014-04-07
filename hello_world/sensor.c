@@ -28,8 +28,8 @@
 #define ADC_SAMPLING_FREQ 64 //use power of 2 in Hz (tested 1, 2, 4...32)
 #define ADC_SAMPLES_PER_FRAME (ADC_SAMPLING_FREQ/FRAMES_PER_SEC)
 
-#define MPU_SAMPLING_FREQ 16 //tested 1, 2, and 4
-#define MPU_SAMPLES_PER_FRAME (MPU_SAMPLING_FREQ/FRAMES_PER_SEC)
+#define MPU_SAMPLING_FREQ 2 //tested 1, 2, and 4
+#define MPU_SAMPLES_PER_FRAME (MPU_SAMPLING_FREQ/FRAMES_PER_SEC_INT)
 
 #define I2C_SENSOR
 //#define ADC_SENSOR
@@ -91,28 +91,27 @@ static void app_recv(void)
 	//printf("Received from RDC\n");
 	PROCESS_CONTEXT_BEGIN(&null_app_process);
 	
-	uint16_t *data = (uint16_t*)packetbuf_dataptr();
+	int16_t *data = (int16_t*)packetbuf_dataptr();
 
-	uint8_t flag = 0;
-
-
-	int i;
+	uint8_t i;
 	rimeaddr_t *sent_sn_addr = packetbuf_addr(PACKETBUF_ADDR_SENDER);
 	uint8_t rx_sn_id = sent_sn_addr->u8[0];
 
 	uint8_t pkt_seq = packetbuf_attr(PACKETBUF_ATTR_PACKET_ID);
-	uint8_t payload_len = packetbuf_datalen()/DATA_SIZE;
+	//uint8_t payload_len = packetbuf_datalen()/DATA_SIZE;
+	uint8_t payload_len = packetbuf_datalen()/2;
 
-
-	printf("%u,%u,%u,",rx_sn_id,pkt_seq,payload_len);
-	/*
+/*
+	printf("%u,%u,",rx_sn_id,pkt_seq);
+	
 	for(i=0;i<payload_len;i++){
-		printf("%u,",data[i]);
+		printf("%d,",data[i]);
 	}
 	printf("\n");
-	*/
+*/
 
-	//app_output(data,rx_sn_id,pkt_seq,payload_len);
+
+	app_output_16t(data,rx_sn_id,pkt_seq,payload_len);
 
 	PROCESS_CONTEXT_END(&null_app_process);
 
@@ -194,19 +193,22 @@ PROCESS_THREAD(null_app_process, ev, data)
 
 #ifdef I2C_SENSOR
 	//static rtimer_clock_t rt, del;
-	static mpu_data samples;
-	static int i;
+	int i;
 	static uint8_t MPU_status = 0;
+	static uint8_t sample_count = 0;
 /*
 	static uint8_t samples_sorted_bytes[14*MPU_SAMPLES_PER_FRAME],comp_samples_sorted_bytes[14*MPU_SAMPLES_PER_FRAME];
 	static uint8_t sample_num=0, uncomp_data_len=14*MPU_SAMPLES_PER_FRAME,comp_data_len;
 	static uint8_t *st;
 */
 
+
+	static mpu_data sampleArray[MPU_SAMPLES_PER_FRAME];
+
 	if (node_id != 0){
 
 		MPU_status = 0;
-		for(i = 0; i < 100 & ~MPU_status;i++)
+		for(i = 0; i < 100 & (~MPU_status);i++)
 		{
 			MPU_status = mpu_enable();
 		}
@@ -216,7 +218,7 @@ PROCESS_THREAD(null_app_process, ev, data)
 
 
 		MPU_status = 0;
-		for(i = 0; i < 100 & ~MPU_status;i++)
+		for(i = 0; i < 100 & (~MPU_status);i++)
 		{
 			MPU_status = mpu_wakeup();
 		}
@@ -236,7 +238,22 @@ PROCESS_THREAD(null_app_process, ev, data)
 			PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&rxtimer));
 			etimer_reset(&rxtimer);
 
+			mpu_data_union samples;
 			int m=mpu_sample_all(&samples);
+
+			sampleArray[sample_count] = samples.data;
+
+			sample_count = sample_count + 1;
+
+			if(sample_count == MPU_SAMPLES_PER_FRAME)
+			{
+				sample_count = 0;
+				tdma_rdc_buf_ptr = 0;
+	    	 	tdma_rdc_buf_send_ptr = 0;
+	    	 	tdma_rdc_buf_full_flg = 0;
+				app_conn_send(sampleArray,sizeof(mpu_data)/sizeof(uint8_t)*MPU_SAMPLES_PER_FRAME);
+
+			}
 /*
 			st = &samples;
 			for(i=0;i<7;i++){
@@ -250,8 +267,11 @@ PROCESS_THREAD(null_app_process, ev, data)
 
 				app_conn_send(samples_sorted_bytes,sizeof(uint8_t)*14*MPU_SAMPLES_PER_FRAME);
 			}
+
+			PRINTF("%d,%d,%d,%d,%d,%d,%d\n",samples.data.accel_x,samples.data.accel_y,samples.data.accel_z,samples.data.gyro_x,samples.data.gyro_y,
+				samples.data.gyro_z,samples.data.temperature);
 */
-			app_conn_send((uint8_t*)&samples,sizeof(mpu_data)/sizeof(uint8_t));
+//			app_conn_send(&samples,sizeof(mpu_data)/sizeof(uint8_t));
 		}
 	}
 
