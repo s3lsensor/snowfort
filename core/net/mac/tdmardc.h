@@ -30,6 +30,7 @@
 */
 #ifndef FRAMES_PER_SEC
 #define FRAMES_PER_SEC 2.0
+#define FRAMES_PER_SEC_INT 2
 #endif
 
 #ifndef SEGMENT_PERIOD

@@ -8,7 +8,10 @@
 #ifndef MPU_6050_H
 #define MPU_6050_H
 
+#define SWAP(a,b) a = a^b; b = a^b; a = a^b;
+
 #define I2C_READ_SEND_ACK 1
+
 
 
 
@@ -42,21 +45,22 @@
 typedef struct
 {
     /* data */
-    uint8_t x_accel_h;
-    uint8_t x_accel_l;
-    uint8_t y_accel_h;
-    uint8_t y_accel_l;
-    uint8_t z_accel_h;
-    uint8_t z_accel_l;
-    uint8_t t_h;
-    uint8_t t_l;
-    uint8_t x_gyro_h;
-    uint8_t x_gyro_l;
-    uint8_t y_gyro_h;
-    uint8_t y_gyro_l;
-    uint8_t z_gyro_h;
-    uint8_t z_gyro_l;
+    int8_t x_accel_h;
+    int8_t x_accel_l;
+    int8_t y_accel_h;
+    int8_t y_accel_l;
+    int8_t z_accel_h;
+    int8_t z_accel_l;
+    int8_t t_h;
+    int8_t t_l;
+    int8_t x_gyro_h;
+    int8_t x_gyro_l;
+    int8_t y_gyro_h;
+    int8_t y_gyro_l;
+    int8_t z_gyro_h;
+    int8_t z_gyro_l;
 }mpu_lh;
+
 typedef struct
 {
     int16_t accel_x;
@@ -73,6 +77,7 @@ typedef union
     mpu_lh reg;
     mpu_data data; 
 }mpu_data_union;
+
 int read_mpu_reg(unsigned char mpu_reg_addr, unsigned char* buffer);
 int read_mpu_reg_burst(unsigned char mpu_reg_addr_start, unsigned num, unsigned char* buffer);
 int write_mpu_reg(unsigned char mpu_reg_addr,unsigned char mpu_reg_val);

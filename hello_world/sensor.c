@@ -37,11 +37,13 @@
 #ifdef I2C_SENSOR
 #define DATA_SIZE sizeof(uint16_t)/sizeof(uint8_t);
 #define SAMPLING_FREQ MPU_SAMPLING_FREQ
+#define SAMPLES_PER_FRAME MPU_SAMPLES_PER_FRAME
 #endif /*I2C_SENSOR*/
 
 #ifdef ADC_SENSOR
 #define DATA_SIZE sizeof(uint16_t)/sizeof(uint8_t);
 #define SAMPLING_FREQ ADC_SAMPLES_PER_FRAME
+#define SAMPLES_PER_FRAME ADC_SAMPLES_PER_FRAME
 #endif /*ADC_SENSOR*/
 
 #ifndef DATA_SIZE
@@ -91,28 +93,63 @@ static void app_recv(void)
 	//printf("Received from RDC\n");
 	PROCESS_CONTEXT_BEGIN(&null_app_process);
 	
-	int16_t *data = (int16_t*)packetbuf_dataptr();
+	//int16_t *data = (int16_t*)packetbuf_dataptr();
+
+	mpu_data_union data[SAMPLES_PER_FRAME];
+
+	memcpy((uint8_t*)data,packetbuf_dataptr(),sizeof(mpu_data_union)/sizeof(uint8_t)*SAMPLES_PER_FRAME);
+
+	int8_t *raw_data = (int8_t *)packetbuf_dataptr();
 
 	uint8_t i;
 	rimeaddr_t *sent_sn_addr = packetbuf_addr(PACKETBUF_ADDR_SENDER);
 	uint8_t rx_sn_id = sent_sn_addr->u8[0];
 
 	uint8_t pkt_seq = packetbuf_attr(PACKETBUF_ATTR_PACKET_ID);
-	//uint8_t payload_len = packetbuf_datalen()/DATA_SIZE;
-	uint8_t payload_len = packetbuf_datalen()/2;
+	//DATA_SIZE;
+	uint8_t payload_len = packetbuf_datalen();
 
-/*
+
 	printf("%u,%u,",rx_sn_id,pkt_seq);
-	
-	for(i=0;i<payload_len;i++){
-		printf("%d,",data[i]);
+/*
+	for(i = 0;i < payload_len;i++)
+	{
+		printf("%02x,",raw_data[i]);
 	}
 	printf("\n");
+*/	
+	for(i=0;i<SAMPLES_PER_FRAME;i++)
+	{
+		// MPU data
+		mpu_data_union sampled_data = data[i];
+
+		//change little endian to big endian
+		/*
+		SWAP(sampled_data.reg.x_accel_h,sampled_data.reg.x_accel_l);
+		SWAP(sampled_data.reg.y_accel_h,sampled_data.reg.y_accel_l);
+		SWAP(sampled_data.reg.z_accel_h,sampled_data.reg.z_accel_l);
+		SWAP(sampled_data.reg.t_h,sampled_data.reg.t_l);
+		SWAP(sampled_data.reg.x_gyro_h,sampled_data.reg.x_gyro_l);
+		SWAP(sampled_data.reg.y_gyro_h,sampled_data.reg.y_gyro_l);
+		SWAP(sampled_data.reg.z_gyro_h,sampled_data.reg.z_gyro_l);
+		*/
+
+		//print result
+		
+		printf("%d,%d,%d,%d,%d,%d,%d\n",sampled_data.data.accel_x,sampled_data.data.accel_y,sampled_data.data.accel_z,sampled_data.data.temperature,sampled_data.data.gyro_x,sampled_data.data.gyro_y,
+			sampled_data.data.gyro_z);
+		
+/*
+		printf("%02x,%02x,%02x,%02x,%d,%d",sampled_data.reg.x_accel_h,sampled_data.reg.x_accel_l,sampled_data.reg.y_accel_h,sampled_data.reg.y_accel_l,sampled_data.data.accel_x,sampled_data.data.accel_y);
 */
 
+	}
+	printf("\n");
 
+
+/*
 	app_output_16t(data,rx_sn_id,pkt_seq,payload_len);
-
+*/
 	PROCESS_CONTEXT_END(&null_app_process);
 
 }
@@ -248,9 +285,8 @@ PROCESS_THREAD(null_app_process, ev, data)
 			if(sample_count == MPU_SAMPLES_PER_FRAME)
 			{
 				sample_count = 0;
-				tdma_rdc_buf_ptr = 0;
-	    	 	tdma_rdc_buf_send_ptr = 0;
-	    	 	tdma_rdc_buf_full_flg = 0;
+				tdma_rdc_buf_clear();
+
 				app_conn_send(sampleArray,sizeof(mpu_data)/sizeof(uint8_t)*MPU_SAMPLES_PER_FRAME);
 
 			}
