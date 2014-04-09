@@ -38,7 +38,7 @@ while True:
     # determine how many samples -- i2c
     sample_num = int((len(tmp) - 2)/7)
     #print sample_num
-    data = tmp[3:len(tmp)]
+    data = tmp[2:len(tmp)]
     #print data
 
     acc_x = []
@@ -66,10 +66,10 @@ while True:
 
 
 
-    for n in range(1,sample_num):
-        sample = data[(n-1)*7:n*7]
+    for n in range(0,sample_num):
+        sample = data[(n)*7:(n+1)*7]
 
-        #print sample
+        print sample
 
         val = []
 
@@ -103,7 +103,7 @@ while True:
         temperature.append((y+12421)/340)
         val.append((y+12421)/340)
 
-        #print val
+        print val
 
         
 
@@ -133,9 +133,9 @@ while True:
 
     payload = {'json_payload': JSON_data}
 
-    headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
+    headers = {'Content-type': 'application/json', 'Accept': 'application/json'}
 
-    r = requests.post("http://54.213.119.190:5000/data/post",data=payload,headers=headers)
+    r = requests.post("http://54.213.119.190:5000/data/post",data=JSON_data,headers=headers)
 
     print r
 
