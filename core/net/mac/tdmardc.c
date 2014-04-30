@@ -180,9 +180,13 @@ static void TDMA_BS_send(void)
 
   //send packet -- pushed to radio layer
   if(NETSTACK_RADIO.send(packetbuf_hdrptr(),packetbuf_totlen()) != RADIO_TX_OK)
+  {
     printf("TDMA RDC: BS fails to send packet\n");
+  }
   else
+  {
     printf("TDMA RDC: BS sends %u\n",seq_num);
+  }
 
 
 
