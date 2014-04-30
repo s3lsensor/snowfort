@@ -45,7 +45,10 @@ void app_conn_input(void);
  */
 void app_conn_send(const void * ptr, const uint16_t data_len);
 
-
+/*
+ * \brief Clean tdma rdc buffer
+ */
+void tdma_rdc_buf_clear(void);
 
 
 #endif /* APP_CONN_H_ */

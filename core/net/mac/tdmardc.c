@@ -26,7 +26,7 @@
 
 
 
-#define DEBUG 1
+#define DEBUG 0
 #if DEBUG
 #define PRINTF(...) printf(__VA_ARGS__)
 #else
@@ -45,7 +45,7 @@ static const uint16_t BS_period = BS_PERIOD;         //BS broadcasts duration in
 
 //slot information
 static const uint16_t total_slot_num = TOTAL_TS; // uint16_t to support > 256 slots
-static volatile uint16_t sf_tdma_slot_num; //
+static volatile uint16_t sf_tdma_slot_num = 0; //
 
 //packet information
 static uint8_t seq_num;
@@ -180,9 +180,13 @@ static void TDMA_BS_send(void)
 
   //send packet -- pushed to radio layer
   if(NETSTACK_RADIO.send(packetbuf_hdrptr(),packetbuf_totlen()) != RADIO_TX_OK)
+  {
     printf("TDMA RDC: BS fails to send packet\n");
+  }
   else
+  {
     printf("TDMA RDC: BS sends %u\n",seq_num);
+  }
 
 
 

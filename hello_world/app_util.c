@@ -6,6 +6,9 @@
  */
 
 #include "app_util.h"
+#include <stdio.h>
+//#include "platform-conf.h"
+
 
 /*
  * Function: app_output
@@ -13,13 +16,15 @@
  * with the read_usb.py script. It is recommended for using this function to print
  * output instead of using the self-developed function.
  */
-void app_output(const char * data, const int node_id, const int pkt_seq, const int payload_len)
+void app_output(const uint8_t * data, const uint8_t node_id, const uint8_t pkt_seq, const uint8_t payload_len)
 {
-	printf("%u,%d,%u",node_id,pkt_seq,0);
-	int i;
+  int i;
+
+  printf("%u,%u,",node_id,pkt_seq);
+
 	for(i = 0; i < payload_len; i++)
 	{
-		printf(",%d",data[i]);
+	  printf("%02x",data[i]);
 	}
 	printf("\n");
 }

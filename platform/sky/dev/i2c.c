@@ -87,7 +87,7 @@ void     i2c_stop(void);
 /*
  * Should avoid infinite looping while waiting for SCL_IS_1. xxx/bg
  */
-#define SCL_WAIT_FOR_1() do{}while (!SCL_IS_1)
+//#define SCL_WAIT_FOR_1() do{}while (!SCL_IS_1)
 
 #define delay_4_7us() do{ _NOP(); _NOP(); _NOP(); _NOP(); \
                           _NOP(); _NOP(); _NOP(); _NOP(); \
@@ -112,7 +112,7 @@ i2c_enable(void)
   old_pxout = I2C_PxOUT & sda_scl;
   old_pxdir = I2C_PxDIR & sda_scl;
 
-  spi_busy = 1;
+  //spi_busy = 1;
 
   I2C_PxSEL &= ~sda_scl;
 
@@ -135,7 +135,7 @@ i2c_disable(void)
   I2C_PxOUT = (I2C_PxOUT & not_sda_scl) | old_pxout;
   I2C_PxSEL = (I2C_PxSEL & not_sda_scl) | old_pxsel;
 
-  spi_busy = 0;
+  //spi_busy = 0;
 }
 
 int
@@ -144,7 +144,11 @@ i2c_start(void)
   SDA_1();
   SCL_1();
 #if 1
-  SCL_WAIT_FOR_1();
+  //SCL_WAIT_FOR_1();
+  uint8_t n;
+  for (n = 0; n < 1000 && !SCL_IS_1; n++);
+  if (!SCL_IS_1)
+  	return 1;
 #else
   {
     unsigned long n;
@@ -167,7 +171,13 @@ i2c_stop(void)
   SDA_0();
   delay_4us();
   SCL_1();
-  SCL_WAIT_FOR_1();
+  //SCL_WAIT_FOR_1();
+
+  uint8_t n;
+  for (n = 0; n < 1000 && !SCL_IS_1; n++);
+//  if (!SLC_IS_1)
+ // 	return 0;
+
   SDA_1();
 }
 
@@ -188,7 +198,10 @@ i2c_write(unsigned char _c)
     else
       SDA_0();
     SCL_1();
-    SCL_WAIT_FOR_1();
+    //SCL_WAIT_FOR_1();
+  	for (n = 0; n < 1000 && !SCL_IS_1; n++);
+ 	if (!SCL_IS_1)
+  		return 1;
     SCL_0();
   }
 
@@ -201,7 +214,10 @@ i2c_write(unsigned char _c)
       break;
     }
   }
-  SCL_WAIT_FOR_1();		/* clock stretching? */
+  //SCL_WAIT_FOR_1();		/* clock stretching? */
+  for (n = 0; n < 1000 && !SCL_IS_1; n++);
+  if (!SCL_IS_1)
+  	return 1;
   SCL_0();
 
   return ret;
@@ -212,12 +228,17 @@ i2c_read(int send_ack)
 {
   int i;
   unsigned char c = 0x00;
+  uint8_t n;
 
   SDA_1();
   for (i = 0; i < 8; i++) {
     c <<= 1;
     SCL_1();
-    SCL_WAIT_FOR_1();
+    //SCL_WAIT_FOR_1();
+  	for (n = 0; n < 1000 && !SCL_IS_1; n++);
+ 	if (!SCL_IS_1)
+  		return 1;
+
     if (SDA_IS_1)
       c |= 0x1;
     SCL_0();
@@ -226,7 +247,10 @@ i2c_read(int send_ack)
   if (send_ack)
     SDA_0();
   SCL_1();
-  SCL_WAIT_FOR_1();
+  //SCL_WAIT_FOR_1();
+  for (n = 0; n < 1000 && !SCL_IS_1; n++);
+  if (!SCL_IS_1)
+	return 1;
   SCL_0();
 
   return c;
@@ -293,13 +317,13 @@ read_multibyte(unsigned slave_address, unsigned register_address, int numbytes, 
 	// slave address	
 	if (i2c_write(slave_address_w)==0){
 		i2c_stop();
-		//printf("read_ slave_address_w unsuccessful\n");
+		printf("read_ slave_address_w unsuccessful\n");
 		return;
 	}		
 	// register address
 	if (i2c_write(register_address)==0){
 		i2c_stop();
-		//printf("read_ register unsuccessful\n");
+		printf("read_ register unsuccessful\n");
 		return;
 	}
 	// restart
@@ -307,7 +331,7 @@ read_multibyte(unsigned slave_address, unsigned register_address, int numbytes, 
 	// load slave read address
 	if (i2c_write(slave_address_r)==0){
 		i2c_stop();
-		//printf("read_ slave_address_r unsuccessful\n");
+		printf("read_ slave_address_r unsuccessful\n");
 		return;
 	}	
 
