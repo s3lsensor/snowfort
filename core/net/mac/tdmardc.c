@@ -328,7 +328,7 @@ static void input(void)
     if (sf_tdma_slot_num != -1)
     {
       //PRINTF("Schedule for TX at Slot %d\n",my_slot);
-      rtimer_clock_t SN_TX_time = SN_RX_start_time + (BS_period+TS_period * (sf_tdma_slot_num-1))-GRD_PERIOD;//20 might need to be changed later, do better calibration, increase to 33 if timing problems
+      rtimer_clock_t SN_TX_time = SN_RX_start_time + (BS_period+TS_period * (sf_tdma_slot_num-1))-GRD_PERIOD+33;//20 might need to be changed later, do better calibration, increase to 33 if timing problems
       rtimer_set(&SNTimer,SN_TX_time,0,TDMA_SN_send,NULL);
     }
   }
