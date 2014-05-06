@@ -12,13 +12,14 @@
  *    Yizheng Liao <yzliao@stanford.edu>
  */
 
- /**
-  * Define constant
-  */
+
+/* Define constant */
 
 // the number of bits per byte
 #define CHAR_BIT 8
 
+
+/* Structures */
 /**
  * \brief structure for bit
  */
@@ -56,3 +57,7 @@ typedef union
 	bit_t 		bits[32];
 	uint32_t 	int_val;
 }bit32_t;
+
+
+/* Global variables */
+bit_t 
