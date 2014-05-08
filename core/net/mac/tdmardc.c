@@ -67,6 +67,7 @@ static struct rtimer BSTimer;
 // SN global variable
 static rtimer_clock_t SN_RX_start_time = 0;
 static uint16_t radioontime;
+static uint8_t incorrect_rx_counter = 0;
 
 //Timer -- SN
 static struct rtimer SNTimer;
@@ -216,8 +217,10 @@ static void TDMA_SN_listen(void)
 // TDMA_SN_sleep -- called when radio cannot receive any beacon for a while
 static void TDMA_SN_sleep(void)
 {
+  printf("TDMA RDC: SN goes into sleep mode\n");
   ctimer_set(&SN_sleep_timer,MAX_SLEEP_PERIOD,TDMA_SN_listen,(void*)NULL);
   NETSTACK_RADIO.off();
+  incorrect_rx_counter = 0;
 }
 
 // TDMA_SN_send() -- called at a assigned time slot
@@ -317,7 +320,16 @@ static void input(void)
   if (!rimeaddr_cmp(packetbuf_addr(PACKETBUF_ADDR_SENDER),&rimeaddr_null))
   {
     printf("Packet is not from base station, rejected!\n");
-    TDMA_SN_listen();
+    incorrect_rx_counter++;
+
+    if (incorrect_rx_counter < TOTAL_TS*2)
+    {
+      TDMA_SN_listen();
+    }
+    else
+    {
+      TDMA_SN_sleep();
+    }
     return;
   }
 
@@ -460,6 +472,10 @@ static void init(void)
 
 
   printf("Init RDC layer,packet size\n");
+
+#ifdef SF_MOTE_TYPE_SENSOR
+  incorrect_rx_counter = 0;
+#endif
 
   on();
 }
