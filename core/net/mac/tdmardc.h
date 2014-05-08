@@ -57,6 +57,14 @@
 #define GRD_PERIOD		65 //ticks for 2 ms
 #endif
 
+#ifndef MAX_LISTEN_PERIOD
+#define MAX_LISTEN_PERIOD	CLOCK_SECOND
+#endif
+
+#ifndef MAX_SLEEP_PERIOD
+#define MAX_SLEEP_PERIOD	(6*CLOCK_SECOND)
+#endif
+
 /* data structure for transferring data*/
 extern char tdma_rdc_buffer[MAX_PKT_PAYLOAD_SIZE];
 extern volatile uint8_t tdma_rdc_buf_ptr; //updated when send() called (RDC_send()) directly
