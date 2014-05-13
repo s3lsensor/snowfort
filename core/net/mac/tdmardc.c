@@ -17,6 +17,7 @@
 #include "appconn/app_conn.h"
 #include "net/mac/framer-tdma.h"
 #include "frame802154.h"
+#include "sys/ctimer.h"
 #include <string.h>
 #include <stdio.h>
 
@@ -66,12 +67,21 @@ static struct rtimer BSTimer;
 // SN global variable
 static rtimer_clock_t SN_RX_start_time = 0;
 static uint16_t radioontime;
+static uint8_t incorrect_rx_counter = 0;
 
 //Timer -- SN
 static struct rtimer SNTimer;
+static struct ctimer SN_listen_timer;
+static struct ctimer SN_sleep_timer;
+
+// local functions
+static void TDMA_SN_sleep(void);
+static void TDMA_SN_listen(void);
+
 #endif
 
 // RDC buffer
+
 char tdma_rdc_buffer[MAX_PKT_PAYLOAD_SIZE] = {0};
 volatile uint8_t tdma_rdc_buf_ptr = 0;
 volatile uint8_t tdma_rdc_buf_send_ptr = 0;
@@ -127,6 +137,8 @@ void sf_tdma_set_mac_addr(void)
          longaddr[4], longaddr[5], longaddr[6], longaddr[7]);
   cc2420_set_pan_addr(IEEE802154_PANID, shortaddr, longaddr);
 }
+
+
 
 #ifdef SF_MOTE_TYPE_AP
 // TDMA_BS_send() -- called at a specific time
@@ -194,6 +206,23 @@ static void TDMA_BS_send(void)
 #endif /* SF_MOTE_TYPE_AP */
 
 #ifdef SF_MOTE_TYPE_SENSOR
+// TDMA_SN_listen() -- called when radio is open for listening
+static void TDMA_SN_listen(void)
+{
+  ctimer_set(&SN_listen_timer,MAX_LISTEN_PERIOD,TDMA_SN_sleep,(void *)NULL);
+
+  NETSTACK_RADIO.on();
+}
+
+// TDMA_SN_sleep -- called when radio cannot receive any beacon for a while
+static void TDMA_SN_sleep(void)
+{
+  printf("TDMA RDC: SN goes into sleep mode\n");
+  ctimer_set(&SN_sleep_timer,MAX_SLEEP_PERIOD,TDMA_SN_listen,(void*)NULL);
+  NETSTACK_RADIO.off();
+  incorrect_rx_counter = 0;
+}
+
 // TDMA_SN_send() -- called at a assigned time slot
 static void TDMA_SN_send(void)
 {
@@ -283,10 +312,24 @@ static void input(void)
 
 #ifdef SF_MOTE_TYPE_SENSOR
   /*-------------SN CODE----------------------*/
+
+  ctimer_stop(&SN_sleep_timer);
+  ctimer_stop(&SN_listen_timer);
+
   //check if the packet is from BS
   if (!rimeaddr_cmp(packetbuf_addr(PACKETBUF_ADDR_SENDER),&rimeaddr_null))
   {
     printf("Packet is not from base station, rejected!\n");
+    incorrect_rx_counter++;
+
+    if (incorrect_rx_counter < TOTAL_TS*2)
+    {
+      TDMA_SN_listen();
+    }
+    else
+    {
+      TDMA_SN_sleep();
+    }
     return;
   }
 
@@ -376,8 +419,13 @@ static int on(void)
   PRINTF("turn on RDC layer\n");
 #ifdef SF_MOTE_TYPE_AP
     rtimer_set(&BSTimer,RTIMER_NOW()+segment_period,0,TDMA_BS_send,NULL);
+    return NETSTACK_RADIO.on();
+#else
+    // SF_MOTE_TYPE_SENSOR
+    TDMA_SN_listen();
+    return 1;
 #endif
-  return NETSTACK_RADIO.on();
+  
 }
 /*-----------------------------------------------*/
 // turn off RDC layer
@@ -423,8 +471,11 @@ static void init(void)
   }
 
 
-
   printf("Init RDC layer,packet size\n");
+
+#ifdef SF_MOTE_TYPE_SENSOR
+  incorrect_rx_counter = 0;
+#endif
 
   on();
 }
