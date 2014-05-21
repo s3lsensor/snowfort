@@ -10,6 +10,7 @@
 
 #include "net/mac/rdc.h"
 #include "dev/radio.h"
+#include "snowfort/snowfort.h"
 
 #include "sys/rtimer.h"
 
@@ -21,6 +22,7 @@
 //#define FREE_SLOT_CONST 	0x7F
 #define MAX_PKT_SIZE		127
 #define MAX_PKT_PAYLOAD_SIZE	117		//should be 117, let's start from 50 right now
+#define MAX_PKT_PAYLOAD_SIZE_BIT (MAX_PKT_PAYLOAD_SIZE * CHAR_BIT)
 
 // time slot information -- default
 /*
@@ -66,11 +68,46 @@
 #endif
 
 /* data structure for transferring data*/
-extern char tdma_rdc_buffer[MAX_PKT_PAYLOAD_SIZE];
+ /**
+ * RDC buffer in bytes
+ */
+typedef struct 
+{
+	int8_t rdc_buf[MAX_PKT_PAYLOAD_SIZE];
+	volatile uint8_t rdc_buf_ptr;
+	volatile uint8_t rdc_buf_send_ptr;
+	volatile bit_t rdc_buf_full_flg;
+	volatile bit_t rdc_buf_in_using_flg;
+}tdma_rdc_byte_buf_t;
+
+/**
+ * RDC buffer in bits
+ */
+typedef struct 
+{
+	/* data */
+	bit_t rdc_buf[MAX_PKT_PAYLOAD_SIZE_BIT];
+	volatile uint8_t rdc_buf_ptr;
+	volatile uint8_t rdc_buf_send_ptr;
+	volatile bit_t rdc_buf_full_flg;
+	volatile bit_t rdc_buf_in_using_flg;
+}tdma_rdc_bit_buf_t;
+
+typedef union
+{
+	tdma_rdc_byte_buf_t rdc_byte_buf;
+	tdma_rdc_bit_buf_t rdc_bit_buf;
+}tdma_rdc_buf_t;
+
+/*
+extern int8_t tdma_rdc_buffer[MAX_PKT_PAYLOAD_SIZE];
 extern volatile uint8_t tdma_rdc_buf_ptr; //updated when send() called (RDC_send()) directly
 extern volatile uint8_t tdma_rdc_buf_send_ptr; //updated when send() called (RDC_send()) directly
 extern volatile uint8_t tdma_rdc_buf_full_flg; //updated when send() called RDC_send()) directly
 extern volatile uint8_t tdma_rdc_buf_in_using_flg;
+*/
+
+extern tdma_rdc_buf_t tdma_rdc_buf;
 
 /* tdma rdc driver */
 extern const struct rdc_driver tdmardc_driver;

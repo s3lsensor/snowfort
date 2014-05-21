@@ -15,6 +15,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "net/mac/tdmardc.h"
+#include "snowfort/snowfort.h"
 #include "app_conn.h"
 
 #define DEBUG 1

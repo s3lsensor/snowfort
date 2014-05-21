@@ -57,6 +57,7 @@ CFLAGS += -DCONTIKI=1 -DCONTIKI_TARGET_$(TARGET_UPPERCASE)=1
 include $(CONTIKI)/core/net/rime/Makefile.rime
 include $(CONTIKI)/core/net/mac/Makefile.mac
 include $(CONTIKI)/core/net/appconn/Makefile.appconn
+include $(CONTIKI)/core/net/coder/Makefile.coder
 
 SYSTEM  = process.c procinit.c autostart.c elfloader.c profile.c \
           timetable.c timetable-aggregate.c compower.c serial-line.c
@@ -65,6 +66,7 @@ LIBS    = memb.c mmem.c timer.c list.c etimer.c ctimer.c energest.c rtimer.c sti
           print-stats.c ifft.c crc16.c random.c checkpoint.c ringbuf.c
 DEV     = nullradio.c
 NET     = netstack.c uip-debug.c packetbuf.c queuebuf.c packetqueue.c
+SNOWFORT = sf_math.c
 
 ifdef UIP_CONF_IPV6
   CFLAGS += -DUIP_CONF_IPV6=1
@@ -87,15 +89,15 @@ CTK     = ctk.c
 CTKVNC  = $(CTK) ctk-vncserver.c libconio.c vnc-server.c vnc-out.c ctk-vncfont.c
 
 ifndef CONTIKI_NO_NET
-  CONTIKIFILES = $(SYSTEM) $(LIBS) $(NET) $(THREADS) $(DHCP) $(DEV)
+  CONTIKIFILES = $(SYSTEM) $(LIBS) $(NET) $(THREADS) $(DHCP) $(DEV) $(SNOWFORT)
 else
-  CONTIKIFILES = $(SYSTEM) $(LIBS) $(THREADS) $(DEV) sicslowpan.c fakeuip.c
+  CONTIKIFILES = $(SYSTEM) $(LIBS) $(THREADS) $(DEV) $(SNOWFORT) sicslowpan.c fakeuip.c
 endif
 
 CONTIKI_SOURCEFILES += $(CONTIKIFILES)
 
-CONTIKIDIRS += ${addprefix $(CONTIKI)/core/,dev lib net net/mac net/rime net/appconn \
-                 net/rpl sys cfs ctk lib/ctk loader . }
+CONTIKIDIRS += ${addprefix $(CONTIKI)/core/,dev lib net net/mac net/rime net/appconn net/coder \
+                 net/rpl sys cfs ctk lib/ctk loader snowfort . }
 
 oname = ${patsubst %.c,%.o,${patsubst %.S,%.o,$(1)}}
 

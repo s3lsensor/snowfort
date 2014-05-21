@@ -61,7 +61,7 @@ static rtimer_clock_t BS_RX_start_time = 0;
 
 //Timer -- BS
 static struct rtimer BSTimer;
-#endif /*SN_MOTE_TYPE_AP*/
+#endif /* SN_MOTE_TYPE_AP */
 
 #ifdef SF_MOTE_TYPE_SENSOR
 // SN global variable
@@ -81,7 +81,6 @@ static void TDMA_SN_listen(void);
 #endif
 
 // RDC buffer
-
 char tdma_rdc_buffer[MAX_PKT_PAYLOAD_SIZE] = {0};
 volatile uint8_t tdma_rdc_buf_ptr = 0;
 volatile uint8_t tdma_rdc_buf_send_ptr = 0;
@@ -170,7 +169,7 @@ static void TDMA_BS_send(void)
     tdma_rdc_buf_ptr = 0;
     tdma_rdc_buf_send_ptr = 0;
 */
-    PRINTF("send command %s %d\n",tdma_rdc_buffer,packetbuf_attr(PACKETBUF_ATTR_PACKET_TYPE));
+    PRINTF("send command %s %d\n",tdma_rdc_buf.rdc_byte_buf.rdc_buf,packetbuf_attr(PACKETBUF_ATTR_PACKET_TYPE));
   }
   else
   {
