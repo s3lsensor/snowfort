@@ -1,6 +1,5 @@
-CONTIKI=/home/user/snowflake
+CONTIKI=$(PWD)/..
 APPS = serial-shell shell remote-shell
-
 CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\"
 
 CFLAGS += $(BASH_CONST)

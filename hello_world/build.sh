@@ -1,6 +1,5 @@
 #!/bin/bash
 
-source ./test.cfg
 
 if [ "$1" = "make" ]; then
 #	cp $CONTIKI_HOME/s3l_rdc/tdmardc.h $CONTIKI_HOME/core/net/mac/tdmardc.h

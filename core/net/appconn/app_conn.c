@@ -81,3 +81,21 @@ void app_conn_send(const void * ptr, const uint16_t data_len)
   tdma_rdc_buf_in_using_flg = 0;
 }
 
+/*---------------------------------------------------------------------------*/
+void tdma_rdc_buf_clear(void)
+{
+  //add guard for tdma_rdc_buffer access
+  while(tdma_rdc_buf_in_using_flg);
+
+  // lock tdma_rdc_buffer and preventing access from other functions.
+  tdma_rdc_buf_in_using_flg = 1;
+
+  memset(tdma_rdc_buffer,0,MAX_PKT_PAYLOAD_SIZE);
+  tdma_rdc_buf_ptr = 0;
+  tdma_rdc_buf_send_ptr = 0;
+  tdma_rdc_buf_full_flg = 0;
+
+  // release tdma_rdc_buffer
+  tdma_rdc_buf_in_using_flg = 0;
+
+}

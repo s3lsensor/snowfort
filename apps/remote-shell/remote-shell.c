@@ -16,14 +16,14 @@
 #include "contiki.h"
 #include "shell.h"
 #include "remote-shell.h"
-
+#include "node-id.h"
 #include "net/mac/tdmardc.h"
 #include "appconn/app_conn.h"
 #include "net/packetbuf.h"
 
 #include <stdio.h>
 #include <string.h>
-
+#include <stdlib.h>
 #define DEBUG 1
 #if DEBUG
 #define PRINTF(...) printf(__VA_ARGS__)
@@ -98,15 +98,38 @@ void remote_shell_init(void)
 void remote_shell_send(const char* cmd, const uint16_t len)
 {
   PRINTF("Remote shell command: %s -- sent\n",cmd);
-  //app_conn_send(cmd,len);
   packetbuf_copyfrom((void *)&cmd[0],len*sizeof(char));
   packetbuf_set_attr(PACKETBUF_ATTR_PACKET_TYPE,PACKETBUF_ATTR_PACKET_TYPE_CMD);
 }
 /*---------------------------------------------------------------------------*/
 void remote_shell_input(void)
 {
-  char command[30];
-  strncpy(command,(char *)packetbuf_dataptr(),packetbuf_datalen());
-  command[packetbuf_datalen()] = '\0';
-  process_post(&remote_shell_process,remote_command_event_message,command);
+  char command[80];
+  strncpy(command, (char*)(packetbuf_dataptr()), packetbuf_datalen());
+  char id[4] = {'\0'};
+  int isValid = 1;
+  int index = 0;
+  int pos = 0;
+  if(isalpha(command[0]) == 0) {
+    isValid = 0; // p2p 
+    while(isalpha(command[pos]) == 0) {
+      if(command[pos] == ' ') {
+	index = 0;
+	if(atoi(id) == node_id){ //found node id in list.
+	  isValid = 1;
+	  break;
+	}
+      } else {
+	id[index] = command[pos];
+	index++;
+      }
+      pos++;
+    }
+  }
+  if(isValid == 1) {
+    command[packetbuf_datalen()] = '\0';
+    process_post(&remote_shell_process,remote_command_event_message,command+pos);
+  } else {
+    printf("Command is not for me, ignoring.\n");
+  }
 }
