@@ -35,3 +35,7 @@ log*
 
 # Sublime text
 *.sublime-*
+
+# Eclipse
+*.cproejct
+*.project
