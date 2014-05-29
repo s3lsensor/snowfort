@@ -20,6 +20,11 @@ ifeq ($(HOST_OS),Darwin)
   SERIALDUMP = serialdump-macos
 endif
 
+ifeq ($(HOST_OS),Pi)
+  SERIALDUMP = serialdump-pi
+  FLAG+=-DPI
+endif
+
 ifndef SERIALDUMP
   # Assume Linux
   SERIALDUMP = serialdump-linux
@@ -28,4 +33,4 @@ endif
 all:	$(SERIALDUMP)
 
 $(SERIALDUMP):	serialdump.c
-	$(CC) $FLAG -o $@ $<
+	$(CC) $(FLAG) -o $@ $<
