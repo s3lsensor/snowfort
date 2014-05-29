@@ -32,8 +32,8 @@ while True:
     print "Local Time:", localtime
     #print tmp
     
-    sensor_id = tmp[0].replace("\x00","");
-    packet_id = tmp[1].replace("\x00","");
+    sensor_id = tmp[0].replace("\x00","0");
+    packet_id = tmp[1].replace("\x00","0");
 
     # determine how many samples -- i2c
     sample_num = int((len(tmp) - 2)/7)
@@ -73,33 +73,33 @@ while True:
 
         val = []
 
-        y = float(sample[0].replace("\x00",""))
+        y = float(sample[0].replace("\x00","0"))
         acc_x.append(y/16384)
         val.append(y/16384)
 
 
-        y = float(sample[1].replace("\x00",""))
+        y = float(sample[1].replace("\x00","0"))
         acc_y.append(y/16384)
         val.append(y/16384)
 
-        y = float(sample[2].replace("\x00",""))
+        y = float(sample[2].replace("\x00","0"))
         acc_z.append(y/16384)
         val.append(y/16384)
 
 
-        y = float(sample[4].replace("\x00",""))
+        y = float(sample[4].replace("\x00","0"))
         gyro_x.append((y)/131)
         val.append((y)/131)
 
-        y = float(sample[5].replace("\x00",""))
+        y = float(sample[5].replace("\x00","0"))
         gyro_y.append((y)/131)
         val.append((y)/131)
 
-        y = float(sample[6].replace("\x00",""))
+        y = float(sample[6].replace("\x00","0"))
         gyro_z.append((y)/131)
         val.append((y)/131)
 
-        y = float(sample[3].replace("\x00",""))
+        y = float(sample[3].replace("\x00","0"))
         temperature.append((y+12421)/340)
         val.append((y+12421)/340)
 
@@ -112,8 +112,9 @@ while True:
     {
         'station': 'Stanford',
         'mote_id': sensor_id,
-        'timeslot': int(packet_id),
+        'slot_num': int(sensor_id),
         'timestamp': time.time(),
+        'packet_num': int(packet_id),
         'data': {
             'acc_x': acc_x,
             'acc_y': acc_y,
@@ -135,7 +136,7 @@ while True:
 
     headers = {'Content-type': 'application/json', 'Accept': 'application/json'}
 
-    r = requests.post("http://54.213.119.190:5000/data/post",data=JSON_data,headers=headers)
+    r = requests.post("http://54.186.84.169:5000/data/post",data=JSON_data,headers=headers)
 
     print r
 

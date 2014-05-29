@@ -21,45 +21,6 @@
 #define SIN_TAB_LEN 120
 #define RESOLUTION 7
 
-#define MPU_ADDRESS 0xD0
-/*
-static int16_t accx, accy, accz;
-static int16_t gyrx, gyry, gyrz;
-
-static uint8_t measurevector[14];
-
-static void init_mpu6050(){
-	write_(MPU_ADDRESS, 0x6B, 0x01); //clear sleep bit, set clock to 0x01 (x-gyro)
-	write_(MPU_ADDRESS, 0x1B, 0x00); //fs_250 for gyro
-	write_(MPU_ADDRESS, 0x1C, 0x00); //fs_2 for accel
-}
-
-static void measure_mpu(){
-//	uint8_t measurevector[14];
-	read_multibyte(MPU_ADDRESS, 0x3B, 14, measurevector);
-
-	accx = 0;
-	accx |= measurevector[0];
-	accx = (accx<<8) | measurevector[1];
-	accy = 0;
-	accy |= measurevector[2];
-	accy = (accy<<8) | measurevector[3];
-	accz = 0;
-	accz |= measurevector[4];
-	accz = (accz<<8) | measurevector[5];
-
-	gyrx = 0;
-	gyrx |= measurevector[8];
-	gyrx = (gyrx<<8) | measurevector[9];
-	gyry = 0;
-	gyry |= measurevector[10];
-	gyry = (gyry<<8) | measurevector[11];
-	gyrz = 0;
-	gyrz |= measurevector[12];
-	gyrz = (gyrz<<8) | measurevector[13];
-
-}
- */
 
 static const int8_t SIN_TAB[] =
 {
@@ -90,8 +51,6 @@ static int8_t sin(uint16_t angleMilli)
 
 /*---------------------------------------------------------------*/
 PROCESS(null_app_process, "Hello world Process");
-//PROCESS(sensor_sampling_process, "Sensor Sampling Process");
-//AUTOSTART_PROCESSES(&null_app_process, &sensor_sampling_process);
 AUTOSTART_PROCESSES(&null_app_process);
 
 /*---------------------------------------------------------------*/
@@ -135,7 +94,7 @@ PROCESS_THREAD(null_app_process, ev, data)
 
 	app_conn_open(&nullApp_callback);
 
-	static uint8_t debug_buf[10] = {0};
+	static uint8_t debug_buf[7] = {0};
 	static struct etimer rxtimer;
 	static char input_buf[MAX_PKT_PAYLOAD_SIZE] = {0};
 	static uint16_t counter = 0;
@@ -162,61 +121,39 @@ PROCESS_THREAD(null_app_process, ev, data)
 
 	    etimer_reset(&rxtimer);
 
-	    //measure_mpu();
-	    //printf("Accel value: %d\tY value: %d\tZ value: %d\n",accx,accy,accz);
-
-	    //      packetbuf_copyfrom(debug_buf,sizeof(int8_t)*10);
-	    //      NETSTACK_RDC.send(NULL,NULL);
-
-	    //printf("NULLAPP: %d %d %d\n", debug_buf[0],debug_buf[1],debug_buf[2]);
+/*
 	    int i = 0;
 	    for(i = 0; i < 10; i++)
 	    {
 		    counter++;
 		    debug_buf[i] = sin(counter)+127;
 	    }
+*/
 
-	    app_conn_send(debug_buf,sizeof(int8_t)*10);
+	    counter++;
+	    debug_buf[0] = sin(counter) << 6;
+
+	    counter++;
+	    debug_buf[1] = sin(counter) << 6;
+
+	    counter++;
+	    debug_buf[2] = sin(counter) << 6;
+
+	    counter++;
+	    debug_buf[3] = sin(counter) << 7;
+	    counter++;
+	    debug_buf[4] = sin(counter) << 7;
+	    counter++;
+	    debug_buf[5] = sin(counter) << 7;
+
+	    counter++;
+	    debug_buf[6] = sin(counter) << 4;
+
+
+	    app_conn_send(debug_buf,sizeof(int8_t)*7);
 
 	  }
 	}
 	PROCESS_END();
 }
 
-/*
-PROCESS_THREAD(sensor_sampling_process, ev, data)
-{
-  PROCESS_BEGIN();
-  if (SN_ID != 0){
-	printf("Sensor Sampling begun\n");
-
- 	 static struct etimer sensetimer;
-  	  etimer_set(&sensetimer,CLOCK_SECOND);
-	  init_mpu6050();  
-	  uint8_t rv;
-	  rv = read_(MPU_ADDRESS, 0x75, 0);
-	  printf("%d \n", rv);
-
-
-	  while(1)
-	  {
-
-//	    if(SN_ID != 0)
-//    {
-  	    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&sensetimer));
-
-  	    etimer_reset(&sensetimer);
-
-  	    measure_mpu();
-	    #if DEBUG
-  	    printf("Accel value: %d\tY value: %d\tZ value: %d\n",accx,accy,accz);
-	    #endif
-
-	    packetbuf_copyfrom(measurevector,sizeof(int8_t)*10);
-	    NETSTACK_RDC.send(NULL,NULL);
-
-  	  }
-  	}
-  PROCESS_END();
-}
- */

@@ -24,7 +24,7 @@ void app_output(const uint8_t * data, const uint8_t node_id, const uint8_t pkt_s
 
 	for(i = 0; i < payload_len; i++)
 	{
-	  printf("%02x",data[i]);
+	  printf("%d",data[i]);
 	}
 	printf("\n");
 }
