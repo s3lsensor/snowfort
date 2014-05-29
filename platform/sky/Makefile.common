@@ -83,7 +83,14 @@ else
   # Else we assume Linux
   ifndef MOTELIST
     USBDEVPREFIX=
-    SERIALDUMP = $(CONTIKI)/tools/sky/serialdump-linux
+
+    ifeq ($(HOST_OS),Pi)
+      SERIALDUMP = $(CONTIKI)/tools/sky/serialdump-pi
+    else
+      SERIALDUMP = $(CONTIKI)/tools/sky/serialdump-linux
+    endif
+
+
     MOTELIST = $(CONTIKI)/tools/sky/motelist-linux
     TMOTE_BSL_FILE = tmote-bsl-linux
     TMOTE_BSL=$(if $(wildcard $(CONTIKI)/tools/sky/$(TMOTE_BSL_FILE)),1,0)
