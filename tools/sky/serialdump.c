@@ -162,6 +162,9 @@ int main(int argc, char **argv)
   fprintf(stderr, "connecting to %s (%s)", device, speedname);
 
 #ifndef __APPLE__
+  #ifdef PI
+  fd = open(device, O_RDWR | O_NOCTTY | O_NDELAY | O_SYNC );
+  #endif
   fd = open(device, O_RDWR | O_NOCTTY | O_NDELAY | O_DIRECT | O_SYNC );
 #else
   fd = open(device, O_RDWR | O_NOCTTY | O_NDELAY | O_SYNC );
