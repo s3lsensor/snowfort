@@ -27,6 +27,11 @@ ifndef HOST_OS
   ## e.g. CygWin, MingW, VisualC, Watcom, Interix
     HOST_OS := Windows
   else
+    ifneq (,$(findstring raspberrypi,$(shell uname -a)))
+      HOST_OS := Pi
+    else
+      HOST_OS := $(shell uname)
+    endif
     HOST_OS := $(shell uname)
   endif
 endif

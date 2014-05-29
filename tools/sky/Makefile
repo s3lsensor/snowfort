@@ -2,7 +2,11 @@ ifndef HOST_OS
   ifeq ($(OS),Windows_NT)
     HOST_OS := Windows
   else
-    HOST_OS := $(shell uname)
+    ifneq (,$(findstring raspberrypi,$(shell uname -a)))
+      HOST_OS := Pi
+    else
+      HOST_OS := $(shell uname)
+    endif
   endif
 endif
 
