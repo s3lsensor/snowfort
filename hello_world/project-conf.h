@@ -23,4 +23,12 @@
 //define feature
 //#define SF_FEATURE_SHELL_OPT
 
+//redefine time accuracy
+#ifdef CLOCK_CONF_SECOND
+#undef CLOCK_CONF_SECOND
+#define CLOCK_CONF_SECOND 1024UL
+#else
+#define CLOCK_CONF_SECOND 1024UL
+#endif
+
 #endif /* __PROJECT_CONF_H__ */
