@@ -87,6 +87,6 @@ int mpu_enable(void);
 int mpu_wakeup(void);
 int mpu_sleep(void);
 
-void print_mpu_sample(mpu_data_union *sample);
+void print_mpu_sample(mpu_data_union *samples);
 
 #endif /*MPU_6050_H*/
