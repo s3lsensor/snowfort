@@ -11,6 +11,7 @@
 
 #include "dev/i2c.h"
 #include "dev/mpu-6050.h"
+#include "dev/uart1.h"
 
 #define SWAP(a,b) a = a^b; b = a^b; a = a^b;
 
@@ -213,6 +214,27 @@ int mpu_wakeup(void)
 int mpu_sleep(void)
 {
 	mpu_reset();
+}
+
+/*
+ * Print the MPU samples
+ */
+void print_mpu_sample(mpu_data_union *samples)
+{
+	uart1_writeb((unsigned char)samples->reg.x_accel_h);
+	uart1_writeb((unsigned char)samples->reg.x_accel_l);
+	uart1_writeb((unsigned char)samples->reg.y_accel_h);
+	uart1_writeb((unsigned char)samples->reg.y_accel_l);
+	uart1_writeb((unsigned char)samples->reg.z_accel_h);
+	uart1_writeb((unsigned char)samples->reg.z_accel_l);
+	uart1_writeb((unsigned char)samples->reg.x_gyro_h);
+	uart1_writeb((unsigned char)samples->reg.x_gyro_l);
+	uart1_writeb((unsigned char)samples->reg.y_gyro_h);
+	uart1_writeb((unsigned char)samples->reg.y_gyro_l);
+	uart1_writeb((unsigned char)samples->reg.z_gyro_h);
+	uart1_writeb((unsigned char)samples->reg.z_gyro_l);
+	uart1_writeb((unsigned char)samples->reg.t_h);
+	uart1_writeb((unsigned char)samples->reg.t_l);
 }
 
 

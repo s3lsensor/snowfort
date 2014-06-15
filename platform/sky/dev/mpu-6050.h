@@ -75,7 +75,7 @@ typedef struct
 typedef union
 {
     mpu_lh reg;
-    mpu_data data; 
+    mpu_data data;
 }mpu_data_union;
 
 int read_mpu_reg(unsigned char mpu_reg_addr, unsigned char* buffer);
@@ -86,5 +86,7 @@ int mpu_reset(void);
 int mpu_enable(void);
 int mpu_wakeup(void);
 int mpu_sleep(void);
+
+void print_mpu_sample(mpu_data_union *samples);
 
 #endif /*MPU_6050_H*/
