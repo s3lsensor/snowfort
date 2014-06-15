@@ -160,7 +160,7 @@ static int parse(void)
 
 		  case  FRAME802154_CMDFRAME:
 		    packetbuf_set_attr(PACKETBUF_ATTR_PACKET_TYPE,PACKETBUF_ATTR_PACKET_TYPE_CMD);
-        break;
+        	break;
 		}
 
 		PRINTF("15.4-IN: %2X", frame.fcf.frame_type);
