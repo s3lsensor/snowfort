@@ -11,7 +11,7 @@
 #include "app_util.h"
 //#include "i2c.h"
 
-#define DEBUG 1
+#define DEBUG 0
 #if DEBUG
 #define PRINTF(...) printf(__VA_ARGS__)
 #else
@@ -94,7 +94,7 @@ PROCESS_THREAD(null_app_process, ev, data)
 
 	app_conn_open(&nullApp_callback);
 
-	static uint8_t debug_buf[7] = {0};
+	static uint16_t debug_buf[7] = {0};
 	static struct etimer rxtimer;
 	static char input_buf[MAX_PKT_PAYLOAD_SIZE] = {0};
 	static uint16_t counter = 0;
@@ -102,9 +102,9 @@ PROCESS_THREAD(null_app_process, ev, data)
 
 	if (node_id != 0)
 		//etimer_set(&rxtimer,(unsigned long)(SEGMENT_PERIOD));
-		etimer_set( &rxtimer, (unsigned long)(CLOCK_SECOND/(FRAMES_PER_SEC)));
+		etimer_set( &rxtimer, (unsigned long)(CLOCK_SECOND/256));
 	else
-		etimer_set(&rxtimer,CLOCK_SECOND/20);
+		etimer_set(&rxtimer,CLOCK_SECOND/256);
 
 	//init_mpu6050();
 	//uint8_t rv;
@@ -121,15 +121,15 @@ PROCESS_THREAD(null_app_process, ev, data)
 
 	    etimer_reset(&rxtimer);
 
-/*
+
 	    int i = 0;
-	    for(i = 0; i < 10; i++)
+	    for(i = 0; i < 7; i++)
 	    {
 		    counter++;
-		    debug_buf[i] = sin(counter)+127;
+		    debug_buf[i] = sin(counter);
 	    }
-*/
 
+/*
 	    counter++;
 	    debug_buf[0] = sin(counter) << 6;
 
@@ -149,8 +149,8 @@ PROCESS_THREAD(null_app_process, ev, data)
 	    counter++;
 	    debug_buf[6] = sin(counter) << 4;
 
-
-	    app_conn_send(debug_buf,sizeof(int8_t)*7);
+*/
+	    app_conn_send((uint8_t *)debug_buf,sizeof(int16_t)*7);
 
 	  }
 	}

@@ -270,7 +270,7 @@ static void TDMA_SN_send(void)
     }
     else
     {
-      PRINTF("TDMA RDC: SN sends %d\n",seq_num);
+      printf("TDMA RDC: SN sends %d, %d bytes\n",seq_num,packetbuf_datalen());
     }
     tdma_rdc_buf_full_flg = 0;
     tdma_rdc_buf_ptr = 0;

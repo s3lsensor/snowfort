@@ -151,6 +151,39 @@ int mpu_sample_all(mpu_data_union *sampled_data)
 	return 1;
 }
 
+int mpu_sample_acc(mpu_data_acc_gyro_union *sampled_data)
+{
+	uint8_t buffer[6];
+	if(!read_mpu_reg_burst(MPU_RA_ACCEL_XOUT_H,6,buffer))
+		return 0;
+
+	sampled_data->reg.x_h = buffer[0];
+	sampled_data->reg.x_l = buffer[1];
+	sampled_data->reg.y_h = buffer[2];
+	sampled_data->reg.y_l = buffer[3];
+	sampled_data->reg.z_h = buffer[4];
+	sampled_data->reg.z_l = buffer[5];
+
+	return 1;
+}
+
+int mpu_sample_gyro(mpu_data_acc_gyro_union *sampled_data)
+{
+	uint8_t buffer[6];
+	if(!read_mpu_reg_burst(MPU_RA_GYRO_XOUT_H,6,buffer))
+		return 0;
+
+	sampled_data->reg.x_h = buffer[0];
+	sampled_data->reg.x_l = buffer[1];
+	sampled_data->reg.y_h = buffer[2];
+	sampled_data->reg.y_l = buffer[3];
+	sampled_data->reg.z_h = buffer[4];
+	sampled_data->reg.z_l = buffer[5];
+
+	return 1;
+
+}
+
 /*
 Restore the default configuration (default register values)
 */
@@ -237,6 +270,16 @@ void print_mpu_sample(mpu_data_union *samples)
 	uart1_writeb((unsigned char)samples->reg.t_l);
 }
 
+
+void print_mpu_sample_acc_gyro(mpu_data_acc_gyro_union *samples)
+{
+	uart1_writeb((unsigned char)samples->reg.x_h);
+	uart1_writeb((unsigned char)samples->reg.x_l);
+	uart1_writeb((unsigned char)samples->reg.y_h);
+	uart1_writeb((unsigned char)samples->reg.y_l);
+	uart1_writeb((unsigned char)samples->reg.z_h);
+	uart1_writeb((unsigned char)samples->reg.z_l);
+}
 
 
 

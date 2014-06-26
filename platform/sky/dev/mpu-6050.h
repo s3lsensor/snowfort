@@ -61,6 +61,18 @@ typedef struct
     int8_t z_gyro_l;
 }mpu_lh;
 
+typedef struct 
+{
+    /* data */
+    int8_t x_h;
+    int8_t x_l;
+    int8_t y_h;
+    int8_t y_l;
+    int8_t z_h;
+    int8_t z_l;
+
+}mpu_lh_acc_gyro;
+
 typedef struct
 {
     int16_t accel_x;
@@ -72,16 +84,35 @@ typedef struct
     int16_t gyro_z;
 }mpu_data;
 
+typedef struct
+{
+    int16_t x;
+    int16_t y;
+    int16_t z;
+}mpu_data_acc_gyro;
+
 typedef union
 {
     mpu_lh reg;
     mpu_data data;
 }mpu_data_union;
 
+typedef union
+{
+    mpu_lh_acc_gyro reg;
+    mpu_data_acc_gyro data;
+}mpu_data_acc_gyro_union;
+
+#define MPU_DATA_SIZE (sizeof(mpu_data)/sizeof(uint8_t))
+
+#define MPU_DATA_ACC_GYRO_SIZE (sizeof(mpu_data_acc_gyro)/sizeof(uint8_t))
+
 int read_mpu_reg(unsigned char mpu_reg_addr, unsigned char* buffer);
 int read_mpu_reg_burst(unsigned char mpu_reg_addr_start, unsigned num, unsigned char* buffer);
 int write_mpu_reg(unsigned char mpu_reg_addr,unsigned char mpu_reg_val);
 int mpu_sample_all(mpu_data_union *sampled_data);
+int mpu_sample_acc(mpu_data_acc_gyro_union *sampled_data);
+int mpu_sample_gyro(mpu_data_acc_gyro_union *sampled_data);
 int mpu_reset(void);
 int mpu_enable(void);
 int mpu_wakeup(void);
