@@ -14,7 +14,7 @@
 #include "dev/i2c.h"
 #include "dev/mpu-6050.h"
 
-#define DEBUG 1
+#define DEBUG 0
 #if DEBUG
 #define PRINTF(...) printf(__VA_ARGS__)
 #else
@@ -28,7 +28,7 @@
 #define ADC_SAMPLING_FREQ 64 //use power of 2 in Hz (tested 1, 2, 4...32)
 #define ADC_SAMPLES_PER_FRAME (ADC_SAMPLING_FREQ/FRAMES_PER_SEC)
 
-#define MPU_SAMPLING_FREQ 2 //tested 1, 2, and 4
+#define MPU_SAMPLING_FREQ 256 //tested 1, 2, and 4
 #define MPU_SAMPLES_PER_FRAME (MPU_SAMPLING_FREQ/FRAMES_PER_SEC_INT)
 
 #define I2C_SENSOR
@@ -38,6 +38,7 @@
 #define DATA_SIZE sizeof(uint16_t)/sizeof(uint8_t);
 #define SAMPLING_FREQ MPU_SAMPLING_FREQ
 #define SAMPLES_PER_FRAME MPU_SAMPLES_PER_FRAME
+#define MPU_PRINT_BYTE( X ) (uart1_writeb((unsigned char)X));
 #endif /*I2C_SENSOR*/
 
 #ifdef ADC_SENSOR
@@ -49,6 +50,7 @@
 #ifndef DATA_SIZE
 #define DATA_SIZE 1 //size of uint8_t (1 bit)
 #endif /*DATA_SIZE*/
+
 
 
 
@@ -82,8 +84,6 @@ static int8_t sin(uint16_t angleMilli)
 
 /*---------------------------------------------------------------*/
 PROCESS(null_app_process, "Hello world Process");
-//PROCESS(sensor_sampling_process, "Sensor Sampling Process");
-//AUTOSTART_PROCESSES(&null_app_process, &sensor_sampling_process);
 AUTOSTART_PROCESSES(&null_app_process);
 
 /*---------------------------------------------------------------*/
@@ -95,11 +95,12 @@ static void app_recv(void)
 	
 	//int16_t *data = (int16_t*)packetbuf_dataptr();
 
+#ifdef SF_MOTE_TYPE_AP
 	mpu_data_union data[SAMPLES_PER_FRAME];
 
-	memcpy((uint8_t*)data,packetbuf_dataptr(),sizeof(mpu_data_union)/sizeof(uint8_t)*SAMPLES_PER_FRAME);
 
-	int8_t *raw_data = (int8_t *)packetbuf_dataptr();
+
+	//int8_t *raw_data = (int8_t *)packetbuf_dataptr();
 
 	uint8_t i;
 	rimeaddr_t *sent_sn_addr = packetbuf_addr(PACKETBUF_ADDR_SENDER);
@@ -109,8 +110,21 @@ static void app_recv(void)
 	//DATA_SIZE;
 	uint8_t payload_len = packetbuf_datalen();
 
+	if(payload_len != MPU_DATA_SIZE*SAMPLES_PER_FRAME)
+	{
+		printf("Ignore packet %u,%u %u\n",rx_sn_id,pkt_seq,payload_len);
+		return;
+	}
+	else
+	{
+		memcpy((uint8_t*)data,packetbuf_dataptr(),MPU_DATA_SIZE*SAMPLES_PER_FRAME);
+	}
 
-	printf("%u,%u,",rx_sn_id,pkt_seq);
+
+	
+
+
+//	printf("%u,%u,",rx_sn_id,pkt_seq);
 /*
 	for(i = 0;i < payload_len;i++)
 	{
@@ -121,32 +135,34 @@ static void app_recv(void)
 	for(i=0;i<SAMPLES_PER_FRAME;i++)
 	{
 		// MPU data
-		mpu_data_union sampled_data = data[i];
-
-		//change little endian to big endian
-		/*
-		SWAP(sampled_data.reg.x_accel_h,sampled_data.reg.x_accel_l);
-		SWAP(sampled_data.reg.y_accel_h,sampled_data.reg.y_accel_l);
-		SWAP(sampled_data.reg.z_accel_h,sampled_data.reg.z_accel_l);
-		SWAP(sampled_data.reg.t_h,sampled_data.reg.t_l);
-		SWAP(sampled_data.reg.x_gyro_h,sampled_data.reg.x_gyro_l);
-		SWAP(sampled_data.reg.y_gyro_h,sampled_data.reg.y_gyro_l);
-		SWAP(sampled_data.reg.z_gyro_h,sampled_data.reg.z_gyro_l);
-		*/
-
+		mpu_data_union samples = data[i];
 		//print result
 		
-		printf("%d,%d,%d,%d,%d,%d,%d\n",sampled_data.data.accel_x,sampled_data.data.accel_y,sampled_data.data.accel_z,sampled_data.data.temperature,sampled_data.data.gyro_x,sampled_data.data.gyro_y,
-			sampled_data.data.gyro_z);
-		
-/*
-		printf("%02x,%02x,%02x,%02x,%d,%d",sampled_data.reg.x_accel_h,sampled_data.reg.x_accel_l,sampled_data.reg.y_accel_h,sampled_data.reg.y_accel_l,sampled_data.data.accel_x,sampled_data.data.accel_y);
-*/
+		//printf("%d,%d,%d,%d,%d,%d,%d\n",sampled_data.data.accel_x,sampled_data.data.accel_y,sampled_data.data.accel_z,sampled_data.data.temperature,sampled_data.data.gyro_x,sampled_data.data.gyro_y,sampled_data.data.gyro_z);
+
+		MPU_PRINT_BYTE(rx_sn_id);
+		MPU_PRINT_BYTE(0);
+		MPU_PRINT_BYTE(pkt_seq);
+		MPU_PRINT_BYTE(0);
+		MPU_PRINT_BYTE(samples.reg.x_accel_h);
+		MPU_PRINT_BYTE(samples.reg.x_accel_l);
+		MPU_PRINT_BYTE(samples.reg.y_accel_h);
+		MPU_PRINT_BYTE(samples.reg.y_accel_l);
+		MPU_PRINT_BYTE(samples.reg.z_accel_h);
+		MPU_PRINT_BYTE(samples.reg.z_accel_l);
+		MPU_PRINT_BYTE(samples.reg.x_gyro_h);
+		MPU_PRINT_BYTE(samples.reg.x_gyro_l);
+		MPU_PRINT_BYTE(samples.reg.y_gyro_h);
+		MPU_PRINT_BYTE(samples.reg.y_gyro_l);
+		MPU_PRINT_BYTE(samples.reg.z_gyro_h);
+		MPU_PRINT_BYTE(samples.reg.z_gyro_l);
+		MPU_PRINT_BYTE(samples.reg.t_h);
+		MPU_PRINT_BYTE(samples.reg.t_l);
+		MPU_PRINT_BYTE('\n');
 
 	}
-	printf("\n");
 
-
+#endif
 /*
 	app_output_16t(data,rx_sn_id,pkt_seq,payload_len);
 */
@@ -277,7 +293,8 @@ PROCESS_THREAD(null_app_process, ev, data)
 
 			mpu_data_union samples;
 			int m=mpu_sample_all(&samples);
-
+			app_conn_send((uint8_t *)(&samples),MPU_DATA_SIZE);
+/*
 			sampleArray[sample_count] = samples.data;
 
 			sample_count = sample_count + 1;
@@ -287,9 +304,10 @@ PROCESS_THREAD(null_app_process, ev, data)
 				sample_count = 0;
 				tdma_rdc_buf_clear();
 
-				app_conn_send(sampleArray,sizeof(mpu_data)/sizeof(uint8_t)*MPU_SAMPLES_PER_FRAME);
+				app_conn_send(sampleArray,MPU_DATA_SIZE*MPU_SAMPLES_PER_FRAME);
 
 			}
+*/
 /*
 			st = &samples;
 			for(i=0;i<7;i++){
@@ -316,41 +334,3 @@ PROCESS_THREAD(null_app_process, ev, data)
 	PROCESS_END();
 
 }
-
-/*
-PROCESS_THREAD(sensor_sampling_process, ev, data)
-{
-  PROCESS_BEGIN();
-  if (SN_ID != 0){
-	printf("Sensor Sampling begun\n");
-
- 	 static struct etimer sensetimer;
-  	  etimer_set(&sensetimer,CLOCK_SECOND);
-	  init_mpu6050();  
-	  uint8_t rv;
-	  rv = read_(MPU_ADDRESS, 0x75, 0);
-	  printf("%d \n", rv);
-
-
-	  while(1)
-	  {
-
-//	    if(SN_ID != 0)
-//    {
-  	    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&sensetimer));
-
-  	    etimer_reset(&sensetimer);
-
-  	    measure_mpu();
-	    #if DEBUG
-  	    printf("Accel value: %d\tY value: %d\tZ value: %d\n",accx,accy,accz);
-	    #endif
-
-	    packetbuf_copyfrom(measurevector,sizeof(int8_t)*10);
-	    NETSTACK_RDC.send(NULL,NULL);
-
-  	  }
-  	}
-  PROCESS_END();
-}
- */

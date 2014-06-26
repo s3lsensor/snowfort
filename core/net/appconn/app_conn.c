@@ -17,7 +17,7 @@
 #include "net/mac/tdmardc.h"
 #include "app_conn.h"
 
-#define DEBUG 1
+#define DEBUG 0
 #if DEBUG
 #include <stdio.h>
 #define PRINTF(...) printf(__VA_ARGS__)
@@ -64,12 +64,15 @@ void app_conn_send(const void * ptr, const uint16_t data_len)
   }
   else
   {
+   
     uint8_t temp_len = MAX_PKT_PAYLOAD_SIZE-tdma_rdc_buf_ptr;
     memcpy(tdma_rdc_buffer+tdma_rdc_buf_ptr,ptr,temp_len*sizeof(uint8_t));
     tdma_rdc_buf_full_flg = 1;
     tdma_rdc_buf_ptr = 0;
     memcpy(tdma_rdc_buffer+tdma_rdc_buf_ptr,ptr+temp_len,(data_len-temp_len)*sizeof(uint8_t));
     tdma_rdc_buf_ptr = tdma_rdc_buf_ptr + data_len - temp_len;
+
+
 
   }
 

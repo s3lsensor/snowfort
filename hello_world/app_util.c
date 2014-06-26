@@ -20,11 +20,12 @@ void app_output(const uint8_t * data, const uint8_t node_id, const uint8_t pkt_s
 {
   int i;
 
-  printf("%u,%u,",node_id,pkt_seq);
+  printf("%u,%u,%u",node_id,pkt_seq,payload_len);
+  int16_t * data_int16 = (int16_t *)data;
 
-	for(i = 0; i < payload_len; i++)
+	for(i = 0; i < (payload_len/2); i++)
 	{
-	  printf("%d",data[i]);
+	  printf("%d,",data_int16[i]);
 	}
 	printf("\n");
 }
