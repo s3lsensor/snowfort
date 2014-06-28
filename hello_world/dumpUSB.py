@@ -7,7 +7,7 @@ import datetime
 from ctypes import *
 
 # global variable
-sample_len = 9
+sample_len = 8
 
 # function to open usb
 def openUSB(port):
@@ -113,11 +113,12 @@ def tf_mpu6050(sample):
 
 # script starts here
 
-usb_port1 = '/dev/ttyUSB1'
+usb_port1 = '/dev/ttyUSB0'
 usb_obj = openUSB(usb_port1)
 
 
-fn = 'SensorOutput.csv'
+
+fn = 'temp.csv'
 fn_handle = open(fn,'a+')
 
 data_str = ''
@@ -165,10 +166,11 @@ while True & (usb_obj is not None):
 		continue
 
 	sn_num = sample_list[0]
-	pkt_num = sample_list[1]
-	#sample_val = tf_mpu6050(sample_list[1:len(sample_list)])
-	sample_val = sample_list[2:len(sample_list)]
+	#pkt_num = sample_list[1]
+	sample_val = tf_mpu6050(sample_list[1:len(sample_list)])
+	#sample_val = sample_list[1:len(sample_list)]
 	sample_val.insert(0,sn_num)
+	#sample_val.insert(1,pkt_num)
 
 	final_output = readTime+","+",".join(sample_val)
 	print final_output

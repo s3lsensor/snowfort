@@ -153,32 +153,33 @@ int mpu_sample_all(mpu_data_union *sampled_data)
 
 int mpu_sample_acc(mpu_data_acc_gyro_union *sampled_data)
 {
-	uint8_t buffer[6];
-	if(!read_mpu_reg_burst(MPU_RA_ACCEL_XOUT_H,6,buffer))
+	///uint8_t buffer[6];
+	if(!read_mpu_reg_burst(MPU_RA_ACCEL_XOUT_H,6,(uint8_t*)sampled_data))
 		return 0;
 
-	sampled_data->reg.x_h = buffer[0];
-	sampled_data->reg.x_l = buffer[1];
-	sampled_data->reg.y_h = buffer[2];
-	sampled_data->reg.y_l = buffer[3];
-	sampled_data->reg.z_h = buffer[4];
-	sampled_data->reg.z_l = buffer[5];
+	SWAP(sampled_data->reg.x_h,sampled_data->reg.x_l);
+	SWAP(sampled_data->reg.y_h,sampled_data->reg.y_l);
+	SWAP(sampled_data->reg.z_h,sampled_data->reg.z_l);
+
+	// sampled_data->reg.x_h = buffer[0];
+	// sampled_data->reg.x_l = buffer[1];
+	// sampled_data->reg.y_h = buffer[2];
+	// sampled_data->reg.y_l = buffer[3];
+	// sampled_data->reg.z_h = buffer[4];
+	// sampled_data->reg.z_l = buffer[5];
 
 	return 1;
 }
 
 int mpu_sample_gyro(mpu_data_acc_gyro_union *sampled_data)
 {
-	uint8_t buffer[6];
-	if(!read_mpu_reg_burst(MPU_RA_GYRO_XOUT_H,6,buffer))
+	//uint8_t buffer[6];
+	if(!read_mpu_reg_burst(MPU_RA_ACCEL_XOUT_H,6,(uint8_t*)sampled_data))
 		return 0;
 
-	sampled_data->reg.x_h = buffer[0];
-	sampled_data->reg.x_l = buffer[1];
-	sampled_data->reg.y_h = buffer[2];
-	sampled_data->reg.y_l = buffer[3];
-	sampled_data->reg.z_h = buffer[4];
-	sampled_data->reg.z_l = buffer[5];
+	SWAP(sampled_data->reg.x_h,sampled_data->reg.x_l);
+	SWAP(sampled_data->reg.y_h,sampled_data->reg.y_l);
+	SWAP(sampled_data->reg.z_h,sampled_data->reg.z_l);
 
 	return 1;
 
