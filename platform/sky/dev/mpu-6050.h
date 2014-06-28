@@ -9,6 +9,7 @@
 #define MPU_6050_H
 
 #define SWAP(a,b) a = a^b; b = a^b; a = a^b;
+#define MPU_PRINT_BYTE( X ) (uart1_writeb((unsigned char)X));
 
 #define I2C_READ_SEND_ACK 1
 
@@ -21,6 +22,7 @@
 #define MPU_SLEEP_BIT BV(6)
 #define MPU_RESET_BIT BV(7)
 
+#define MPU6050_RA_INT_STATUS       0x3A
 
 #define MPU_RA_ACCEL_XOUT_H 0x3b
 #define MPU_RA_ACCEL_XOUT_L 0x3c
@@ -119,5 +121,6 @@ int mpu_wakeup(void);
 int mpu_sleep(void);
 
 void print_mpu_sample(mpu_data_union *samples);
+void print_mpu_sample_acc_gyro(mpu_data_acc_gyro_union *samples);
 
 #endif /*MPU_6050_H*/

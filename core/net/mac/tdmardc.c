@@ -275,6 +275,7 @@ static void TDMA_SN_send(void)
     tdma_rdc_buf_full_flg = 0;
     tdma_rdc_buf_ptr = 0;
     tdma_rdc_buf_send_ptr = 0;
+    memset(tdma_rdc_buffer,0,MAX_PKT_PAYLOAD_SIZE);
   }
   else
   {

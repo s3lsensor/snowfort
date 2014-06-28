@@ -25,9 +25,11 @@ contiki*.a
 *.ce
 *.co
 *.map
+*.flash
 
 # Log files
 log*
+*.log
 
 # Ctags files
 *.tags
