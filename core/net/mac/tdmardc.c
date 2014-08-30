@@ -80,13 +80,13 @@ static void TDMA_SN_listen(void);
 
 #endif
 
-// RDC buffer
+// // RDC buffer
 
-char tdma_rdc_buffer[MAX_PKT_PAYLOAD_SIZE] = {0};
-volatile uint8_t tdma_rdc_buf_ptr = 0;
-volatile uint8_t tdma_rdc_buf_send_ptr = 0;
-volatile uint8_t tdma_rdc_buf_full_flg = 0;
-volatile uint8_t tdma_rdc_buf_in_using_flg = 0;
+// uint8_t tdma_rdc_buffer[MAX_PKT_PAYLOAD_SIZE] = {0};
+// volatile uint8_t tdma_rdc_buf_ptr = 0;
+// volatile uint8_t tdma_rdc_buf_send_ptr = 0;
+// volatile uint8_t tdma_rdc_buf_full_flg = 0;
+// volatile uint8_t tdma_rdc_buf_in_using_flg = 0;
 
 // set slot number
 void sf_tdma_set_slot_num(const uint16_t num)
@@ -170,7 +170,7 @@ static void TDMA_BS_send(void)
     tdma_rdc_buf_ptr = 0;
     tdma_rdc_buf_send_ptr = 0;
 */
-    PRINTF("send command %s %d\n",tdma_rdc_buffer,packetbuf_attr(PACKETBUF_ATTR_PACKET_TYPE));
+    PRINTF("send command %s %d\n",(char *)packetbuf_dataptr(),packetbuf_attr(PACKETBUF_ATTR_PACKET_TYPE));
   }
   else
   {
@@ -209,7 +209,7 @@ static void TDMA_BS_send(void)
 // TDMA_SN_listen() -- called when radio is open for listening
 static void TDMA_SN_listen(void)
 {
-  ctimer_set(&SN_listen_timer,MAX_LISTEN_PERIOD,TDMA_SN_sleep,(void *)NULL);
+  //ctimer_set(&SN_listen_timer,MAX_LISTEN_PERIOD,TDMA_SN_sleep,(void *)NULL);
 
   NETSTACK_RADIO.on();
 }
@@ -218,7 +218,8 @@ static void TDMA_SN_listen(void)
 static void TDMA_SN_sleep(void)
 {
   printf("TDMA RDC: SN goes into sleep mode\n");
-  ctimer_set(&SN_sleep_timer,MAX_SLEEP_PERIOD,TDMA_SN_listen,(void*)NULL);
+ // ctimer_stop(&SN_listen_timer);
+ // ctimer_set(&SN_sleep_timer,MAX_SLEEP_PERIOD,TDMA_SN_listen,(void*)NULL);
   NETSTACK_RADIO.off();
   incorrect_rx_counter = 0;
 }
@@ -235,7 +236,7 @@ static void TDMA_SN_send(void)
 
   //update packet sequence number
   seq_num = seq_num + 1;
-
+/*
   //wait if the tdma_rdc_buffer is accessing by other functions
   while(tdma_rdc_buf_in_using_flg);
 
@@ -255,7 +256,9 @@ static void TDMA_SN_send(void)
     memcpy(packetbuf_dataptr()+temp_len,tdma_rdc_buffer,sizeof(uint8_t)*tdma_rdc_buf_send_ptr);
     packetbuf_set_datalen(MAX_PKT_PAYLOAD_SIZE);
   }
+*/
 
+  tdma_rdc_buf_copyto_packetbuf();
 
   // send packet -- pushed to radio layer
   if(NETSTACK_RADIO.on())
@@ -272,10 +275,11 @@ static void TDMA_SN_send(void)
     {
       printf("TDMA RDC: SN sends %d, %d bytes\n",seq_num,packetbuf_datalen());
     }
-    tdma_rdc_buf_full_flg = 0;
-    tdma_rdc_buf_ptr = 0;
-    tdma_rdc_buf_send_ptr = 0;
-    memset(tdma_rdc_buffer,0,MAX_PKT_PAYLOAD_SIZE);
+    //tdma_rdc_buf_full_flg = 0;
+    //tdma_rdc_buf_ptr = 0;
+    //tdma_rdc_buf_send_ptr = 0;
+    //memset(tdma_rdc_buffer,0,MAX_PKT_PAYLOAD_SIZE);
+    tdma_rdc_buf_clear();
   }
   else
   {
@@ -285,7 +289,7 @@ static void TDMA_SN_send(void)
   NETSTACK_RADIO.off();
 
   // release tdma_rdc_buffer
-  tdma_rdc_buf_in_using_flg = 0;
+  //tdma_rdc_buf_in_using_flg = 0;
 
 }
 #endif /*SF_MOTE_TYPE_SENSOR*/
@@ -314,8 +318,8 @@ static void input(void)
 #ifdef SF_MOTE_TYPE_SENSOR
   /*-------------SN CODE----------------------*/
 
-  ctimer_stop(&SN_sleep_timer);
-  ctimer_stop(&SN_listen_timer);
+  //ctimer_stop(&SN_sleep_timer);
+  //ctimer_stop(&SN_listen_timer);
 
   //check if the packet is from BS
   if (!rimeaddr_cmp(packetbuf_addr(PACKETBUF_ADDR_SENDER),&rimeaddr_null))

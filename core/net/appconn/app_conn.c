@@ -29,6 +29,14 @@
 // Local variable used to hold application callback pointer
 static const struct app_callbacks* app_callback_API;
 
+// RDC buffer
+
+static uint8_t tdma_rdc_buffer[MAX_PKT_PAYLOAD_SIZE] = {0};
+static volatile uint8_t tdma_rdc_buf_ptr = 0;
+static volatile uint8_t tdma_rdc_buf_send_ptr = 0;
+static volatile uint8_t tdma_rdc_buf_full_flg = 0;
+static volatile uint8_t tdma_rdc_buf_in_using_flg = 0;
+
 /*---------------------------------------------------------------------------*/
 void app_conn_open(const struct app_callbacks *u)
 {
@@ -81,6 +89,8 @@ void app_conn_send(const void * ptr, const uint16_t data_len)
 
   // release tdma_rdc_buffer
   tdma_rdc_buf_in_using_flg = 0;
+
+  PRINTF("Copy %u bytes\n",data_len);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -100,4 +110,33 @@ void tdma_rdc_buf_clear(void)
   // release tdma_rdc_buffer
   tdma_rdc_buf_in_using_flg = 0;
 
+  PRINTF("Clear RDC buffer\n");
+
+}
+
+/*---------------------------------------------------------------------------*/
+void tdma_rdc_buf_copyto_packetbuf(void)
+{
+  //wait if the tdma_rdc_buffer is accessing by other functions
+  while(tdma_rdc_buf_in_using_flg);
+
+  // lock tdma_rdc_buffer and preventing access from other functions.
+  tdma_rdc_buf_in_using_flg = 1;
+
+
+  if (tdma_rdc_buf_full_flg == 0)
+  {
+    packetbuf_copyfrom((void *)&tdma_rdc_buffer[0],sizeof(uint8_t)*tdma_rdc_buf_ptr);
+    packetbuf_set_datalen(tdma_rdc_buf_ptr);
+  }
+  else
+  {
+    uint8_t temp_len = MAX_PKT_PAYLOAD_SIZE - tdma_rdc_buf_send_ptr;
+    memcpy(packetbuf_dataptr(),tdma_rdc_buffer+tdma_rdc_buf_send_ptr,sizeof(uint8_t)*temp_len);
+    memcpy(packetbuf_dataptr()+temp_len,tdma_rdc_buffer,sizeof(uint8_t)*tdma_rdc_buf_send_ptr);
+    packetbuf_set_datalen(MAX_PKT_PAYLOAD_SIZE);
+  }
+
+  // release tdma_rdc_buffer
+  tdma_rdc_buf_in_using_flg = 0;
 }

@@ -20,7 +20,7 @@
 
 //#define FREE_SLOT_CONST 	0x7F
 #define MAX_PKT_SIZE		127
-#define MAX_PKT_PAYLOAD_SIZE	100		//should be 117, let's start from 50 right now
+#define MAX_PKT_PAYLOAD_SIZE	117		//should be 117, let's start from 50 right now
 
 // time slot information -- default
 /*
@@ -38,7 +38,7 @@
 #endif
 
 #ifndef TOTAL_TS
-#define TOTAL_TS		2
+#define TOTAL_TS		14
 #endif
 
 #ifndef BKN_SLOTS
@@ -66,11 +66,11 @@
 #endif
 
 /* data structure for transferring data*/
-extern char tdma_rdc_buffer[MAX_PKT_PAYLOAD_SIZE];
-extern volatile uint8_t tdma_rdc_buf_ptr; //updated when send() called (RDC_send()) directly
-extern volatile uint8_t tdma_rdc_buf_send_ptr; //updated when send() called (RDC_send()) directly
-extern volatile uint8_t tdma_rdc_buf_full_flg; //updated when send() called RDC_send()) directly
-extern volatile uint8_t tdma_rdc_buf_in_using_flg;
+// extern uint8_t tdma_rdc_buffer[MAX_PKT_PAYLOAD_SIZE];
+// extern volatile uint8_t tdma_rdc_buf_ptr; //updated when send() called (RDC_send()) directly
+// extern volatile uint8_t tdma_rdc_buf_send_ptr; //updated when send() called (RDC_send()) directly
+// extern volatile uint8_t tdma_rdc_buf_full_flg; //updated when send() called RDC_send()) directly
+// extern volatile uint8_t tdma_rdc_buf_in_using_flg;
 
 /* tdma rdc driver */
 extern const struct rdc_driver tdmardc_driver;
