@@ -58,11 +58,11 @@
 #endif
 
 #ifndef MAX_LISTEN_PERIOD
-#define MAX_LISTEN_PERIOD	(4*CLOCK_SECOND)
+#define MAX_LISTEN_PERIOD	(30*CLOCK_SECOND)
 #endif
 
 #ifndef MAX_SLEEP_PERIOD
-#define MAX_SLEEP_PERIOD	(10*CLOCK_SECOND)
+#define MAX_SLEEP_PERIOD	(60*CLOCK_SECOND)
 #endif
 
 /* data structure for transferring data*/

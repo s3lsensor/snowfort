@@ -14,6 +14,13 @@
 #include "dev/i2c.h"
 #include "dev/mpu-6050.h"
 
+//include for shell
+#ifdef SF_FEATURE_SHELL_OPT
+#include "shell.h"
+#include "serial-shell.h"
+#include "remote-shell.h"
+#endif
+
 
 #define DEBUG 0
 #if DEBUG
@@ -22,6 +29,8 @@
 #define PRINTF(...)
 #endif
 
+
+#define SAMPLE_RATE 10 //ticks.1024 ticks per sec & fs = 100Hz
 
 //global veriable
 static struct ctimer ct;
@@ -54,14 +63,21 @@ static void app_recv(void)
 	}
 	else
 	{
-		uart1_writeb(rx_sn_id);
-		uart1_writeb(pkt_seq);
-		uart1_writeb(payload_len);
+		//printf("%u,%u,%u,",rx_sn_id,pkt_seq,payload_len);
+		putchar(rx_sn_id);
+		putchar(pkt_seq);
+		putchar(payload_len);
+		
+		//printf("%u",rx_sn_id);
 		uint8_t i = 0;
-		for(i = 0; i < payload_len; i++)
+	
+		for(i = 0; i < (payload_len); i++)
 		{
-			uart1_writeb(data[i]);
+			//printf("%d,",((data[2*i+1]<<8)|data[2*i]));
+			putchar(data[i]);
 		}
+
+	
 	}
 
 /*
@@ -86,7 +102,7 @@ static void sample_fun(void)
 	MPU_status = mpu_sample_acc(&sample_data);
 	if (MPU_status != 0)
 	{
-		printf("%d,%d,%d\n",sample_data.data.x,sample_data.data.y,sample_data.data.z);
+		PRINTF("%d,%d,%d\n",sample_data.data.x,sample_data.data.y,sample_data.data.z);
 		app_conn_send((uint8_t*)&sample_data,MPU_DATA_ACC_GYRO_SIZE);
 	}
 	else
@@ -100,6 +116,15 @@ PROCESS_THREAD(null_app_process, ev, data)
 {
 	PROCESS_BEGIN();
 	printf("MPU6050 ACC Started\n");
+
+#ifdef SF_FEATURE_SHELL_OPT
+	serial_shell_init();
+	remote_shell_init();
+	shell_reboot_init();
+	shell_blink_init();
+	shell_sky_init();
+	
+#endif
 
 	static uint8_t MPU_status2 = 0;
 	uint8_t i;
@@ -130,7 +155,7 @@ PROCESS_THREAD(null_app_process, ev, data)
 			printf("MPU could not be awakened\n");
 		}
 
-		ctimer_set(&ct,16,sample_fun,(void*)NULL);
+		ctimer_set(&ct,SAMPLE_RATE,sample_fun,(void*)NULL);
 	}
 
 	PROCESS_END();

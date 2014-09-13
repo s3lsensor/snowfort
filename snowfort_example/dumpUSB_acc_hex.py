@@ -10,7 +10,7 @@ from ctypes import *
 # function to open usb
 def openUSB(port):
 	try:
-		usb_obj = serial.Serial(port,115200,timeout=None)
+		usb_obj = serial.Serial(port,baudrate=115200,parity=serial.PARITY_NONE,stopbits=serial.STOPBITS_ONE,bytesize=serial.EIGHTBITS,timeout=None)
 	except serial.SerialException:
 		usb_obj = None
 
@@ -40,7 +40,7 @@ def readUSB(usb_obj):
 	# readOut = usb_obj.read(byteToRead)
 	if usb_obj.readable():
 		readOut = usb_obj.readline()
-		print readOut
+		#print readOut
 	else:
 		readOut = None
 
@@ -64,27 +64,7 @@ def getValueFromASCII(readOut):
 	for item in readOut_list:
 		readOut_char.append(c_ubyte(ord(item)))
 
-	#print readOut_char
-
-	total_len = int(len(readOut_char))
-	readOut_int = []
-
-	# readOut_int.append(str(c_ushort(readOut_char[0].value).value))
-	# readOut_int.append(str(c_ushort(readOut_char[1].value).value))
-	#print len(readOut_char),total_len,range(0,total_len)
-	for i in range(0,total_len):
-		a = c_short(readOut_char[i].value)
-		readOut_int.append(str(a.value))
-		#print a,i
-
-
-
-	#print readOut_int
-	#readOut_clean = ",".join(readOut_int)
-
-	#print readOut_clean
-
-	return readOut_int
+	return readOut_char
 
 # function to combine two 1 byte into one 2 bytes
 def byteComb(val1,val2):
@@ -103,7 +83,7 @@ def conv_func(sample,a,b):
 usb_port1 = '/dev/ttyUSB0'
 usb_obj = openUSB(usb_port1)
 
-fn = 'Test1'
+fn = 'temp1'
 
 fn_csv = fn+'.csv'
 fn_handle = open(fn_csv,'w+')
@@ -125,38 +105,63 @@ while True & (usb_obj is not None):
 
 
 	# change string to list
-	#ascii_vec = getValueFromASCII(readData)
+	ascii_vec = getValueFromASCII(readData)
 
-	ascii_vec = readData.split(",")
-	print ascii_vec
+	while ascii_vec[0].value == 0:
+		ascii_vec.pop(0)
+
+	#if ascii_vec[len(ascii_vec)-1].value == 10:
+	#	ascii_vec.pop()
+
 
 	if len(ascii_vec) > 3:
 
-		ascii_vec[-1] = ascii_vec[-1].strip()
+		if (len(ascii_vec)-3) > c_ushort(ascii_vec[2].value).value:
+			sample_len = c_ushort(ascii_vec[2].value).value
+			if ascii_vec[len(ascii_vec)-1].value == 10:
+				ascii_vec.pop()
+
+		elif (len(ascii_vec)-3) <= c_ushort(ascii_vec[2].value).value:
+				sample_len = len(ascii_vec)-3
+
 
 		# SN_id
-		SN_id = ascii_vec[0]
-		pkt_seq = ascii_vec[1]
-		payload_len = ascii_vec[2]
+		SN_id = str(c_ushort(ascii_vec[0].value).value)
+		pkt_seq = str(c_ushort(ascii_vec[1].value).value)
+		payload_len = str(c_ushort(ascii_vec[2].value).value)
 
-		status_vec = ascii_vec[0:3]
+		# avoid incorrect frame message
+		if (ascii_vec[0].value == 73) and (ascii_vec[1].value == 110) and (ascii_vec[2].value == 99):
+			continue
+
+
+		print SN_id,pkt_seq,payload_len
+
+		status_vec = [SN_id,pkt_seq,payload_len]
 		fn_handle3.write(readTime+','+(','.join(status_vec))+'\n')
 
 
-		total_sample = (len(ascii_vec)-3)/3;
+		total_sample = (sample_len/3)/2
+
 		#sample_vec = []
 
+		#print ascii_vec
 		for i in range(0,total_sample):
 			#sample_vec.append(conv_func(a,16384,0))
+			#print i,total_sample,payload_len,len(ascii_vec)
 			sample_vec = []
 			sample_vec.append(readTime)
 			sample_vec.append(SN_id)
 			sample_vec.append(pkt_seq)
 			sample_vec.append(payload_len)
 
-			x = conv_func(int(ascii_vec[3+i*3]),16384,0)
-			y = conv_func(int(ascii_vec[3+i*3+1]),16384,0)
-			z = conv_func(int(ascii_vec[3+i*3+2]),16384,0)
+			x_int = byteComb(ascii_vec[3+i*6+1],ascii_vec[3+i*6])
+			y_int = byteComb(ascii_vec[3+i*6+3],ascii_vec[3+i*6+2])
+			z_int = byteComb(ascii_vec[3+i*6+5],ascii_vec[3+i*6+4])
+
+			x = conv_func(x_int,16384,0)
+			y = conv_func(y_int,16384,0)
+			z = conv_func(z_int,16384,0)
 
 			sample_vec.append(x)
 			sample_vec.append(y)
@@ -165,8 +170,8 @@ while True & (usb_obj is not None):
 			ss = ",".join(sample_vec)
 			print ss
 			fn_handle.write(ss+"\n")
-		else:
-			print readData
+	else:
+		print readData
 
 		
 

@@ -44,6 +44,7 @@ static int8_t sinI(uint16_t angleMilli)
 
 static uint16_t counter = 0;
 static struct ctimer ct;
+static struct etimer et;
 static int8_t data_buf[6] = {0};
 /*---------------------------------------------------------------*/
 PROCESS(null_app_process, "Sine Wave Process");
@@ -62,17 +63,18 @@ static void app_recv(void)
 	uint8_t rx_sn_id = sent_sn_addr->u8[0];
 	uint8_t pkt_seq = packetbuf_attr(PACKETBUF_ATTR_PACKET_ID);
 	uint8_t payload_len = packetbuf_datalen();
-/*
+
 	uart1_writeb(rx_sn_id);
 	uart1_writeb(pkt_seq);
 	uart1_writeb(payload_len);
-*/
+
 	if(node_id != 0)
 	{
-		printf("%u,%u,%u\n",rx_sn_id,pkt_seq,payload_len);
+		printf("%u,%u,%u,",rx_sn_id,pkt_seq,payload_len);
 	}
 	else
 	{
+	
 		uart1_writeb(rx_sn_id);
 		uart1_writeb(pkt_seq);
 		uart1_writeb(payload_len);
@@ -81,6 +83,8 @@ static void app_recv(void)
 		{
 			uart1_writeb(data[i]);
 		}
+	
+	//	printf("%u,%u,%u,",rx_sn_id,pkt_seq,payload_len);
 	}
 
 /*
@@ -99,6 +103,7 @@ static const struct app_callbacks nullApp_callback= {app_recv};
 
 
 /*---------------------------------------------------------------*/
+
 static void sample_fun(void)
 {
 	ctimer_reset(&ct);
@@ -115,6 +120,7 @@ static void sample_fun(void)
 	//printf("%s %s\n",ct.p->name,ct.next->p->name);
 
 }
+
 /*---------------------------------------------------------------*/
 PROCESS_THREAD(null_app_process, ev, data)
 {
@@ -122,17 +128,50 @@ PROCESS_THREAD(null_app_process, ev, data)
 	printf("Sine Wave Started\n");
 
 	serial_shell_init();
+	remote_shell_init();
 	shell_reboot_init();
 	shell_blink_init();
 	shell_sky_init();
-	remote_shell_init();
+	
 
 	app_conn_open(&nullApp_callback);
-
+/*
+	if (node_id != 0)
+		etimer_set(&et,16);
+	else
+		etimer_set(&et,200);
+*/
 	if (node_id != 0)
 	{
-		ctimer_set(&ct,16,sample_fun,(void*)NULL);
+		ctimer_set(&ct,10,sample_fun,(void*)NULL);
+/*
+		while(1)
+		{
+			PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+			etimer_reset(&et);
+			uint8_t i;
+			for(i = 0; i < 6; i++)
+			{
+				data_buf[i] = sinI(counter);
+				counter++;
+			}
+			app_conn_send((uint8_t *)data_buf,6*sizeof(int8_t));
+		}
+*/
 	}
+/*
+	else
+	{
+		while(1)
+		{
+			PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
+			etimer_reset(&et);
+		}
+		
+	}
+*/
+
+
 
 /*
 	int8_t data_buf[6] = {0};

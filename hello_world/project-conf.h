@@ -21,7 +21,7 @@
 #endif /* SN_ID >0: Sensor node*/
 
 //define feature
-//#define SF_FEATURE_SHELL_OPT
+#define SF_FEATURE_SHELL_OPT
 
 //redefine time accuracy
 #ifdef CLOCK_CONF_SECOND

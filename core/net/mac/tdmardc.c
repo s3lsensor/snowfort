@@ -14,6 +14,7 @@
 #include "sys/rtimer.h"
 #include "net/queuebuf.h"
 #include "dev/cc2420.h"
+#include "dev/leds.h"
 #include "appconn/app_conn.h"
 #include "net/mac/framer-tdma.h"
 #include "frame802154.h"
@@ -79,6 +80,14 @@ static void TDMA_SN_sleep(void);
 static void TDMA_SN_listen(void);
 
 #endif
+
+static struct ctimer led_ct;
+
+static void led_timer(uint8_t LED_NUM, uint8_t period)
+{
+  leds_on(LED_NUM);
+  ctimer_set(&led_ct,period,leds_off,LED_NUM);
+}
 
 // // RDC buffer
 
@@ -146,11 +155,14 @@ static void TDMA_BS_send(void)
 {
 
   //printf("%05u,",RTIMER_NOW());//call time for BS_send
-
+/*
   uint8_t bkn_len = 16;
   uint8_t bkn_pkt[16]={0};
   bkn_pkt[14]=1;
   bkn_pkt[15]=2;
+*/
+  uint8_t bkn_len = 12;
+  uint8_t bkn_pkt[12] = {72,73,72,74,72,75,72,76,72,77,72,78};
 
   // set timer for next BS send
   // right now, rtimer_timer does not consider drifting. For long time experiment, it may have problem
@@ -171,6 +183,7 @@ static void TDMA_BS_send(void)
     tdma_rdc_buf_send_ptr = 0;
 */
     PRINTF("send command %s %d\n",(char *)packetbuf_dataptr(),packetbuf_attr(PACKETBUF_ATTR_PACKET_TYPE));
+
   }
   else
   {
@@ -191,15 +204,25 @@ static void TDMA_BS_send(void)
     return;
 
   //send packet -- pushed to radio layer
+  uint8_t i = 0;
+  uint8_t * pkt = packetbuf_hdrptr();
+  for(i = 0; i < packetbuf_totlen(); i++)
+  {
+    printf("%u,",pkt[i]);
+  }
+  printf("\n");
+
   if(NETSTACK_RADIO.send(packetbuf_hdrptr(),packetbuf_totlen()) != RADIO_TX_OK)
   {
     printf("TDMA RDC: BS fails to send packet\n");
   }
   else
   {
-    printf("TDMA RDC: BS sends %u\n",seq_num);
+    PRINTF("TDMA RDC: BS sends %u\n",seq_num);
   }
 
+  //clean flag
+  packetbuf_set_attr(PACKETBUF_ATTR_PACKET_TYPE,PACKETBUF_ATTR_PACKET_TYPE_DATA);
 
 
 }
@@ -209,7 +232,8 @@ static void TDMA_BS_send(void)
 // TDMA_SN_listen() -- called when radio is open for listening
 static void TDMA_SN_listen(void)
 {
-  //ctimer_set(&SN_listen_timer,MAX_LISTEN_PERIOD,TDMA_SN_sleep,(void *)NULL);
+  //ctimer_stop(&SN_sleep_timer);
+  ctimer_set(&SN_listen_timer,MAX_LISTEN_PERIOD,TDMA_SN_sleep,(void *)NULL);
 
   NETSTACK_RADIO.on();
 }
@@ -218,15 +242,18 @@ static void TDMA_SN_listen(void)
 static void TDMA_SN_sleep(void)
 {
   printf("TDMA RDC: SN goes into sleep mode\n");
- // ctimer_stop(&SN_listen_timer);
- // ctimer_set(&SN_sleep_timer,MAX_SLEEP_PERIOD,TDMA_SN_listen,(void*)NULL);
+  //ctimer_stop(&SN_listen_timer);
+  ctimer_set(&SN_sleep_timer,MAX_SLEEP_PERIOD,TDMA_SN_listen,(void*)NULL);
   NETSTACK_RADIO.off();
   incorrect_rx_counter = 0;
+  led_timer(LEDS_RED,CLOCK_SECOND);
 }
 
 // TDMA_SN_send() -- called at a assigned time slot
 static void TDMA_SN_send(void)
 {
+  led_timer(LEDS_BLUE,CLOCK_SECOND/(FRAMES_PER_SEC_INT/2));
+
   //set timer for open RADIO -- for opening earlier 2 ms
   //uint16_t time = RTIMER_TIME(&SNTimer)+RTIMER_MS*(segment_period-BS_period-my_slot*TS_period);
   uint16_t callBkTime = RTIMER_NOW();
@@ -266,6 +293,14 @@ static void TDMA_SN_send(void)
     packetbuf_set_attr(PACKETBUF_ATTR_MAC_SEQNO,seq_num);
     uint8_t hdr_len = NETSTACK_FRAMER.create();
 
+
+    uint8_t i = 0;
+    uint8_t * pkt = packetbuf_hdrptr();
+    for(i = 0; i < 20; i++)
+    {
+      printf("%x,",pkt[i]);
+    }
+    printf("\n");
 
     if(NETSTACK_RADIO.send(packetbuf_hdrptr(),packetbuf_totlen()) != RADIO_TX_OK)
     {
@@ -312,30 +347,38 @@ static void send_list(mac_callback_t sent_callback, void *ptr, struct rdc_buf_li
 static void input(void)
 {
   if(NETSTACK_FRAMER.parse() < 0)
+  {
     printf("Incorrect decode frame\n");
+    return;
+  }
+    
 
 
 #ifdef SF_MOTE_TYPE_SENSOR
   /*-------------SN CODE----------------------*/
 
-  //ctimer_stop(&SN_sleep_timer);
-  //ctimer_stop(&SN_listen_timer);
+  ctimer_stop(&SN_sleep_timer);
+  ctimer_stop(&SN_listen_timer);
 
   //check if the packet is from BS
   if (!rimeaddr_cmp(packetbuf_addr(PACKETBUF_ADDR_SENDER),&rimeaddr_null))
   {
-    printf("Packet is not from base station, rejected!\n");
+    rimeaddr_t *sent_sn_addr = packetbuf_addr(PACKETBUF_ADDR_SENDER);
+    printf("Packet is not from base station, rejected! %d\n",sent_sn_addr->u8[0]);
     incorrect_rx_counter++;
 
-    if (incorrect_rx_counter < TOTAL_TS*2)
+    if (incorrect_rx_counter > TOTAL_TS*10)
     {
-      TDMA_SN_listen();
+      TDMA_SN_sleep();
+      return;
     }
     else
     {
-      TDMA_SN_sleep();
+      //TDMA_SN_listen();
+      return;
     }
-    return;
+
+    
   }
 
   uint8_t *rx_pkt = (uint8_t *)packetbuf_dataptr();
@@ -346,6 +389,8 @@ static void input(void)
   {
     printf("TDMA RDC: SN fails to turn off radio");
   }
+
+  led_timer(LEDS_GREEN,CLOCK_SECOND/(FRAMES_PER_SEC_INT/2));
 
 
   SN_RX_start_time = packetbuf_attr(PACKETBUF_ATTR_TIMESTAMP);
@@ -380,6 +425,8 @@ static void input(void)
       rtimer_set(&SNTimer,SN_TX_time,0,TDMA_SN_send,NULL);
     }
   }
+  PRINTF("Channel: %d;", cc2420_get_channel());
+  PRINTF("RSSI: %d\n", cc2420_last_rssi-45);
   app_conn_input(); //For debugging timing
 #endif /* SF_MOTE_TYPE_SENSOR */
 
@@ -481,6 +528,9 @@ static void init(void)
 #ifdef SF_MOTE_TYPE_SENSOR
   incorrect_rx_counter = 0;
 #endif
+
+  cc2420_set_channel(RF_CHANNEL_CONST);
+  cc2420_set_txpower(CC2420_TXPOWER_MAX);
 
   on();
 }
