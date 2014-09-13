@@ -31,6 +31,7 @@
 #define CLOCK_CONF_SECOND 1024UL
 #endif
 
+//Zigbee available channel: 15,20,25,26
 #define RF_CONF_CHANNEL 25
 
 //RF_Channel

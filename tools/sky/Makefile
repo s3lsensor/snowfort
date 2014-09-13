@@ -21,7 +21,7 @@ ifeq ($(HOST_OS),Darwin)
 endif
 
 ifeq ($(HOST_OS),Pi)
-  SERIALDUMP = serialdump-pi
+  SERIALDUMP = serialdump-linux
   FLAG+=-DPI
 endif
 
