@@ -5,7 +5,7 @@ TARGET=sky
 
 DEFINES=ELFLOADER_DATAMEMORY_SIZE=0x100,ELFLOADER_TEXTMEMORY_SIZE=0x100
 
-APPS = serial-shell
+APPS = serial-shell remote-shell
 CONTIKI = ../..
 include $(CONTIKI)/Makefile.include
 
