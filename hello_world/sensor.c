@@ -123,9 +123,9 @@ static void app_recv(void)
 
 	
 
-
-//	printf("%u,%u,",rx_sn_id,pkt_seq);
 /*
+	printf("%u,%u,",rx_sn_id,pkt_seq);
+
 	for(i = 0;i < payload_len;i++)
 	{
 		printf("%02x,",raw_data[i]);
@@ -138,7 +138,7 @@ static void app_recv(void)
 		mpu_data_union samples = data[i];
 		//print result
 		
-		//printf("%d,%d,%d,%d,%d,%d,%d\n",sampled_data.data.accel_x,sampled_data.data.accel_y,sampled_data.data.accel_z,sampled_data.data.temperature,sampled_data.data.gyro_x,sampled_data.data.gyro_y,sampled_data.data.gyro_z);
+		printf("%d,%d,%d,%d,%d,%d,%d\n",sampled_data.data.accel_x,sampled_data.data.accel_y,sampled_data.data.accel_z,sampled_data.data.temperature,sampled_data.data.gyro_x,sampled_data.data.gyro_y,sampled_data.data.gyro_z);
 
 		MPU_PRINT_BYTE(rx_sn_id);
 		MPU_PRINT_BYTE(0);
@@ -237,7 +237,11 @@ PROCESS_THREAD(null_app_process, ev, data)
 	    	 tdma_rdc_buf_send_ptr = 0;
 	    	 tdma_rdc_buf_full_flg = 0;
 	    	 app_conn_send(samples,sizeof(uint16_t)*ADC_SAMPLES_PER_FRAME/sizeof(uint8_t));
-	    }
+	    	 for(int i = 0; i<sample_num; i++){
+			printf("%d ", samples[i]);
+		 }
+		 printf("\n");
+	     }
 
 	  }
 	}
