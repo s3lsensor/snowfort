@@ -14,7 +14,8 @@
 		   PS -> VCC
 		   CS -> GND  : I2C address will be 0x77 
 
- * usage: init before use to get the coefficients. reset everytime the sensor restarts. 
+ * usage: the address can be set by soldering the ADDR pins on the chip. 
+ 		  if the pin is changed, change the TSL2561_ADDR accordingly.
  */
 #ifndef TSL2561_H
 #define TSL2561_H
@@ -23,7 +24,10 @@
                           _NOP(); _NOP(); _NOP(); _NOP(); \
                           _NOP(); _NOP(); }while(250)
 
-#define TSL2561_ADDR   0x39
+// #define TSL2561_ADDR 0x29 // address with '0' shorted on board
+#define TSL2561_ADDR   0x39 // default address
+// #define TSL2561_ADDR 0x49 // address with '1' shorted on board
+
 
 #define TSL2561_CMD           0x80
 #define TSL2561_CMD_CLEAR     0xC0
@@ -41,30 +45,22 @@
 
 #define I2C_READ_SEND_ACK 1
 
-
-
-
-#define MS5803_ADDR 0x77
+typedef struct
+{
+    int8_t h;
+    int8_t l;
+}data;
 
 typedef struct
 {
-    int8_t hByte;
-    int8_t mByte;
-    int8_t lByte;
-}ms5803_data;
-
-typedef struct
-{
-	int32_t pressure;
-	int32_t temperature;
-}ms5803_union
+    data ch0;
+    data ch1;
+}tsl2561_data;
 
 // #define MS5803_DATA_SIZE (sizeof(ms5803_data)/sizeof(uint8_t))
-
-int16_t* tsl2561_init();
-int tsl2561_poweron();
-int tsl2561_powerdonw(int8_t cmd);
-int tsl2561_settiming();
+void tsl2561_poweron();
+void tsl2561_powerdonw();
+void tsl2561_settiming();
 int tsl2561_sample(int8_t precision, int16_t *coeff);
 
 
