@@ -27,7 +27,7 @@
  * Read a single byte from the MPU.
  */
 
-// dummy file for ml8511, analog output need an adc to continue
+// dummy file for adxl337, analog output need an adc to continue
 
 
 

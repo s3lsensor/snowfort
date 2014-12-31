@@ -10,7 +10,7 @@
 #include <stdio.h>
 
 #include "dev/i2c.h"
-#include "dev/ms5803.h"
+#include "dev/tsl2561.h"
 #include "dev/uart1.h"
 
 #define SWAP(a,b) a = a^b; b = a^b; a = a^b;
@@ -27,8 +27,8 @@ int16_t* ms5803_init(){
 	int16_t coefficients[8];
 	for (int i=0; i<8;i++){
 		ms5803_send(CMD_PROM+i*2);
-		start();
-		if !write(MS5803_ADDR){
+		i2c.start();
+		if !i2c.write(MS5803_ADDR){
 			printf("I2C write failure...");
 			i2c_stop();
 			return NULL;

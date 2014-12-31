@@ -16,28 +16,30 @@
 
  * usage: init before use to get the coefficients. reset everytime the sensor restarts. 
  */
-#ifndef MS5803_H
-#define MS5803_H
+#ifndef ISL29125_H
+#define ISL29125_H
 
 #define delay_1ms()   do{ _NOP(); _NOP(); _NOP(); _NOP(); \
                           _NOP(); _NOP(); _NOP(); _NOP(); \
                           _NOP(); _NOP(); }while(250)
 
-#define CMD_RESET 0x1E // reset command
-#define CMD_ADC_READ 0x00 // ADC read command
-#define CMD_ADC_CONV 0x40 // ADC conversion command
-#define CMD_PROM 0xA0 // Coefficient location
+#define ISL_I2C_ADDR 0x44
 
-
-#define PRESSURE 0x00
-#define TEMPERATURE 0x10
-
-// precisions
-#define ADC_256  0x00
-#define ADC_512  0x02
-#define ADC_1024  0x04
-#define ADC_2048  0x06
-#define ADC_4096  0x08
+#define DEVICE_ID 0x00
+#define CONFIG_1 0x01
+#define CONFIG_2 0x02
+#define CONFIG_3 0x03
+#define THRESHOLD_LL 0x04
+#define THRESHOLD_LH 0x05
+#define THRESHOLD_HL 0x06
+#define THRESHOLD_HH 0x07
+#define STATUS 0x08 
+#define GREEN_L 0x09 
+#define GREEN_H 0x0A
+#define RED_L 0x0B
+#define RED_H 0x0C
+#define BLUE_L 0x0D
+#define BLUE_H 0x0E
 
 
 #define SWAP(a,b) a = a^b; b = a^b; a = a^b;
@@ -45,10 +47,6 @@
 
 #define I2C_READ_SEND_ACK 1
 
-
-
-
-#define MS5803_ADDR 0x77
 
 typedef struct
 {
@@ -63,14 +61,16 @@ typedef struct
 	int32_t temperature;
 }ms5803_union
 
-#define MS5803_DATA_SIZE (sizeof(ms5803_data)/sizeof(uint8_t))
+// #define MS5803_DATA_SIZE (sizeof(ms5803_data)/sizeof(uint8_t))
 
-int16_t* ms5803_init();
-int ms5803_reset();
-int ms5803_send(int8_t cmd);
-int ms5803_sample(int8_t precision, int16_t *coeff);
+int16_t* isl29125_init();
+int isl29125_reset();
+int isl29125_config(int8_t cmd);
+int isl29125_sample_red(int8_t precision, int16_t *coeff);
+int isl29125_sample_blue(int8_t precision, int16_t *coeff);
+int isl29125_sample_green(int8_t precision, int16_t *coeff);
 
 
-void print_ms5803_sample(ms5803_union samples);
+void print_isl29125_sample(ms5803_union samples);
 
 #endif
