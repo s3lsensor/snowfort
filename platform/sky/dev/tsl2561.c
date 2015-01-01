@@ -3,7 +3,7 @@
  *
  * ---------------------------------------------------------
  *
- * Author: Ronnie Bajwa
+ * Author: Bin Wang
  */
 #include "contiki.h"
 

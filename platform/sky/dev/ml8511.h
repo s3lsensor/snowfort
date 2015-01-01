@@ -9,7 +9,7 @@
 /*
  * Pin connection: analog output, need a adc converter
 
- * usage: init before use to get the coefficients. reset everytime the sensor restarts. 
+ * usage: Dummy file for sensor ml8511
  */
 #ifndef ML8511_H
 #define ML8511_H

@@ -9,7 +9,7 @@
 /*
  * Pin connection: analog output, need a adc converter
 
- * usage: init before use to get the coefficients. reset everytime the sensor restarts. 
+ * usage: dummy files for sensor adxl337
  */
 #ifndef ADXL337_H
 #define ADXL337_H

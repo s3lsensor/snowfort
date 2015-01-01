@@ -14,7 +14,7 @@
 		   PS -> VCC
 		   CS -> GND  : I2C address will be 0x77 
 
- * usage: init before use to get the coefficients. reset everytime the sensor restarts. 
+ * usage: 
  */
 #ifndef ISL29125_H
 #define ISL29125_H

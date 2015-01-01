@@ -14,7 +14,7 @@
 		   PS -> VCC
 		   CS -> GND  : I2C address will be 0x77 
 
- * usage: init before use to get the coefficients. reset everytime the sensor restarts. 
+ * usage: 2 sensors with separate sample and init function
  */
 #ifndef 6DOF_H
 #define 6DOF_H
@@ -24,7 +24,7 @@
                           _NOP(); _NOP(); }while(250)
 
 //ADXL337 Register Map
-#define ADXL_ADDR	0xA6
+#define ADXL_ADDR		0xA6
 #define	DEVID			0x00	//Device ID Register
 #define THRESH_TAP		0x1D	//Tap Threshold
 #define	OFSX			0x1E	//X-axis offset
