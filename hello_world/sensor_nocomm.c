@@ -12,7 +12,7 @@
 #include "dev/adc.h"
 #include "dev/leds.h"
 #include "dev/i2c.h"
-#include "dev/mpu-6050.h"
+#include "dev/tsl2561.h"
 #include "sys/rtimer.h"
 
 #include "dev/uart1.h"
@@ -235,7 +235,6 @@ PROCESS_THREAD(null_app_process, ev, data)
 #ifdef I2C_SENSOR
 	//static rtimer_clock_t rt, del;
 	int i;
-	static uint8_t MPU_status = 0;
 	static uint8_t sample_count = 0;
 /*
 	static uint8_t samples_sorted_bytes[14*MPU_SAMPLES_PER_FRAME],comp_samples_sorted_bytes[14*MPU_SAMPLES_PER_FRAME];
@@ -243,38 +242,9 @@ PROCESS_THREAD(null_app_process, ev, data)
 	static uint8_t *st;
 */
 
-
-	static mpu_data sampleArray[MPU_SAMPLES_PER_FRAME];
-
 	if (node_id != 0){
 
-		MPU_status = 0;
-		for(i = 0; i < 100 & (~MPU_status);i++)
-		{
-			MPU_status = mpu_enable();
-		}
-
-		if (MPU_status == 0)
-			printf("MPU could not be enabled.\n");
-		else
-		{
-			//read who am i
-			// uint8_t c;
-			// read_mpu_reg(MPU6050_RA_GYRO_CONFIG,&c);
-			// printf("Gyro configure %u\n",c);
-			// read_mpu_reg(MPU6050_RA_ACCEL_CONFIG,&c);
-			// printf("ACC configure %u\n",c);
-		}
-
-
-		MPU_status = 0;
-		for(i = 0; i < 100 & (~MPU_status);i++)
-		{
-			MPU_status = mpu_wakeup();
-		}
-
-		if (MPU_status == 0)
-			printf("MPU could not be awakened.\n");
+		tsl2561_poweron();
 
 		etimer_set(&rxtimer, (unsigned long)(CLOCK_SECOND/MPU_SAMPLING_FREQ));
 
@@ -291,8 +261,8 @@ PROCESS_THREAD(null_app_process, ev, data)
 			etimer_reset(&rxtimer);
 
 			//printf("start %u\n",RTIMER_NOW());
-			mpu_data_union samples;
-			int m=mpu_sample_all(&samples);
+			tsl2561_data samples = tsl2561_sample();
+
 			//counterxx = counterxx + 1;
 			//printf("%lu\n",counterxx);
 			
@@ -312,7 +282,7 @@ PROCESS_THREAD(null_app_process, ev, data)
 
 			// uart1_writeb((unsigned char)'\n');
 
-			PRINTF("%d,%d,%d,%d,%d,%d,%d\n",samples.data.accel_x,samples.data.accel_y,samples.data.accel_z,samples.data.gyro_x,samples.data.gyro_y, samples.data.gyro_z,samples.data.temperature);
+			PRINTF("%d,%d,\n %d,%d\n\n",samples.ch0.h, samples.ch0.l, samples.ch1.h, samples.ch1.l);
 
 
 			//printf("end %u\n",RTIMER_NOW());

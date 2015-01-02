@@ -15,13 +15,6 @@
 
 #define SWAP(a,b) a = a^b; b = a^b; a = a^b;
 
-#define DEBUG 0
-#if DEBUG
-#define PRINTF(...) printf(__VA_ARGS__)
-#else
-#define PRINTF(...)
-#endif
-
 // Initialize the sensor and return coefficients
 void tsl2561_poweron(){
 	write_(TSL2561_ADDR, TSL2561_REG_CONTROL, 0x03);
