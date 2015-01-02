@@ -129,7 +129,7 @@ typedef struct
 	data x;
 	data y;
 	data z;
-}adxl345_union;
+}adxl345_union
 
 typedef struct
 {
@@ -137,7 +137,7 @@ typedef struct
 	data y;
 	data z;
 	data temp;
-}itg3200_union;
+}itg3200_union
 
 //#define MS5803_DATA_SIZE (sizeof(ms5803_data)/sizeof(uint8_t))
 

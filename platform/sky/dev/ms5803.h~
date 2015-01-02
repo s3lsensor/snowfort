@@ -69,7 +69,7 @@ int16_t* ms5803_init(void);
 int ms5803_reset(void);
 int ms5803_send(int8_t cmd);
 ms5803_union ms5803_sample(int8_t precision, int16_t *coeff);
-int32_t ms5803_ADCConv(int8_t type, int8_t precision, int16_t *coeff);
+int32_t ms5803_ADCConv(int8_t type, int8_t precision, int16_t *coeff)
 
 void print_ms5803_sample(ms5803_union samples);
 

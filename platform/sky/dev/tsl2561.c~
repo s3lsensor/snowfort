@@ -48,6 +48,7 @@ tsl2561_data tsl2561_sample(void){
 	rlt.ch0.l = rv[0];
 
 	read_multibyte(TSL2561_ADDR, TSL2561_REG_DATA_1 | TSL2561_CMD, 2, rv);
+	tsl2561_data rlt;
 	rlt.ch1.h = rv[1];
 	rlt.ch1.l = rv[0];
 	return rlt;

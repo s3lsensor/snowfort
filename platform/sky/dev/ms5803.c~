@@ -68,7 +68,7 @@ int ms5803_send(int8_t cmd){
 // sample temperature and pressure, temperature in Celsius is (returned value)/10
 ms5803_union ms5803_sample(int8_t precision, int16_t *coeff){
 	int32_t temp_raw = ms5803_ADCConv(TEMPERATURE, precision, coeff);
-	int32_t press_raw = ms5803_ADCConv(PRESSURE, precision, coeff);
+	int32_t pree_raw = ms5803_ADCConv(PRESSURE, precision, coeff);
 
 	int32_t temp_calc, press_calc;
 	int32_t dT = temp_raw - ((int32_t)coeff[5] << 8);
