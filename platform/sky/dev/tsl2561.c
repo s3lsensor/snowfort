@@ -25,7 +25,7 @@ void tsl2561_powerdonw(void){
 }
 
 
-void tsl2561_settiming(bool gain, unsigned char t){
+void tsl2561_settiming(int gain, unsigned t){
 	unsigned timing = read_(TSL2561_ADDR, TSL2561_REG_TIMING, 1);
 	
 	if (gain)
