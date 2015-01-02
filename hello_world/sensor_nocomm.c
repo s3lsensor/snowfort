@@ -92,71 +92,71 @@ AUTOSTART_PROCESSES(&null_app_process);
 
 /*---------------------------------------------------------------*/
 //APP Callback function
-static void app_recv(void)
-{
-	//printf("Received from RDC\n");
-	PROCESS_CONTEXT_BEGIN(&null_app_process);
+// static void app_recv(void)
+// {
+// 	//printf("Received from RDC\n");
+// 	PROCESS_CONTEXT_BEGIN(&null_app_process);
 	
-	//int16_t *data = (int16_t*)packetbuf_dataptr();
+// 	//int16_t *data = (int16_t*)packetbuf_dataptr();
 
-	mpu_data_union data[SAMPLES_PER_FRAME];
+// 	mpu_data_union data[SAMPLES_PER_FRAME];
 
-	memcpy((uint8_t*)data,packetbuf_dataptr(),sizeof(mpu_data_union)/sizeof(uint8_t)*SAMPLES_PER_FRAME);
+// 	memcpy((uint8_t*)data,packetbuf_dataptr(),sizeof(mpu_data_union)/sizeof(uint8_t)*SAMPLES_PER_FRAME);
 
-	int8_t *raw_data = (int8_t *)packetbuf_dataptr();
+// 	int8_t *raw_data = (int8_t *)packetbuf_dataptr();
 
-	uint8_t i;
-	rimeaddr_t *sent_sn_addr = packetbuf_addr(PACKETBUF_ADDR_SENDER);
-	uint8_t rx_sn_id = sent_sn_addr->u8[0];
+// 	uint8_t i;
+// 	rimeaddr_t *sent_sn_addr = packetbuf_addr(PACKETBUF_ADDR_SENDER);
+// 	uint8_t rx_sn_id = sent_sn_addr->u8[0];
 
-	uint8_t pkt_seq = packetbuf_attr(PACKETBUF_ATTR_PACKET_ID);
-	//DATA_SIZE;
-	uint8_t payload_len = packetbuf_datalen();
+// 	uint8_t pkt_seq = packetbuf_attr(PACKETBUF_ATTR_PACKET_ID);
+// 	//DATA_SIZE;
+// 	uint8_t payload_len = packetbuf_datalen();
 
 
-	printf("%u,%u,",rx_sn_id,pkt_seq);
-/*
-	for(i = 0;i < payload_len;i++)
-	{
-		printf("%02x,",raw_data[i]);
-	}
-	printf("\n");
-*/	
-	for(i=0;i<SAMPLES_PER_FRAME;i++)
-	{
-		// MPU data
-		mpu_data_union sampled_data = data[i];
+// 	printf("%u,%u,",rx_sn_id,pkt_seq);
+// /*
+// 	for(i = 0;i < payload_len;i++)
+// 	{
+// 		printf("%02x,",raw_data[i]);
+// 	}
+// 	printf("\n");
+// */	
+// 	for(i=0;i<SAMPLES_PER_FRAME;i++)
+// 	{
+// 		// MPU data
+// 		mpu_data_union sampled_data = data[i];
 
-		//change little endian to big endian
-		/*
-		SWAP(sampled_data.reg.x_accel_h,sampled_data.reg.x_accel_l);
-		SWAP(sampled_data.reg.y_accel_h,sampled_data.reg.y_accel_l);
-		SWAP(sampled_data.reg.z_accel_h,sampled_data.reg.z_accel_l);
-		SWAP(sampled_data.reg.t_h,sampled_data.reg.t_l);
-		SWAP(sampled_data.reg.x_gyro_h,sampled_data.reg.x_gyro_l);
-		SWAP(sampled_data.reg.y_gyro_h,sampled_data.reg.y_gyro_l);
-		SWAP(sampled_data.reg.z_gyro_h,sampled_data.reg.z_gyro_l);
-		*/
-
-		//print result
+// 		//change little endian to big endian
 		
-		// printf("%d,%d,%d,%d,%d,%d,%d\n",sampled_data.data.accel_x,sampled_data.data.accel_y,sampled_data.data.accel_z,sampled_data.data.temperature,sampled_data.data.gyro_x,sampled_data.data.gyro_y,
-		// 	sampled_data.data.gyro_z);
+// 		SWAP(sampled_data.reg.x_accel_h,sampled_data.reg.x_accel_l);
+// 		SWAP(sampled_data.reg.y_accel_h,sampled_data.reg.y_accel_l);
+// 		SWAP(sampled_data.reg.z_accel_h,sampled_data.reg.z_accel_l);
+// 		SWAP(sampled_data.reg.t_h,sampled_data.reg.t_l);
+// 		SWAP(sampled_data.reg.x_gyro_h,sampled_data.reg.x_gyro_l);
+// 		SWAP(sampled_data.reg.y_gyro_h,sampled_data.reg.y_gyro_l);
+// 		SWAP(sampled_data.reg.z_gyro_h,sampled_data.reg.z_gyro_l);
 		
-/*
-		printf("%02x,%02x,%02x,%02x,%d,%d",sampled_data.reg.x_accel_h,sampled_data.reg.x_accel_l,sampled_data.reg.y_accel_h,sampled_data.reg.y_accel_l,sampled_data.data.accel_x,sampled_data.data.accel_y);
-*/
 
-	}
-	printf("\n");
+// 		//print result
+		
+// 		// printf("%d,%d,%d,%d,%d,%d,%d\n",sampled_data.data.accel_x,sampled_data.data.accel_y,sampled_data.data.accel_z,sampled_data.data.temperature,sampled_data.data.gyro_x,sampled_data.data.gyro_y,
+// 		// 	sampled_data.data.gyro_z);
+		
+// /*
+// 		printf("%02x,%02x,%02x,%02x,%d,%d",sampled_data.reg.x_accel_h,sampled_data.reg.x_accel_l,sampled_data.reg.y_accel_h,sampled_data.reg.y_accel_l,sampled_data.data.accel_x,sampled_data.data.accel_y);
+// */
+
+// 	}
+// 	printf("\n");
 
 
-/*
-	app_output_16t(data,rx_sn_id,pkt_seq,payload_len);
-*/
-	PROCESS_CONTEXT_END(&null_app_process);
+// /*
+// 	app_output_16t(data,rx_sn_id,pkt_seq,payload_len);
+// */
+// 	PROCESS_CONTEXT_END(&null_app_process);
 
-}
+// }
 static const struct app_callbacks nullApp_callback= {app_recv};
 
 

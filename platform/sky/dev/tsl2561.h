@@ -64,6 +64,6 @@ void tsl2561_settiming();
 int tsl2561_sample(int8_t precision, int16_t *coeff);
 
 
-void print_tsl2561_sample(ms5803_union samples);
+void print_tsl2561_sample(tsl2561_data samples);
 
 #endif
