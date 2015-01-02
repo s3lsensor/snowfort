@@ -61,7 +61,7 @@ typedef struct
 void tsl2561_poweron();
 void tsl2561_powerdonw();
 void tsl2561_settiming();
-int tsl2561_sample(int8_t precision, int16_t *coeff);
+int tsl2561_sample();
 
 
 void print_tsl2561_sample(tsl2561_data samples);
