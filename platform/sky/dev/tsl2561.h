@@ -1,4 +1,4 @@
-/*
+                                                /*
  * This file defines the driver for ms5803
  *
  * ---------------------------------------------------------
@@ -58,10 +58,10 @@ typedef struct
 }tsl2561_data;
 
 // #define MS5803_DATA_SIZE (sizeof(ms5803_data)/sizeof(uint8_t))
-void tsl2561_poweron();
-void tsl2561_powerdonw();
-void tsl2561_settiming();
-tsl2561_data tsl2561_sample();
+void tsl2561_poweron(void);
+void tsl2561_powerdonw(void);
+void tsl2561_settiming(bool gain, unsigned char t);
+tsl2561_data tsl2561_sample(void);
 
 
 void print_tsl2561_sample(tsl2561_data samples);
