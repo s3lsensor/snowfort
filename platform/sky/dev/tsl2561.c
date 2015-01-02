@@ -16,11 +16,11 @@
 #define SWAP(a,b) a = a^b; b = a^b; a = a^b;
 
 // Initialize the sensor and return coefficients
-void tsl2561_poweron(){
+void tsl2561_poweron(void){
 	write_(TSL2561_ADDR, TSL2561_REG_CONTROL, 0x03);
 }
 
-void tsl2561_powerdonw(){
+void tsl2561_powerdonw(void){
 	write_(TSL2561_ADDR, TSL2561_REG_CONTROL, 0x00);
 }
 
@@ -40,7 +40,7 @@ void tsl2561_settiming(bool gain, unsigned char t){
 
 }
 
-tsl2561_data tsl2561_sample(){
+tsl2561_data tsl2561_sample(void){
 	unsigned char rv[2];
 	read_multibyte(TSL2561_ADDR, TSL2561_REG_DATA_0 | TSL2561_CMD, 2, rv);
 	tsl2561_data rlt;
