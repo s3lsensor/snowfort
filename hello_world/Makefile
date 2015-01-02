@@ -6,4 +6,3 @@ CFLAGS += $(BASH_CONST)
 CFLAGS += -DUART1_CONF_TX_WITH_INTERRUPT=1
 CONTIKI_SOURCEFILES += app_util.c 
 include $(CONTIKI)/Makefile.include
-
