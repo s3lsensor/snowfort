@@ -157,7 +157,7 @@ AUTOSTART_PROCESSES(&null_app_process);
 // 	PROCESS_CONTEXT_END(&null_app_process);
 
 // }
-static const struct app_callbacks nullApp_callback= {app_recv};
+// static const struct app_callbacks nullApp_callback= {app_recv};
 
 
 /*---------------------------------------------------------------*/
