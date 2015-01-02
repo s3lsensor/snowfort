@@ -17,7 +17,7 @@
 
 #include "dev/uart1.h"
 
-#define DEBUG 0
+#define DEBUG 1
 #if DEBUG
 #define PRINTF(...) printf(__VA_ARGS__)
 #else
@@ -300,9 +300,9 @@ PROCESS_THREAD(null_app_process, ev, data)
 
 			// printf("%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u\n",(unsigned char)samples.reg.x_accel_h,(unsigned char)samples.reg.x_accel_l,(unsigned char)samples.reg.y_accel_h,(unsigned char)samples.reg.y_accel_l,(unsigned char)samples.reg.z_accel_h,(unsigned char)samples.reg.z_accel_l,(unsigned char)samples.reg.x_gyro_h,(unsigned char)samples.reg.x_gyro_l,(unsigned char)samples.reg.y_gyro_h,(unsigned char)samples.reg.y_gyro_l,(unsigned char)samples.reg.z_gyro_h,(unsigned char)samples.reg.z_gyro_l,(unsigned char)samples.reg.t_h,(unsigned char)samples.reg.t_l);
 
-			uart1_writeb((unsigned char)SN_ID);
-			uart1_writeb(0); // avoid SN_ID is combined with others
-			print_mpu_sample(&samples);
+			// uart1_writeb((unsigned char)SN_ID);
+			// uart1_writeb(0); // avoid SN_ID is combined with others
+			// print_mpu_sample(&samples);
 			// uart1_writeb((unsigned char)samples.reg.x_accel_h);
 			// uart1_writeb((unsigned char)samples.reg.x_accel_l);
 			// uart1_writeb((unsigned char)samples.reg.x_accel_h);
@@ -310,8 +310,9 @@ PROCESS_THREAD(null_app_process, ev, data)
 
 
 
-			uart1_writeb((unsigned char)'\n');
+			// uart1_writeb((unsigned char)'\n');
 
+			PRINTF("%d,%d,%d,%d,%d,%d,%d\n",samples.data.accel_x,samples.data.accel_y,samples.data.accel_z,samples.data.gyro_x,samples.data.gyro_y, samples.data.gyro_z,samples.data.temperature);
 
 
 			//printf("end %u\n",RTIMER_NOW());
