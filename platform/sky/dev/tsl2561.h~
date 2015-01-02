@@ -1,4 +1,4 @@
-                                                /*
+/*
  * This file defines the driver for ms5803
  *
  * ---------------------------------------------------------
@@ -61,7 +61,7 @@ typedef struct
 void tsl2561_poweron();
 void tsl2561_powerdonw();
 void tsl2561_settiming();
-tsl2561_data tsl2561_sample();
+int tsl2561_sample();
 
 
 void print_tsl2561_sample(tsl2561_data samples);
