@@ -157,7 +157,7 @@ AUTOSTART_PROCESSES(&null_app_process);
 // 	PROCESS_CONTEXT_END(&null_app_process);
 
 // }
-static const struct app_callbacks nullApp_callback= {app_recv};
+//static const struct app_callbacks nullApp_callback= {app_recv};
 
 
 /*---------------------------------------------------------------*/
@@ -179,7 +179,8 @@ PROCESS_THREAD(null_app_process, ev, data)
 	shell_sky_init();
 #endif
 
-	app_conn_open(&nullApp_callback);
+	app_conn_open(0);
+	//app_conn_open(&nullApp_callback);
 
 
 #ifdef ADC_SENSOR
@@ -261,7 +262,8 @@ PROCESS_THREAD(null_app_process, ev, data)
 			etimer_reset(&rxtimer);
 
 			//printf("start %u\n",RTIMER_NOW());
-			tsl2561_data samples = tsl2561_sample();
+			tsl2561_data samples;
+			samples = tsl2561_sample();
 
 			//counterxx = counterxx + 1;
 			//printf("%lu\n",counterxx);
