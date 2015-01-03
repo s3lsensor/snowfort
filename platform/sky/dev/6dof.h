@@ -141,13 +141,13 @@ typedef struct
 
 //#define MS5803_DATA_SIZE (sizeof(ms5803_data)/sizeof(uint8_t))
 
-void adxl337_init();
-adxl345_union adxl337_sample();
+void adxl337_init(void);
+adxl345_union adxl337_sample(void);
 
 void print_adxl337_sample(adxl345_union samples);
 
-void itg3200_init();
-itg3200_union itg3200_sample();
+void itg3200_init(void);
+itg3200_union itg3200_sample(void);
 
 void print_itg3200_sample(itg3200_union samples);
 

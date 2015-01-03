@@ -22,7 +22,7 @@
 #define PRINTF(...)
 #endif
 
-int isl29125_init(){
+int isl29125_init(void){
 	config(CFG1_MODE_RGB | CFG1_10KLUX, CFG2_IR_ADJUST_HIGH, CFG_DEFAULT);
 }
 
@@ -56,7 +56,7 @@ void setLowerThreshold(uint16_t data){
 	i2c_stop();
 }
 
-int16_t readUpperThreshold(){
+int16_t readUpperThreshold(void){
 	unsigned rv[2];
 	read_multibyte(ISL_I2C_ADDR, THRESHOLD_HL, 2, rv);
 
@@ -66,7 +66,7 @@ int16_t readUpperThreshold(){
 	return rlt;
 }
 
-int16_t readLowerThreshold(){
+int16_t readLowerThreshold(void){
 	unsigned rv[2];
 	read_multibyte(ISL_I2C_ADDR, THRESHOLD_LL, 2, rv);
 
@@ -76,7 +76,7 @@ int16_t readLowerThreshold(){
 	return rlt;
 }
 
-int16_t isl29125_sample_red(){
+int16_t isl29125_sample_red(void){
 	int16_t rlt;
 	rlt = (int16_t) read_(ISL_I2C_ADDR, RED_L, 1);
 	rlt = ((int16_t) read_(ISL_I2C_ADDR, RED_H, 1)) << 8 | rlt;
@@ -85,7 +85,7 @@ int16_t isl29125_sample_red(){
 }
 
 
-int16_t isl29125_sample_blue(){
+int16_t isl29125_sample_blue(void){
 	int16_t rlt;
 	rlt = (int16_t) read_(ISL_I2C_ADDR, BLUE_L, 1);
 	rlt = ((int16_t) read_(ISL_I2C_ADDR, BLUE_H, 1)) << 8 | rlt;
@@ -94,7 +94,7 @@ int16_t isl29125_sample_blue(){
 }
 
 
-int16_t isl29125_sample_green(){
+int16_t isl29125_sample_green(void){
 	int16_t rlt;
 	rlt = (int16_t) read_(ISL_I2C_ADDR, GREEN_L, 1);
 	rlt = ((int16_t) read_(ISL_I2C_ADDR, GREEN_H, 1)) << 8 | rlt;
@@ -102,7 +102,7 @@ int16_t isl29125_sample_green(){
 	return rlt;
 }
 
-int8_t isl29125_readStatus(){
+int8_t isl29125_readStatus(void){
 	return read_(ISL_I2C_ADDR, STATUS, 1);
 }
 

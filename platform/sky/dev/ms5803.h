@@ -65,10 +65,10 @@ typedef struct
 
 #define MS5803_DATA_SIZE (sizeof(ms5803_data)/sizeof(uint8_t))
 
-int16_t* ms5803_init();
-int ms5803_reset();
+int16_t* ms5803_init(void);
+int ms5803_reset(void);
 int ms5803_send(int8_t cmd);
-int ms5803_sample(int8_t precision, int16_t *coeff);
+ms5803_union ms5803_sample(int8_t precision, int16_t *coeff);
 
 
 void print_ms5803_sample(ms5803_union samples);

@@ -117,16 +117,16 @@
 
 // #define MS5803_DATA_SIZE (sizeof(ms5803_data)/sizeof(uint8_t))
 
-void isl29125_init();
+void isl29125_init(void);
 void isl29125_config(int8_t config1, int8_t config2, int8_t config3);
 void setUpperThreshold(int16_t data);
 void setLowerThreshold(uint16_t data);
-int16_t readUpperThreshold();
-int16_t readLowerThreshold();
-int16_t isl29125_sample_red();
-int16_t isl29125_sample_blue();
-int16_t isl29125_sample_green();
-int8_t isl29125_readStatus();
+int16_t readUpperThreshold(void);
+int16_t readLowerThreshold(void);
+int16_t isl29125_sample_red(void);
+int16_t isl29125_sample_blue(void);
+int16_t isl29125_sample_green(void);
+int8_t isl29125_readStatus(void);
 
 void print_isl29125_sample(int16_t data);
 

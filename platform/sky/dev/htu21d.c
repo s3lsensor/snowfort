@@ -22,7 +22,7 @@
 #define PRINTF(...)
 #endif
 
-void htu21d_init(){
+void htu21d_init(void){
 	htu21d_set_res(0); // resolution for hum is 12 bits
 					   // resolution for tmp is 14 bits
 }
@@ -38,7 +38,7 @@ void htu21d_set_res(unsigned resolution){
   write_(HTDU21D_ADDRESS, WRITE_USER_REG, userRegister)
 }
 
-data htu21d_sample_hum(){
+data htu21d_sample_hum(void){
 	unsigned rv[3];
 	read_multibyte(HTDU21D_ADDRESS, TRIGGER_HUMD_MEASURE_HOLD, 3, rv);
 	data humd;
@@ -49,7 +49,7 @@ data htu21d_sample_hum(){
 	return humd;
 }
 
-data htu21d_sample_tmp(){
+data htu21d_sample_tmp(void){
 	unsigned rv[3];
 	read_multibyte(HTDU21D_ADDRESS, TRIGGER_TEMP_MEASURE_HOLD, 3, rv);
 	data temp;

@@ -23,7 +23,7 @@
 #endif
 
 // Initialize the sensor and return coefficients
-int16_t* ms5803_init(){
+int16_t* ms5803_init(void){
 	int16_t coefficients[8];
 	for (int i=0; i<8;i++){
 		ms5803_send(CMD_PROM+i*2);
@@ -41,7 +41,7 @@ int16_t* ms5803_init(){
 }
 
 // reset the sensor
-int ms5803_reset(){
+int ms5803_reset(void){
 	ms5803_send(CMD_RESET);
 	delay_1ms();delay_1ms();delay_1ms();
 	return 0;

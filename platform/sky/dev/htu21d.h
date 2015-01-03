@@ -57,10 +57,10 @@ typedef struct
 // #define MS5803_DATA_SIZE (sizeof(ms5803_data)/sizeof(uint8_t))
 
 
-void htu21d_init();
+void htu21d_init(void);
 void htu21d_set_res(unsigned resolution);
-data htu21d_sample_hum();
-data htu21d_sample_tmp();
+data htu21d_sample_hum(void);
+data htu21d_sample_tmp(void);
 
 
 void print_htu21d_sample(data samples);
