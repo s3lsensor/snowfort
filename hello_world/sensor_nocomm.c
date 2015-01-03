@@ -237,6 +237,7 @@ PROCESS_THREAD(null_app_process, ev, data)
 #ifdef I2C_SENSOR
 	//static rtimer_clock_t rt, del;
 	int i;
+	int16_t* coeff;
 	static uint8_t sample_count = 0;
 /*
 	static uint8_t samples_sorted_bytes[14*MPU_SAMPLES_PER_FRAME],comp_samples_sorted_bytes[14*MPU_SAMPLES_PER_FRAME];
@@ -246,7 +247,7 @@ PROCESS_THREAD(null_app_process, ev, data)
 
 	if (node_id != 0){
 
-		int16_t* coeff = ms5803_init();
+		coeff = ms5803_init();
 
 		etimer_set(&rxtimer, (unsigned long)(CLOCK_SECOND/MPU_SAMPLING_FREQ));
 
