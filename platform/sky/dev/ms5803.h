@@ -61,7 +61,7 @@ typedef struct
 {
 	int32_t pressure;
 	int32_t temperature;
-}ms5803_union
+}ms5803_union;
 
 #define MS5803_DATA_SIZE (sizeof(ms5803_data)/sizeof(uint8_t))
 
