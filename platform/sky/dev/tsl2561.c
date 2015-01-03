@@ -17,6 +17,8 @@
 
 // Initialize the sensor and return coefficients
 void tsl2561_poweron(void){
+	i2c_enable();
+//	_NOP(); _NOP(); _NOP(); _NOP();
 	write_(TSL2561_ADDR, TSL2561_REG_CONTROL, 0x03);
 }
 
@@ -26,7 +28,7 @@ void tsl2561_powerdonw(void){
 
 
 void tsl2561_settiming(int gain, unsigned t){
-	unsigned timing = read_(TSL2561_ADDR, TSL2561_REG_TIMING, 1);
+	unsigned timing = read_(TSL2561_ADDR, TSL2561_REG_TIMING, 0);
 	
 	if (gain)
 		timing |= 0x10;

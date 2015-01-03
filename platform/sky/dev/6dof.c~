@@ -24,6 +24,7 @@
 
 // Initialize the sensor and return coefficients
 void adxl345_init(void){
+	//i2c_enable();
 	write_(ADXL_ADDR, POWER_CTL, MEASURE);
 	write_(ADXL_ADDR, DATA_FORMAT, 1<<0);
 }
@@ -32,16 +33,16 @@ adxl345_union adxl345_sample(void){
 	data tmp;
 	adxl345_union rlt;
 
-	tmp.h = read_(ADXL_ADDR, DATAX0, 1);
-	tmp.l = read_(ADXL_ADDR, DATAX1, 1);
+	tmp.h = read_(ADXL_ADDR, DATAX0, 0);
+	tmp.l = read_(ADXL_ADDR, DATAX1, 0);
 	rlt.x = tmp;
 
-	tmp.h = read_(ADXL_ADDR, DATAY0, 1);
-	tmp.l = read_(ADXL_ADDR, DATAY1, 1);
+	tmp.h = read_(ADXL_ADDR, DATAY0, 0);
+	tmp.l = read_(ADXL_ADDR, DATAY1, 0);
 	rlt.y = tmp;
 
-	tmp.h = read_(ADXL_ADDR, DATAZ0, 1);
-	tmp.l = read_(ADXL_ADDR, DATAZ1, 1);
+	tmp.h = read_(ADXL_ADDR, DATAZ0, 0);
+	tmp.l = read_(ADXL_ADDR, DATAZ1, 0);
 	rlt.z = tmp;
 
 	return rlt;
@@ -62,6 +63,8 @@ void print_adxl345_sample(adxl345_union samples){
 }
 
 void itg3200_init(void){
+	// i2c_enable();
+
 	//Set internal clock to 1kHz with 42Hz LPF and Full Scale to 3 for proper operation
 	write_(ADXL_ADDR, DLPF_FS, DLPF_FS_SEL_0|DLPF_FS_SEL_1|DLPF_CFG_0);
 	

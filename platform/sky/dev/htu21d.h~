@@ -23,7 +23,7 @@
                           _NOP(); _NOP(); }while(250)
 
 
-#define HTDU21D_ADDRESS 0x40 << 1 
+#define HTDU21D_ADDRESS 0x80 
 
 #define TRIGGER_TEMP_MEASURE_HOLD  0xE3
 #define TRIGGER_HUMD_MEASURE_HOLD  0xE5

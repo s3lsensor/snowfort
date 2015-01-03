@@ -23,7 +23,7 @@
                           _NOP(); _NOP(); _NOP(); _NOP(); \
                           _NOP(); _NOP(); }while(250)
 
-//ADXL337 Register Map
+//ADXL345 Register Map
 #define ADXL_ADDR		0xA6
 #define	DEVID			0x00	//Device ID Register
 #define THRESH_TAP		0x1D	//Tap Threshold
@@ -141,10 +141,10 @@ typedef struct
 
 //#define MS5803_DATA_SIZE (sizeof(ms5803_data)/sizeof(uint8_t))
 
-void adxl337_init(void);
-adxl345_union adxl337_sample(void);
+void adxl345_init(void);
+adxl345_union adxl345_sample(void);
 
-void print_adxl337_sample(adxl345_union samples);
+void print_adxl345_sample(adxl345_union samples);
 
 void itg3200_init(void);
 itg3200_union itg3200_sample(void);

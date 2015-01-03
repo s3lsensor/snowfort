@@ -387,7 +387,3 @@ void write_(unsigned slave_address_w, unsigned register_address, unsigned value)
 	// stop
 	i2c_stop();
 }
-
-
-
-
