@@ -14,7 +14,7 @@
 #ifndef ML8511_H
 #define ML8511_H
 
-int ml8511_enable();
+void ml8511_enable();
 void ml8511_disable();
 
 unsigned short ml8511_sample();

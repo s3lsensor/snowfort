@@ -12,11 +12,17 @@
 #include "dev/adc.h"
 #include "dev/leds.h"
 #include "dev/i2c.h"
+// headers for I2C sensors
 //#include "dev/mpu-6050.h"
 //#include "dev/tsl2561.h"
-#include "dev/ms5803.h"
+//#include "dev/ms5803.h"
 //#include "dev/6dof.h"
 //#include "dev/htu21d.h"
+
+// headers for ADC sensors
+//#include "dev/ml8511.h"
+//#include "dev/adxl337.h"
+#include "dev/soundDet.h"
 #include "sys/rtimer.h"
 
 #include "dev/uart1.h"
@@ -38,8 +44,8 @@
 #define MPU_SAMPLING_FREQ 256 //tested 1, 2, and 4
 #define MPU_SAMPLES_PER_FRAME (MPU_SAMPLING_FREQ/FRAMES_PER_SEC_INT)
 
-#define I2C_SENSOR
-//#define ADC_SENSOR
+//#define I2C_SENSOR
+#define ADC_SENSOR
 
 #ifdef I2C_SENSOR
 #define DATA_SIZE sizeof(uint16_t)/sizeof(uint8_t);
@@ -188,15 +194,16 @@ PROCESS_THREAD(null_app_process, ev, data)
 
 
 #ifdef ADC_SENSOR
-	static uint16_t samples[ADC_SAMPLES_PER_FRAME]={0};
+	//static uint16_t samples[ADC_SAMPLES_PER_FRAME]={0};
 	uint8_t i;
 //	static uint8_t samples_sorted_bytes[2*ADC_SAMPLES_PER_FRAME];
 	static uint8_t sample_num = 0; //increments from 0 to samples_per_frame-1
 
 
 	if (node_id != 0){
-		adc_on();
+		//adc_on();
 		//adc_configure(0); //to sample reference voltage (Vref/2), ~2048.
+		soundDet_enable();
 		etimer_set( &rxtimer, (unsigned long)(CLOCK_SECOND/(ADC_SAMPLING_FREQ)));
 	}
 	else
@@ -211,8 +218,9 @@ PROCESS_THREAD(null_app_process, ev, data)
 	    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&rxtimer));
 	    etimer_reset(&rxtimer);
 
-	    samples[sample_num]=adc_sample();
+	    //samples[sample_num]=ml8511_sample();
 	    sample_num++;
+	    printf("%d read\n", soundDet_sample_audio());
 	    if(sample_num == ADC_SAMPLES_PER_FRAME){
 	    	sample_num=0;
 	    	/*
@@ -229,7 +237,7 @@ PROCESS_THREAD(null_app_process, ev, data)
 	    	 tdma_rdc_buf_ptr = 0;
 	    	 tdma_rdc_buf_send_ptr = 0;
 	    	 tdma_rdc_buf_full_flg = 0;
-	    	 app_conn_send(samples,sizeof(uint16_t)*ADC_SAMPLES_PER_FRAME/sizeof(uint8_t));
+	    	 //app_conn_send(samples,sizeof(uint16_t)*ADC_SAMPLES_PER_FRAME/sizeof(uint8_t));
 	    }
 
 	  }
@@ -254,7 +262,7 @@ PROCESS_THREAD(null_app_process, ev, data)
 */
 
 	if (node_id != 0){
-		ms5803_init(coeff);
+		
 		printf("Initialization finished\n");
 
 		etimer_set(&rxtimer, (unsigned long)(CLOCK_SECOND/MPU_SAMPLING_FREQ));
@@ -274,12 +282,12 @@ PROCESS_THREAD(null_app_process, ev, data)
 			//printf("start %u\n",RTIMER_NOW());
 
 printf("new cycle\n");
-samples = ms5803_sample(ADC_256, coeff);
-
+//samples = ms5803_sample(ADC_256, coeff);
+printf("%d\n", ms5803_reset());
 //PRINTF("%d, %d, %d\n%d, %d, %d\n\n", samples.pressure.hByte, samples.pressure.mByte, samples.pressure.lByte,
 //				     samples.temperature.hByte, samples.temperature.mByte, samples.temperature.lByte);
 
-PRINTF("%d\n", (int8_t) (samples.pressure & 0x0000FF));
+//PRINTF("%d\n", (int8_t) (samples.pressure & 0x0000FF));
 i=0;
 while(i<1000){
 _NOP();i++;

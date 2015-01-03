@@ -23,20 +23,21 @@
 #endif
 
 // Initialize the sensor and return coefficients
-int16_t* ms5803_init(void){
-	int16_t coefficients[8];
+void ms5803_init(int16_t* coefficients){
 	int8_t highByte, lowByte;
 	int i;
+	i2c_enable();
 	for (i=0; i<8;i++){
 		ms5803_send(CMD_PROM+i*2);
 		i2c_start();
 		if (!i2c_write(MS5803_ADDR)){
-			printf("I2C write failure...");
+			printf("I2C write failure...\n");
 			i2c_stop();
 			return NULL;
 		}
 		highByte = i2c_read(1);
-		lowByte = i2c_read(1);
+		lowByte = i2c_read(0);
+		i2c_stop();
 		coefficients[i] = (highByte<<8)|lowByte;
 	}
 	return coefficients;
@@ -54,11 +55,11 @@ int ms5803_send(int8_t cmd){
 	int ret = 0;
 	i2c_start();
 	if (!i2c_write(MS5803_ADDR)){
-		printf("I2C write failure...");
+		printf("I2C write failure...\n");
 		ret = 1;
 	}
 	if (!i2c_write(cmd)){
-		printf("I2C write failure...");
+		printf("I2C write failure...\n");
 		ret = 1;
 	}
 	i2c_stop();
@@ -68,7 +69,7 @@ int ms5803_send(int8_t cmd){
 // sample temperature and pressure, temperature in Celsius is (returned value)/10
 ms5803_union ms5803_sample(int8_t precision, int16_t *coeff){
 	int32_t temp_raw = ms5803_ADCConv(TEMPERATURE, precision, coeff);
-	int32_t pree_raw = ms5803_ADCConv(PRESSURE, precision, coeff);
+	int32_t press_raw = ms5803_ADCConv(PRESSURE, precision, coeff);
 
 	int32_t temp_calc, press_calc;
 	int32_t dT = temp_raw - ((int32_t)coeff[5] << 8);

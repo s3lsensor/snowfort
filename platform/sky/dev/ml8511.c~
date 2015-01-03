@@ -46,7 +46,7 @@ int ml8511_enable(){
 	
 	return adc_configure(3);
 }
-void ml8511_disable(){
+int ml8511_disable(){
 	adc_off(); // disable adc
 	// diable chip by setting GIO2 low
 	PxOUT &= ~EN; // disable chipe

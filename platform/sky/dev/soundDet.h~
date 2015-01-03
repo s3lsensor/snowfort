@@ -19,5 +19,5 @@ int soundDet_enable();
 void soundDet_disable();
 
 unsigned short soundDet_sample_audio();
-unsigned short soundDet_sample_envlp();
+unsigned short soundDet_sample_envlo();
 #endif /*ML8511_H*/

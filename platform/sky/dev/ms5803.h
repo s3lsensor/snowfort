@@ -46,9 +46,10 @@
 #define I2C_READ_SEND_ACK 1
 
 
-
-
-#define MS5803_ADDR 0x77
+// Chipe address when CS is set to low
+//#define MS5803_ADDR 0x77 << 1 
+// Chipe address when CS is set to high, current setting
+#define MS5803_ADDR 0x76 << 1
 
 typedef struct
 {
@@ -65,7 +66,7 @@ typedef struct
 
 #define MS5803_DATA_SIZE (sizeof(ms5803_data)/sizeof(uint8_t))
 
-int16_t* ms5803_init(void);
+void ms5803_init(int16_t* coeff);
 int ms5803_reset(void);
 int ms5803_send(int8_t cmd);
 ms5803_union ms5803_sample(int8_t precision, int16_t *coeff);

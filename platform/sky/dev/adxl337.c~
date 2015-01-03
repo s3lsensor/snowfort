@@ -17,7 +17,7 @@
 #include "contiki.h"
 
 #include <stdio.h>
-#include "dev/adxl337.h"
+
 #include "dev/adc.h"
 #include "dev/uart1.h"
 

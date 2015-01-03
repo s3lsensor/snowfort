@@ -189,7 +189,7 @@ i2c_write(unsigned char _c)
 {
   unsigned char c = _c;
   unsigned long n;
-  int i;
+  int i;teteloskl;jkl;k
   int ret;
 
   for (i = 0; i < 8; i++, c <<= 1) {
@@ -387,3 +387,7 @@ void write_(unsigned slave_address_w, unsigned register_address, unsigned value)
 	// stop
 	i2c_stop();
 }
+
+
+
+

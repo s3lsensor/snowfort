@@ -39,7 +39,7 @@ unsigned short soundDet_sample_audio(){
 }
 
 unsigned short soundDet_sample_envlp(){
-	if(adc_configure(envlp)){
+	if(adc_configure(envolp)){
 		return adc_sample();
 	}
 	return 0;

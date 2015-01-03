@@ -23,20 +23,24 @@
 #endif
 
 // Initialize the sensor and return coefficients
-int16_t* ms5803_init(void){
-	int16_t coefficients[8];
+void ms5803_init(int16_t* coefficients){
 	int8_t highByte, lowByte;
 	int i;
+	i2c_enable();
+
+	ms5803_reset();
+
 	for (i=0; i<8;i++){
 		ms5803_send(CMD_PROM+i*2);
 		i2c_start();
 		if (!i2c_write(MS5803_ADDR)){
-			printf("I2C write failure...");
+			printf("I2C write failure...\n");
 			i2c_stop();
 			return NULL;
 		}
 		highByte = i2c_read(1);
-		lowByte = i2c_read(1);
+		lowByte = i2c_read(0);
+		i2c_stop();
 		coefficients[i] = (highByte<<8)|lowByte;
 	}
 	return coefficients;
@@ -54,11 +58,11 @@ int ms5803_send(int8_t cmd){
 	int ret = 0;
 	i2c_start();
 	if (!i2c_write(MS5803_ADDR)){
-		printf("I2C write failure...");
+		printf("I2C write failure...\n");
 		ret = 1;
 	}
 	if (!i2c_write(cmd)){
-		printf("I2C write failure...");
+		printf("I2C write failure...\n");
 		ret = 1;
 	}
 	i2c_stop();
