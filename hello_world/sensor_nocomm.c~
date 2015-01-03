@@ -256,7 +256,27 @@ PROCESS_THREAD(null_app_process, ev, data)
 	if (node_id != 0){
 		ms5803_init(coeff);
 		printf("Initialization finished\n");
+/*
+		MPU_status = 0;
+		for(i = 0; i < 100 & (~MPU_status);i++)
+		{
+			MPU_status = mpu_enable();
+		}
 
+		if (MPU_status == 0)
+			printf("MPU could not be enabled.\n");
+
+
+		MPU_status = 0;
+		for(i = 0; i < 100 & (~MPU_status);i++)
+		{
+			MPU_status = mpu_wakeup();
+		}
+
+		if (MPU_status == 0)
+			printf("MPU could not be awakened.\n");
+
+*/
 		etimer_set(&rxtimer, (unsigned long)(CLOCK_SECOND/MPU_SAMPLING_FREQ));
 
 		}
