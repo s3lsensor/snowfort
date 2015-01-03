@@ -13,10 +13,10 @@
 #include "dev/leds.h"
 #include "dev/i2c.h"
 //#include "dev/mpu-6050.h"
-//#include "dev/tsl2561.h"
-// #include "dev/ms5803.h"
+#include "dev/tsl2561.h"
+//#include "dev/ms5803.h"
 //#include "dev/6dof.h"
-#include "dev/htu21d.h"
+//#include "dev/htu21d.h"
 #include "sys/rtimer.h"
 
 #include "dev/uart1.h"
@@ -253,7 +253,7 @@ PROCESS_THREAD(null_app_process, ev, data)
 */
 
 	if (node_id != 0){
-		htu21d_init();
+		tsl2561_poweron();
 		printf("Initialization finished\n");
 /*
 		MPU_status = 0;
@@ -297,7 +297,10 @@ PRINTF("%d,%d,%d,%d,%d,%d,%d\n", samples.data.accel_x, samples.data.accel_y, sam
 */
 
 			//printf("start %u\n",RTIMER_NOW());
-PRINTF("%d\n", read_(HTDU21D_ADDRESS, READ_USER_REG, 1));
+//data tmp = htu21d_sample_hum();
+tsl2561_data tmp = tsl2561_sample();
+printf("%d, %d, %d, %d\n\n", tmp.ch0.h, tmp.ch0.l, tmp.ch1.h, tmp.ch1.l);
+
 
 
 /*
