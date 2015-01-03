@@ -12,8 +12,11 @@
 #include "dev/adc.h"
 #include "dev/leds.h"
 #include "dev/i2c.h"
-#include "dev/tsl2561.h"
+//#include "dev/mpu-6050.h"
+//#include "dev/tsl2561.h"
 // #include "dev/ms5803.h"
+//#include "dev/6dof.h"
+#include "dev/htu21d.h"
 #include "sys/rtimer.h"
 
 #include "dev/uart1.h"
@@ -239,6 +242,10 @@ PROCESS_THREAD(null_app_process, ev, data)
 	int i;
 	int16_t* coeff;
 	static uint8_t sample_count = 0;
+
+	static uint8_t MPU_status = 0;
+
+
 /*
 	static uint8_t samples_sorted_bytes[14*MPU_SAMPLES_PER_FRAME],comp_samples_sorted_bytes[14*MPU_SAMPLES_PER_FRAME];
 	static uint8_t sample_num=0, uncomp_data_len=14*MPU_SAMPLES_PER_FRAME,comp_data_len;
@@ -246,9 +253,29 @@ PROCESS_THREAD(null_app_process, ev, data)
 */
 
 	if (node_id != 0){
+		htu21d_init();
+		printf("Initialization finished\n");
+/*
+		MPU_status = 0;
+		for(i = 0; i < 100 & (~MPU_status);i++)
+		{
+			MPU_status = mpu_enable();
+		}
 
-		tsl2561_poweron();
+		if (MPU_status == 0)
+			printf("MPU could not be enabled.\n");
 
+
+		MPU_status = 0;
+		for(i = 0; i < 100 & (~MPU_status);i++)
+		{
+			MPU_status = mpu_wakeup();
+		}
+
+		if (MPU_status == 0)
+			printf("MPU could not be awakened.\n");
+
+*/
 		etimer_set(&rxtimer, (unsigned long)(CLOCK_SECOND/MPU_SAMPLING_FREQ));
 
 		}
@@ -262,11 +289,26 @@ PROCESS_THREAD(null_app_process, ev, data)
 		while(1){
 			PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&rxtimer));
 			etimer_reset(&rxtimer);
+/*
+mpu_data_union samples;
+int m=mpu_sample_all(&samples);
+app_conn_send((uint8_t *)(&samples),MPU_DATA_SIZE);
+PRINTF("%d,%d,%d,%d,%d,%d,%d\n", samples.data.accel_x, samples.data.accel_y, samples.data.accel_z, samples.data.gyro_x, samples.data.gyro_y, samples.data.gyro_z,samples.data.temperature);
+*/
 
 			//printf("start %u\n",RTIMER_NOW());
-			tsl2561_data samples;
-			samples = tsl2561_sample();
+PRINTF("%d\n", read_(HTDU21D_ADDRESS, READ_USER_REG, 1));
 
+
+/*
+PRINTF("%d, %d, %d, %d, %d, %d\n". tmp1.x.h, tmp1.x.l, tmp1.y.h, tmp1.y.l, tmp1.z.h, tmp1.z.l);
+PRINTF("%d, %d, %d, %d, %d, %d\n". tmp2.x.h, tmp2.x.l, tmp2.y.h, tmp2.y.l, tmp2.z.h, tmp2.z.l);
+PRINTF("%d, %d\n\n", tmp2.temp.h, tmp2.temp.l);
+*/
+			//tsl2561_data samples;
+			//samples = tsl2561_sample();
+
+			//PRINTF("%d, %d\n%d, %d\n", samples.ch0.h, samples.ch0.l, samples.ch1.h, samples.ch1.l);
 			//counterxx = counterxx + 1;
 			//printf("%lu\n",counterxx);
 			
@@ -287,7 +329,7 @@ PROCESS_THREAD(null_app_process, ev, data)
 			// uart1_writeb((unsigned char)'\n');
 
 			// PRINTF("%d,%d,\n %d,%d\n\n",samples.ch0.h, samples.ch0.l, samples.ch1.h, samples.ch1.l);
-			PRINTF("%d, %d\n%d, %d\n", samples.ch0.h, samples.ch0.l, samples.ch1.h, samples.ch1.l);
+			
 
 			//printf("end %u\n",RTIMER_NOW());
 /*
