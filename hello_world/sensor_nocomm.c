@@ -12,8 +12,8 @@
 #include "dev/adc.h"
 #include "dev/leds.h"
 #include "dev/i2c.h"
-// #include "dev/tsl2561.h"
-#include "dev/ms5803.h"
+#include "dev/tsl2561.h"
+// #include "dev/ms5803.h"
 #include "sys/rtimer.h"
 
 #include "dev/uart1.h"
@@ -247,7 +247,7 @@ PROCESS_THREAD(null_app_process, ev, data)
 
 	if (node_id != 0){
 
-		coeff = ms5803_init();
+		tsl2561_poweron();
 
 		etimer_set(&rxtimer, (unsigned long)(CLOCK_SECOND/MPU_SAMPLING_FREQ));
 
@@ -264,8 +264,8 @@ PROCESS_THREAD(null_app_process, ev, data)
 			etimer_reset(&rxtimer);
 
 			//printf("start %u\n",RTIMER_NOW());
-			ms5803_union samples;
-			samples = ms5803_sample(ADC_4096, coeff);
+			tsl2561_data samples;
+			samples = tsl2561_sample();
 
 			//counterxx = counterxx + 1;
 			//printf("%lu\n",counterxx);
@@ -287,8 +287,7 @@ PROCESS_THREAD(null_app_process, ev, data)
 			// uart1_writeb((unsigned char)'\n');
 
 			// PRINTF("%d,%d,\n %d,%d\n\n",samples.ch0.h, samples.ch0.l, samples.ch1.h, samples.ch1.l);
-			PRINTF("%d, %d, %d\n%d, %d, %d\n", (int) samples.pressure, (int) (samples.pressure>>8), (int) (samples.pressure>>16)
-											 , (int) samples.temperature, (int) (samples.temperature>>8), (int) (samples.temperature>>16));
+			PRINTF("%d, %d\n%d, %d\n", samples.ch0.h, samples.ch0.l, samples.ch1.h, samples.ch1.l);
 
 			//printf("end %u\n",RTIMER_NOW());
 /*
