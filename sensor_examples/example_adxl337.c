@@ -21,12 +21,12 @@
 // headers for I2C sensors
 //#include "dev/tsl2561.h"
 //#include "dev/ms5803.h"
-#include "dev/6dof.h"
+//#include "dev/6dof.h"
 //#include "dev/htu21d.h"
 
 // headers for ADC sensors
 //#include "dev/ml8511.h"
-//#include "dev/adxl337.h"
+#include "dev/adxl337.h"
 //#include "dev/soundDet.h"
 
 
@@ -51,8 +51,8 @@
 #define MPU_SAMPLING_FREQ 256 //tested 1, 2, and 4
 #define MPU_SAMPLES_PER_FRAME (MPU_SAMPLING_FREQ/FRAMES_PER_SEC_INT)
 
-#define I2C_SENSOR
-//#define ADC_SENSOR
+//#define I2C_SENSOR
+#define ADC_SENSOR
 
 #ifdef I2C_SENSOR
 #define DATA_SIZE sizeof(uint16_t)/sizeof(uint8_t);
@@ -132,10 +132,12 @@ PROCESS_THREAD(null_app_process, ev, data)
 
 	uint8_t i;
 	static uint8_t sample_num = 0; //increments from 0 to samples_per_frame-1
+	unsigned short* rlt;
 
 
 	if (node_id != 0){
-		soundDet_enable();
+		// initiate
+		
 		etimer_set( &rxtimer, (unsigned long)(CLOCK_SECOND/(ADC_SAMPLING_FREQ)));
 	}
 	else
@@ -150,9 +152,11 @@ PROCESS_THREAD(null_app_process, ev, data)
 	    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&rxtimer));
 	    etimer_reset(&rxtimer);
 
-	    //samples[sample_num]=ml8511_sample();
+	    //sample
+	    adxl337_enable();
+	    rlt = adxl337_sample();
 	    sample_num++;
-	    printf("%d read\n", soundDet_sample_audio());
+	    printf("x:%d, y:%d, z:%d\n", rlt[0], rlt[1], rlt[2]);
 	    if(sample_num == ADC_SAMPLES_PER_FRAME){
 	    	sample_num=0;
 
@@ -169,11 +173,11 @@ PROCESS_THREAD(null_app_process, ev, data)
 #ifdef I2C_SENSOR
 	int i;
 	static uint8_t sample_count = 0;
-	int16_t* coeff;
-	adxl345_union adx;
-	itg3200_union itg;
+	htu21d_data rlt;
 
 	if (node_id != 0){
+		// initiate
+		htu21d_init();
 		etimer_set(&rxtimer, (unsigned long)(CLOCK_SECOND/MPU_SAMPLING_FREQ));
 	}else{
 		etimer_set(&rxtimer,CLOCK_SECOND/20);
@@ -183,16 +187,13 @@ PROCESS_THREAD(null_app_process, ev, data)
 		while(1){
 			PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&rxtimer));
 			etimer_reset(&rxtimer);
-			// intitiate each sensor before sample
-			adxl345_init();
-			adx = adxl345_sample();
-			itg3200_init();
-			itg = itg3200_sample(); 
-			// print data
-			printf("adxl data: x:%d, %d, y:%d, %d, z:%d, %d\n", 
-				adx.x.h, adx.x.l, adx.y.h, adx.y.l, adx.z.h, adx.z.l);
-			printf("itg data: x:%d, %d, y:%d, %d, z:%d, %d, tmp:%d, %d\n\n", 
-				itg.x.h, itg.x.l, itg.y.h, itg.y.l, itg.z.h, itg.z.l, itg.temp.h, itg.temp.l);
+			// sample
+			rlt = htu21d_sample_hum();
+			printf("humidity data: h:%d, l:%d, crc:%d\n", 
+				rlt.h, rlt.l, rlt.crc);
+			rlt = htu21d_sample_tmp();
+			printf("temperature data: h:%d, l:%d, crc:%d\n\n", 
+				rlt.h, rlt.l, rlt.crc);
 			
 
 			// delay for examination
