@@ -22,11 +22,11 @@
 //#include "dev/tsl2561.h"
 //#include "dev/ms5803.h"
 //#include "dev/6dof.h"
-//#include "dev/htu21d.h"
+#include "dev/htu21d.h"
 
 // headers for ADC sensors
 //#include "dev/ml8511.h"
-#include "dev/adxl337.h"
+//#include "dev/adxl337.h"
 //#include "dev/soundDet.h"
 
 
@@ -51,8 +51,8 @@
 #define MPU_SAMPLING_FREQ 256 //tested 1, 2, and 4
 #define MPU_SAMPLES_PER_FRAME (MPU_SAMPLING_FREQ/FRAMES_PER_SEC_INT)
 
-//#define I2C_SENSOR
-#define ADC_SENSOR
+#define I2C_SENSOR
+//#define ADC_SENSOR
 
 #ifdef I2C_SENSOR
 #define DATA_SIZE sizeof(uint16_t)/sizeof(uint8_t);
@@ -132,12 +132,10 @@ PROCESS_THREAD(null_app_process, ev, data)
 
 	uint8_t i;
 	static uint8_t sample_num = 0; //increments from 0 to samples_per_frame-1
-	unsigned short* rlt;
 
 
 	if (node_id != 0){
-		// initiate
-		
+		soundDet_enable();
 		etimer_set( &rxtimer, (unsigned long)(CLOCK_SECOND/(ADC_SAMPLING_FREQ)));
 	}
 	else
@@ -152,11 +150,9 @@ PROCESS_THREAD(null_app_process, ev, data)
 	    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&rxtimer));
 	    etimer_reset(&rxtimer);
 
-	    //sample
-	    adxl337_enable();
-	    rlt = adxl337_sample();
+	    //samples[sample_num]=ml8511_sample();
 	    sample_num++;
-	    printf("x:%d, y:%d, z:%d\n", rlt[0], rlt[1], rlt[2]);
+	    printf("%d read\n", soundDet_sample_audio());
 	    if(sample_num == ADC_SAMPLES_PER_FRAME){
 	    	sample_num=0;
 
