@@ -3,7 +3,14 @@
  *
  * ---------------------------------------------------------
  *
- * Author: Ronnie Bajwa
+ * Author: Bin Wang
+ * Pin configuration:
+ * 	U2_1	ACC
+ * 	U2_9	GND
+ * 	U2_3	X
+ * 	U2_5	Y
+ * 	U2_7	Z
+ *
  */
 
 #ifndef ADXL337_H

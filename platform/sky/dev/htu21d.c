@@ -24,7 +24,7 @@
 
 void htu21d_init(void){
 	htu21d_set_res(0); // resolution for hum is 12 bits
-					   // resolution for tmp is 14 bits
+			   // resolution for tmp is 14 bits
 }
 
 

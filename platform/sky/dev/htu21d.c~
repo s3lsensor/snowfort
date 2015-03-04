@@ -40,8 +40,6 @@ void htu21d_set_res(unsigned resolution){
 
 htu21d_data htu21d_sample_hum(void){
 	unsigned rv[3];
-	write_(HTDU21D_ADDRESS, TRIGGER_HUMD_MEASURE_HOLD);
-	
 	read_multibyte(HTDU21D_ADDRESS, TRIGGER_HUMD_MEASURE_HOLD, 3, rv);
 	htu21d_data humd;
 	humd.h = rv[0];

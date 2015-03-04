@@ -3,23 +3,13 @@
  *
  * ---------------------------------------------------------
  *
- * Author: Ronnie Bajwa
+ * Author: Bin Wang
+ * Pin configuration:
+ * 
  */
-#include "contiki.h"
 
-#include <stdio.h>
-
-#include "dev/adc.h"
-#include "dev/uart1.h"
-
-#define SWAP(a,b) a = a^b; b = a^b; a = a^b;
-
-#define DEBUG 0
-#if DEBUG
-#define PRINTF(...) printf(__VA_ARGS__)
-#else
-#define PRINTF(...)
-#endif
+#ifndef ADXL337_H
+#define ADXL337_H
 
 void adxl337_enable();
 void adxl337_disable();
@@ -27,3 +17,4 @@ void adxl337_disable();
 unsigned short* adxl337_sample();
 unsigned short adxl337_sample_z();
 
+#endif

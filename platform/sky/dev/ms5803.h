@@ -65,13 +65,18 @@ typedef struct
 }ms5803_union;
 
 #define MS5803_DATA_SIZE (sizeof(ms5803_data)/sizeof(uint8_t))
-
-void ms5803_init(int16_t* coeff);
+// funtions for users
+// the input coeff is to get coeff
+void ms5803_init(int16_t* coeff); 
 int ms5803_reset(void);
-int ms5803_send(int8_t cmd);
+// precesion values are defined around line 35 of this file
 ms5803_union ms5803_sample(int8_t precision, int16_t *coeff);
-int32_t ms5803_ADCConv(int8_t type, int8_t precision, int16_t *coeff);
-
+// for the ease of internal usage, the union is structured with int32_t
+// this function send the data byte by byte
 void print_ms5803_sample(ms5803_union samples);
 
+
+// functions for internal use
+int32_t ms5803_ADCConv(int8_t type, int8_t precision, int16_t *coeff);
+int ms5803_send(int8_t cmd);
 #endif

@@ -11,13 +11,13 @@
  * x -- ADC_x
  * y -- ADC_y
  * z -- ADC_z
- * usage: dummy files for sensor adxl337
+ * usage: 
  */
 
 #include "contiki.h"
 
 #include <stdio.h>
-
+#include "dev/adxl337.h"
 #include "dev/adc.h"
 #include "dev/uart1.h"
 

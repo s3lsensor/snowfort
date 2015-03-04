@@ -11,7 +11,7 @@
  * x -- ADC_x
  * y -- ADC_y
  * z -- ADC_z
- * usage: dummy files for sensor adxl337
+ * usage: 
  */
 
 #include "contiki.h"
@@ -31,9 +31,9 @@
 #endif
 
 
-#define ADC_x 1
-#define ADC_y 2
-#define ADC_z 3
+#define ADC_x 0
+#define ADC_y 1
+#define ADC_z 2
 
 void adxl337_enable(){
 	adc_on();

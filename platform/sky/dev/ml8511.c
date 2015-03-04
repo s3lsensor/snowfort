@@ -44,7 +44,7 @@ int ml8511_enable(){
 	PxOUT |= EN; // set GIO 2 to high to enable the pin
 	PxDIR |= EN; // set GIO 2 to output mode
 	
-	return adc_configure(3);
+	return adc_configure(3); // set the adc pin to ADC 3
 }
 void ml8511_disable(){
 	adc_off(); // disable adc
@@ -67,7 +67,6 @@ unsigned short ml8511_sample(){
 	return adc_sample();
 }
 
-// dummy file for ml8511, analog output need an adc to continue
 
 
 

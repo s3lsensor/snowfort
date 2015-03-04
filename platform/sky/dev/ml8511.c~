@@ -46,7 +46,7 @@ int ml8511_enable(){
 	
 	return adc_configure(3);
 }
-int ml8511_disable(){
+void ml8511_disable(){
 	adc_off(); // disable adc
 	// diable chip by setting GIO2 low
 	PxOUT &= ~EN; // disable chipe
@@ -67,7 +67,6 @@ unsigned short ml8511_sample(){
 	return adc_sample();
 }
 
-// dummy file for ml8511, analog output need an adc to continue
 
 
 

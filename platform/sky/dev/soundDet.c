@@ -14,7 +14,7 @@
 #include "dev/uart1.h"
 
 #define SWAP(a,b) a = a^b; b = a^b; a = a^b;
-#define audio 3
+#define audio 0
 #define envlp 1
 #define DEBUG 0
 #if DEBUG
@@ -34,6 +34,8 @@ void soundDet_disable(){
 unsigned short soundDet_sample_audio(){
 	if(adc_configure(audio)){
 		return adc_sample();
+	}else{
+		printf("Audio sample failed");
 	}
 	return 0;
 }
@@ -41,6 +43,8 @@ unsigned short soundDet_sample_audio(){
 unsigned short soundDet_sample_envlp(){
 	if(adc_configure(envlp)){
 		return adc_sample();
+	}else{
+		printf("Envelope sample failed");
 	}
 	return 0;
 }

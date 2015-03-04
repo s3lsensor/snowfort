@@ -1,0 +1,15 @@
+Pin configuration for I2C:
+	U2_1	ACC
+	U2_9	GND
+	U28_3	SCL
+	U28_4	SDA
+
+Pin configuration for ADC:
+	U2_1	ACC
+	U2_9	GND
+	U2_3	ADC0
+	U2_5	ADC1
+	U2_7	ADC2
+	U2_10	ADC3
+	U28_1	ADC6
+	U28_2	ADC7

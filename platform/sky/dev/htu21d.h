@@ -48,21 +48,12 @@ typedef struct
     int8_t crc;
 }htu21d_data;
 
-// typedef struct
-// {
-// 	data humd;
-// 	data temp;
-// }htu21d_union
-
-// #define MS5803_DATA_SIZE (sizeof(ms5803_data)/sizeof(uint8_t))
-
-
+// functions for users
 void htu21d_init(void);
-void htu21d_set_res(unsigned resolution);
 htu21d_data htu21d_sample_hum(void);
 htu21d_data htu21d_sample_tmp(void);
-
-
 void print_htu21d_sample(htu21d_data samples);
 
+// functions for internal use
+void htu21d_set_res(unsigned resolution);
 #endif

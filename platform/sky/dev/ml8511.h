@@ -7,9 +7,13 @@
  */
 
 /*
- * Pin connection: analog output, need a adc converter
+ * Pin connection: 
+	U2_1	ACC
+	U2_9	GND
+	U28_3	 EN
+	U2_10	OUT
 
- * usage: Dummy file for sensor ml8511
+ * usage: the functions are self-explantory
  */
 #ifndef ML8511_H
 #define ML8511_H

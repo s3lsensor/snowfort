@@ -8,9 +8,9 @@
 
 /*
  * Pin connection: analog output, need a adc converter
- * audio -- ADC3
- * envolope -- ADC_e
- * usage: init before use to get the coefficients. reset everytime the sensor restarts. 
+ * audio -- U2_3
+ * envolope -- U2_5
+ * usage:  
  */
 #ifndef SOUNDDET_H
 #define SOUNDDET_H

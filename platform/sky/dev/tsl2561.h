@@ -16,6 +16,9 @@
 
  * usage: the address can be set by soldering the ADDR pins on the chip. 
  		  if the pin is changed, change the TSL2561_ADDR accordingly.
+	  There is a timing function which sets the integration time and 
+	  gain time. Default value is 0b10. More information can be found
+	  in datasheet page 14.
  */
 #ifndef TSL2561_H
 #define TSL2561_H
@@ -61,7 +64,7 @@ typedef struct
     data ch1;
 }tsl2561_data;
 
-// #define MS5803_DATA_SIZE (sizeof(ms5803_data)/sizeof(uint8_t))
+
 void tsl2561_poweron(void);
 void tsl2561_powerdonw(void);
 void tsl2561_settiming(int gain, unsigned t);
