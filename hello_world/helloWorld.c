@@ -72,11 +72,11 @@ static void app_recv(void)
 	uint8_t payload_len = packetbuf_datalen();
 
 
-//	printf("%u,%u,%u%c",rx_sn_id,pkt_seq,payload_len,'|');
-//	for(i=0;i<payload_len;i++){
-//		printf("%02x",data[i]);
-//	}
-//	printf("\n");
+	//printf("%u,%u,%u%c",rx_sn_id,pkt_seq,payload_len,'|');
+	//for(i=0;i<payload_len;i++){
+	//	printf("%02x",data[i]);
+	//}
+	//printf("\n");
 
 	app_output(data,rx_sn_id,pkt_seq,payload_len);
 
