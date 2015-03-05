@@ -26,8 +26,8 @@
 
 // headers for ADC sensors
 //#include "dev/ml8511.h"
-#include "dev/adxl337.h"
-//#include "dev/soundDet.h"
+//#include "dev/adxl337.h"
+#include "dev/soundDet.h"
 
 
 #include "sys/rtimer.h"
@@ -132,12 +132,12 @@ PROCESS_THREAD(null_app_process, ev, data)
 
 	uint8_t i;
 	static uint8_t sample_num = 0; //increments from 0 to samples_per_frame-1
-	unsigned short* rlt;
+	unsigned short audio, envl;
 
 
 	if (node_id != 0){
 		// initiate
-		
+		soundDet_enable();
 		etimer_set( &rxtimer, (unsigned long)(CLOCK_SECOND/(ADC_SAMPLING_FREQ)));
 	}
 	else
@@ -153,10 +153,10 @@ PROCESS_THREAD(null_app_process, ev, data)
 	    etimer_reset(&rxtimer);
 
 	    //sample
-	    adxl337_enable();
-	    rlt = adxl337_sample();
+	    audio = soundDet_sample_audio();
+	    envl = soundDet_sample_envlp();
 	    sample_num++;
-	    printf("x:%d, y:%d, z:%d\n", rlt[0], rlt[1], rlt[2]);
+	    printf("audio:%d, envelope:%d\n", audio, envl);
 	    if(sample_num == ADC_SAMPLES_PER_FRAME){
 	    	sample_num=0;
 
