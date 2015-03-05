@@ -189,7 +189,7 @@ i2c_write(unsigned char _c)
 {
   unsigned char c = _c;
   unsigned long n;
-  int i;
+  int i;teteloskl;jkl;k
   int ret;
 
   for (i = 0; i < 8; i++, c <<= 1) {
