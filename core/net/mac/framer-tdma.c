@@ -111,10 +111,11 @@ static int create(void)
 	if(packetbuf_hdralloc(len))
 	{
 		frame802154_create(&params,packetbuf_hdrptr(),len);
+/*
 		PRINTF("15.4-OUT: %2X", params.fcf.frame_type);
 		PRINTADDR(params.dest_addr);
 		PRINTF("%u %u (%u)\n", len, packetbuf_datalen(), packetbuf_totlen());
-
+*/
 		return len;
 	}
 	else
@@ -132,8 +133,9 @@ static int parse(void)
 	frame802154_t frame;
 	int len;
 	len = packetbuf_datalen();
-	if(frame802154_parse(packetbuf_dataptr(),len,&frame) &&
-			packetbuf_hdrreduce(len-frame.payload_len))
+	int8_t f1 = frame802154_parse(packetbuf_dataptr(),len,&frame);
+	int8_t f2 = packetbuf_hdrreduce(len-frame.payload_len);
+	if(f1 && f2)
 	{
 		if(frame.fcf.dest_addr_mode)
 		{
@@ -162,15 +164,21 @@ static int parse(void)
 		    packetbuf_set_attr(PACKETBUF_ATTR_PACKET_TYPE,PACKETBUF_ATTR_PACKET_TYPE_CMD);
         	break;
 		}
-
+/*
 		PRINTF("15.4-IN: %2X", frame.fcf.frame_type);
 		PRINTADDR(packetbuf_addr(PACKETBUF_ADDR_SENDER));
 		PRINTADDR(packetbuf_addr(PACKETBUF_ADDR_RECEIVER));
 		PRINTF("%u (%u)\n", packetbuf_datalen(), len);
+*/
 
 		return len - frame.payload_len;
 	}
-	return FRAMER_FAILED;
+	else
+	{
+		PRINTF("DECODE %d header reduce %d data len %u\n",f1,f2,len);
+		return FRAMER_FAILED;
+	}
+	
 }
 
 /*---------------------------------------------------------------------------*/

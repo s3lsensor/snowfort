@@ -30,6 +30,7 @@ contiki*.a
 # Log files
 log*
 *.log
+*.csv
 
 # Ctags files
 *.tags

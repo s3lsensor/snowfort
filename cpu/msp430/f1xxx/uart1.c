@@ -59,7 +59,8 @@ static volatile uint8_t transmitting;
 #endif /* UART1_CONF_RX_WITH_DMA */
 
 #if TX_WITH_INTERRUPT
-#define TXBUFSIZE 128
+//#define TXBUFSIZE 128
+#define TXBUFSIZE 256
 
 static struct ringbuf txbuf;
 static uint8_t txbuf_data[TXBUFSIZE];

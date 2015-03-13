@@ -50,5 +50,10 @@ void app_conn_send(const void * ptr, const uint16_t data_len);
  */
 void tdma_rdc_buf_clear(void);
 
+/*
+ * \brief copy from TDMA RDC buffer to packetbuf
+ */
+void tdma_rdc_buf_copyto_packetbuf(void);
+
 
 #endif /* APP_CONN_H_ */

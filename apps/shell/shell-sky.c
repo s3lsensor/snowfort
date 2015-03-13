@@ -309,6 +309,7 @@ PROCESS_THREAD(shell_rfchannel_process, ev, data)
     uint16_t len;
     uint16_t channel;
   } msg;
+  char buf[20];
   const char *newptr;
   PROCESS_BEGIN();
 
@@ -324,7 +325,9 @@ PROCESS_THREAD(shell_rfchannel_process, ev, data)
 
   msg.len = 1;
 
-  shell_output(&rfchannel_command, &msg, sizeof(msg), "", 0);
+  snprintf(buf,sizeof(buf),"%d\n",cc2420_get_channel());
+  shell_output_str(&rfchannel_command, "Channel: ", buf);
+  //shell_output(&rfchannel_command, &msg, sizeof(msg), "", 0);
 
   PROCESS_END();
 }
