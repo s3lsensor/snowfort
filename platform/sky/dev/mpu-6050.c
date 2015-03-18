@@ -283,6 +283,24 @@ void print_mpu_sample_acc_gyro(mpu_data_acc_gyro_union *samples)
 }
 
 
+void mpu_get_acc(mpu_data_union *sampled_data,mpu_data_acc_gyro_union *acc_sample)
+{
+
+	acc_sample->data.x = sampled_data->data.accel_x;
+	acc_sample->data.y = sampled_data->data.accel_y;
+	acc_sample->data.z = sampled_data->data.accel_z;
+
+}
+
+void mpu_get_gyro(mpu_data_union *sampled_data,mpu_data_acc_gyro_union *gyro_sample)
+{
+
+	gyro_sample->data.x = sampled_data->data.gyro_x;
+	gyro_sample->data.y = sampled_data->data.gyro_y;
+	gyro_sample->data.z = sampled_data->data.gyro_z;
+
+}
+
 
 
 
