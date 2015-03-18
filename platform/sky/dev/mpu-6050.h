@@ -44,6 +44,14 @@
 #define MPU_RA_PWR_MGMT1 0x6b
 #define MPU_RV_PWR_MGMT1_AWAKE 0x00
 #define MPU_RA_PWR_MGMT2 0x6c
+
+#define MPU_SMPLRT_DIV             0x19
+#define MPU_CONFIG                 0x1a
+#define MPU_GYRO_CONFIG            0x1b
+#define MPU_ACCEL_CONFIG           0x1c
+
+
+
 typedef struct
 {
     /* data */

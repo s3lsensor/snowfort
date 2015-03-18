@@ -174,7 +174,7 @@ int mpu_sample_acc(mpu_data_acc_gyro_union *sampled_data)
 int mpu_sample_gyro(mpu_data_acc_gyro_union *sampled_data)
 {
 	//uint8_t buffer[6];
-	if(!read_mpu_reg_burst(MPU_RA_ACCEL_XOUT_H,6,(uint8_t*)sampled_data))
+	if(!read_mpu_reg_burst(MPU_RA_GYRO_XOUT_H,6,(uint8_t*)sampled_data))
 		return 0;
 
 	SWAP(sampled_data->reg.x_h,sampled_data->reg.x_l);
