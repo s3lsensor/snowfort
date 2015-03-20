@@ -23,8 +23,8 @@
 #endif
 
 // Initialize the sensor and return coefficients
-void adxl345_init(void){
-	//i2c_enable();
+void adxl345_enable(void){
+	i2c_enable();
 	write_(ADXL_ADDR, POWER_CTL, MEASURE);
 	write_(ADXL_ADDR, DATA_FORMAT, 1<<0);
 }
@@ -62,8 +62,8 @@ void print_adxl345_sample(adxl345_union samples){
 
 }
 
-void itg3200_init(void){
-	// i2c_enable();
+void itg3200_enable(void){
+	i2c_enable();
 
 	//Set internal clock to 1kHz with 42Hz LPF and Full Scale to 3 for proper operation
 	write_(ADXL_ADDR, DLPF_FS, DLPF_FS_SEL_0|DLPF_FS_SEL_1|DLPF_CFG_0);
