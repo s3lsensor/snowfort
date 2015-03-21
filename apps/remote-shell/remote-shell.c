@@ -97,9 +97,24 @@ void remote_shell_init(void)
 /*---------------------------------------------------------------------------*/
 void remote_shell_send(const char* cmd, const uint16_t len)
 {
-  PRINTF("Remote shell command: %s -- sent\n",cmd);
+  
+  //copy data at first, then set up attr
   packetbuf_copyfrom((void *)&cmd[0],len*sizeof(char));
+
   packetbuf_set_attr(PACKETBUF_ATTR_PACKET_TYPE,PACKETBUF_ATTR_PACKET_TYPE_CMD);
+
+  if ((packetbuf_attr(PACKETBUF_ATTR_PACKET_TYPE) != PACKETBUF_ATTR_PACKET_TYPE_CMD))
+  {
+    printf("set remote shell failed\n");
+  }
+  else
+  {
+    
+    PRINTF("Remote shell command: %s -- pushed\n",cmd);
+  }
+
+  
+  
 }
 /*---------------------------------------------------------------------------*/
 void remote_shell_input(void)
