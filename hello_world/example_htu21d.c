@@ -1,5 +1,5 @@
 /*
-* I2C sensor tsl2561 example
+* I2C sensor htu21d example
 */
 
 #include <stdio.h>
@@ -41,7 +41,6 @@
 #define PRINTF(...)
 #endif
 
-#define SIN_TAB_LEN 120
 #define RESOLUTION 7
 
 
@@ -73,36 +72,8 @@
 
 static uint32_t counterxx = 0;
 
-
-static const int8_t SIN_TAB[] =
-{
-		0,6,13,20,26,33,39,45,52,58,63,69,75,80,
-		85,90,95,99,103,107,110,114,116,119,121,
-		123,125,126,127,127,127,127,127,126,125,
-		123,121,119,116,114,110,107,103,99,95,90,
-		85,80,75,69,63,58,52,45,39,33,26,20,13,6,
-		0,-6,-13,-20,-26,-33,-39,-45,-52,-58,-63,
-		-69,-75,-80,-85,-90,-95,-99,-103,-107,-110,
-		-114,-116,-119,-121,-123,-125,-126,-127,-127,
-		-127,-127,-127,-126,-125,-123,-121,-119,-116,
-		-114,-110,-107,-103,-99,-95,-90,-85,-80,-75,
-		-69,-63,-58,-52,-45,-39,-33,-26,-20,-13,-6
-};
-
-static int8_t sinI(uint16_t angleMilli)
-{
-	uint16_t pos;
-	pos = (uint16_t) ((SIN_TAB_LEN * (uint32_t) angleMilli)/1000);
-	return SIN_TAB[pos%SIN_TAB_LEN];
-}
-
-static int8_t sin(uint16_t angleMilli)
-{
-	return SIN_TAB[angleMilli%SIN_TAB_LEN];
-}
-
 /*---------------------------------------------------------------*/
-PROCESS(null_app_process, "Hello world Process");
+PROCESS(null_app_process, "htu21d test");
 AUTOSTART_PROCESSES(&null_app_process);
 
 /*---------------------------------------------------------------*/
@@ -114,7 +85,7 @@ PROCESS_THREAD(null_app_process, ev, data)
 	PROCESS_BEGIN();
 
 
-	printf("Hello world Started.\n");
+	printf("htu21d test.\n");
 
 #ifdef SF_FEATURE_SHELL_OPT
 	serial_shell_init();
