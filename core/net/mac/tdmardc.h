@@ -20,7 +20,7 @@
 
 //#define FREE_SLOT_CONST 	0x7F
 #define MAX_PKT_SIZE		127
-#define MAX_PKT_PAYLOAD_SIZE	117		//should be 117, let's start from 50 right now
+#define MAX_PKT_PAYLOAD_SIZE	116		//should be 117, let's start from 50 right now
 
 // time slot information -- default
 /*
@@ -29,8 +29,8 @@
 #endif
 */
 #ifndef FRAMES_PER_SEC
-#define FRAMES_PER_SEC 8.0
-#define FRAMES_PER_SEC_INT 8
+#define FRAMES_PER_SEC 6.0
+#define FRAMES_PER_SEC_INT 6
 #endif
 
 #ifndef SEGMENT_PERIOD
@@ -38,11 +38,11 @@
 #endif
 
 #ifndef TOTAL_TS
-#define TOTAL_TS		14
+#define TOTAL_TS		6
 #endif
 
 #ifndef BKN_SLOTS
-#define BKN_SLOTS 		2
+#define BKN_SLOTS 		1
 #endif
 
 #ifndef TS_PERIOD
