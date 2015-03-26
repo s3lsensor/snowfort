@@ -23,6 +23,9 @@
 #endif
 
 
+// variable to control print
+volatile uint8_t print_MPU;
+
 /*
  * Read a single byte from the MPU.
  */
