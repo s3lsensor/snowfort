@@ -138,7 +138,7 @@ PROCESS_THREAD(null_app_process, ev, data)
 			MPU_status = mpu_sample_acc(&samples);
 			if (MPU_status != 0)
 			{
-				printf("%u,%u,%u\n",samples.data.x,samples.data.y,samples.data.z);
+				//printf("%u,%u,%u\n",samples.data.x,samples.data.y,samples.data.z);
 				//print_mpu_sample_acc_gyro(&samples);
 				// MPU_PRINT_BYTE(samples.reg.x_h);
 				// MPU_PRINT_BYTE(samples.reg.x_l);
