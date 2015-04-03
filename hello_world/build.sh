@@ -6,11 +6,8 @@ MOTE_ID=$2
 if [ "$1" = "make" ]; then
 	make clean
 	for i in $(echo $(tr '[:upper:]' '[:lower:]' <<< "${@:5}") | sed 's/ /.c /g').c; do
-		if [ -e ../platform/sky/dev/$i ]
+		if [ ! -e ../platform/sky/dev/$i ]
 		then
-			echo ../platform/sky/dev/$i
-		else
-			echo ../platform/sky/dev/$i
 			echo "$i does not exists, wrong sensor part number?"
 			exit
 		fi 
