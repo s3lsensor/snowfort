@@ -8,7 +8,7 @@ if [ "$1" = "make" ]; then
 	for i in $(echo $(tr '[:upper:]' '[:lower:]' <<< "${@:5}") | sed 's/ /.c /g').c; do
 		if [ ! -e ../platform/sky/dev/$i ]
 		then
-			echo "$i does not exists, wrong sensor part number?"
+			echo "$i does not exist, wrong sensor part number?"
 			exit
 		fi 
 	done
