@@ -22,12 +22,12 @@
 //ADXL345 is the accelerometer on 6dof
 //ADXL345 Register Map
 #define _6DOF_ADXL_ADDR			0xA6
-#define _6DOF_DEVID				0x00	//Device ID Register
+#define _6DOF_DEVID			0x00	//Device ID Register
 #define _6DOF_THRESH_TAP		0x1D	//Tap Threshold
-#define _6DOF_OFSX				0x1E	//X-axis offset
-#define _6DOF_OFSY				0x1F	//Y-axis offset
-#define _6DOF_OFSZ				0x20	//Z-axis offset
-#define _6DOF_DUR				0x21	//Tap Duration
+#define _6DOF_OFSX			0x1E	//X-axis offset
+#define _6DOF_OFSY			0x1F	//Y-axis offset
+#define _6DOF_OFSZ			0x20	//Z-axis offset
+#define _6DOF_DUR			0x21	//Tap Duration
 #define _6DOF_Latent			0x22	//Tap latency
 #define _6DOF_Window			0x23	//Tap window
 #define _6DOF_THRESH_ACT		0x24	//Activity Threshold
@@ -37,7 +37,7 @@
 #define _6DOF_THRESH_FF			0x28	//free-fall threshold
 #define _6DOF_TIME_FF			0x29	//Free-Fall Time
 #define _6DOF_TAP_AXES			0x2A	//Axis control for tap/double tap
-#define _6DOF_ACT_TAP_STATUS	0x2B	//Source of tap/double tap
+#define _6DOF_ACT_TAP_STATUS		0x2B	//Source of tap/double tap
 #define _6DOF_BW_RATE			0x2C	//Data rate and power mode control
 #define _6DOF_POWER_CTL			0x2D	//Power Control Register
 #define _6DOF_INT_ENABLE		0x2E	//Interrupt Enable Control
@@ -57,8 +57,8 @@
 #define _6DOF_WU_0			(1<<0)	//Wake Up Mode - Bit 0
 #define _6DOF_WU_1			(1<<1)	//Wake Up mode - Bit 1
 #define _6DOF_SLEEP			(1<<2)	//Sleep Mode
-#define _6DOF_MEASURE		(1<<3)	//Measurement Mode
-#define _6DOF_AUTO_SLP		(1<<4)	//Auto Sleep Mode bit
+#define _6DOF_MEASURE			(1<<3)	//Measurement Mode
+#define _6DOF_AUTO_SLP			(1<<4)	//Auto Sleep Mode bit
 #define _6DOF_LINK			(1<<5)	//Link bit
 
 
@@ -96,12 +96,12 @@
 #define _6DOF_PWR_MGM_STBY_Z	(1<<3)
 #define _6DOF_PWR_MGM_STBY_Y	(1<<4)
 #define _6DOF_PWR_MGM_STBY_X	(1<<5)
-#define _6DOF_PWR_MGM_SLEEP		(1<<6)
+#define _6DOF_PWR_MGM_SLEEP	(1<<6)
 #define _6DOF_PWR_MGM_H_RESET	(1<<7)
 
 
-#define _6DOF_INT_CFG_ACTL			(1<<7)
-#define _6DOF_INT_CFG_OPEN			(1<<6)
+#define _6DOF_INT_CFG_ACTL		(1<<7)
+#define _6DOF_INT_CFG_OPEN		(1<<6)
 #define _6DOF_INT_CFG_LATCH_INT_EN	(1<<5)
 #define _6DOF_INT_CFG_INT_ANYRD		(1<<4)
 #define _6DOF_INT_CFG_ITG_RDY_EN	(1<<2)
