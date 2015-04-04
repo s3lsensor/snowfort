@@ -21,7 +21,7 @@ void htu21d_enable(void){
 
 
 void htu21d_set_res(unsigned resolution){
-  unsigned userRegister = read_(HTU21D_ADDRESS, READ_USER_REG,0); //Go get the current register state
+  unsigned userRegister = read_(HTU21D_ADDRESS, HTU21D_READ_USER_REG,0); //Go get the current register state
   userRegister &= 0b01111110; //Turn off the resolution bits
   resolution &= 0b10000001; //Turn off all other bits but resolution bits
   userRegister |= resolution; //Mask in the requested resolution bits
