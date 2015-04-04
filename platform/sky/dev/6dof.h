@@ -130,8 +130,6 @@ typedef struct
 	_6dof_data temp;
 }itg3200_union;
 
-//#define MS5803_DATA_SIZE (sizeof(ms5803_data)/sizeof(uint8_t))
-
 void adxl345_enable(void);
 adxl345_union adxl345_sample(void);
 
