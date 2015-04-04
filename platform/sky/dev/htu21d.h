@@ -23,22 +23,14 @@
                           _NOP(); _NOP(); }while(250)
 
 
-#define HTDU21D_ADDRESS 0x40 << 1 
+#define HTU21D_ADDRESS 0x40 << 1 
 
-#define TRIGGER_TEMP_MEASURE_HOLD  0xE3
-#define TRIGGER_HUMD_MEASURE_HOLD  0xE5
-// #define TRIGGER_TEMP_MEASURE_NOHOLD  0xF3
-// #define TRIGGER_HUMD_MEASURE_NOHOLD  0xF5
-#define WRITE_USER_REG  0xE6
-#define READ_USER_REG  0xE7
-#define SOFT_RESET  0xFE
+#define HTU21S_TRIGGER_TEMP_MEASURE_HOLD  0xE3
+#define HTU21S_TRIGGER_HUMD_MEASURE_HOLD  0xE5
+#define HTU21S_WRITE_USER_REG  0xE6
+#define HTU21S_READ_USER_REG  0xE7
+#define HTU21S_SOFT_RESET  0xFE
 
-
-
-#define SWAP(a,b) a = a^b; b = a^b; a = a^b;
-#define MPU_PRINT_BYTE( X ) (uart1_writeb((unsigned char)X));
-
-#define I2C_READ_SEND_ACK 1
 
 
 typedef struct
