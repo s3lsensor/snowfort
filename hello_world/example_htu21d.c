@@ -17,58 +17,17 @@
 #include "dev/leds.h"
 #include "dev/i2c.h"
 
-
-// headers for I2C sensors
-//#include "dev/tsl2561.h"
-//#include "dev/ms5803.h"
-//#include "dev/6dof.h"
 #include "dev/htu21d.h"
-
-// headers for ADC sensors
-//#include "dev/ml8511.h"
-//#include "dev/adxl337.h"
-//#include "dev/soundDet.h"
-
 
 #include "sys/rtimer.h"
 
 #include "dev/uart1.h"
 
-#define DEBUG 1
-#if DEBUG
-#define PRINTF(...) printf(__VA_ARGS__)
-#else
-#define PRINTF(...)
-#endif
-
 #define RESOLUTION 7
 
-
-#define ADC_SAMPLING_FREQ 64 //use power of 2 in Hz (tested 1, 2, 4...32)
-#define ADC_SAMPLES_PER_FRAME (ADC_SAMPLING_FREQ/FRAMES_PER_SEC)
-
-#define MPU_SAMPLING_FREQ 256 //tested 1, 2, and 4
-#define MPU_SAMPLES_PER_FRAME (MPU_SAMPLING_FREQ/FRAMES_PER_SEC_INT)
-
-#define I2C_SENSOR
-//#define ADC_SENSOR
-
-#ifdef I2C_SENSOR
 #define DATA_SIZE sizeof(uint16_t)/sizeof(uint8_t);
 #define SAMPLING_FREQ MPU_SAMPLING_FREQ
 #define SAMPLES_PER_FRAME MPU_SAMPLES_PER_FRAME
-#endif /*I2C_SENSOR*/
-
-#ifdef ADC_SENSOR
-#define DATA_SIZE sizeof(uint16_t)/sizeof(uint8_t);
-#define SAMPLING_FREQ ADC_SAMPLES_PER_FRAME
-#define SAMPLES_PER_FRAME ADC_SAMPLES_PER_FRAME
-#endif /*ADC_SENSOR*/
-
-#ifndef DATA_SIZE
-#define DATA_SIZE 1 //size of uint8_t (1 bit)
-#endif /*DATA_SIZE*/
-
 
 static uint32_t counterxx = 0;
 
