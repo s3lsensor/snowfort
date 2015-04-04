@@ -66,16 +66,16 @@ void itg3200_enable(void){
 	i2c_enable();
 
 	//Set internal clock to 1kHz with 42Hz LPF and Full Scale to 3 for proper operation
-	write_(_6DOF_ADXL_ADDR, _6DOF_DLPF_FS, _6DOF_DLPF_FS_SEL_0|_6DOF_DLPF_FS_SEL_1|_6DOF_DLPF_CFG_0);
+	write_(_6DOF_ITG_ADDR, _6DOF_DLPF_FS, _6DOF_DLPF_FS_SEL_0|_6DOF_DLPF_FS_SEL_1|_6DOF_DLPF_CFG_0);
 	
 	//Set sample rate divider for 100 Hz operation
-	write_(_6DOF_ADXL_ADDR, _6DOF_SMPLRT_DIV, 9);	//Fsample = Fint / (divider + 1) where Fint is 1kHz
+	write_(_6DOF_ITG_ADDR, _6DOF_SMPLRT_DIV, 9);	//Fsample = Fint / (divider + 1) where Fint is 1kHz
 	
 	//Setup the interrupt to trigger when new data is ready.
-	write_(_6DOF_ADXL_ADDR,  _6DOF_INT_CFG, _6DOF_INT_CFG_RAW_RDY_EN | _6DOF_INT_CFG_ITG_RDY_EN);
+	write_(_6DOF_ITG_ADDR,  _6DOF_INT_CFG, _6DOF_INT_CFG_RAW_RDY_EN | _6DOF_INT_CFG_ITG_RDY_EN);
 	
 	//Select X gyro PLL for clock source
-	write_(_6DOF_ADXL_ADDR, _6DOF_PWR_MGM, _6DOF_PWR_MGM_CLK_SEL_0);
+	write_(_6DOF_ITG_ADDR, _6DOF_PWR_MGM, _6DOF_PWR_MGM_CLK_SEL_0);
 }
 
 
