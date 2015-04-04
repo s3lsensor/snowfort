@@ -22,8 +22,6 @@
 //ADXL345 is the accelerometer on 6dof
 //ADXL345 Register Map
 #define _6DOF_ADXL_ADDR			0xA6
-#define _6DOF_DEVID			0x00	//Device ID Register
-#define _6DOF_THRESH_TAP		0x1D	//Tap Threshold
 #define _6DOF_OFSX			0x1E	//X-axis offset
 #define _6DOF_OFSY			0x1F	//Y-axis offset
 #define _6DOF_OFSZ			0x20	//Z-axis offset
@@ -107,10 +105,6 @@
 #define _6DOF_INT_CFG_ITG_RDY_EN	(1<<2)
 #define _6DOF_INT_CFG_RAW_RDY_EN	(1<<0)
 
-#define SWAP(a,b) a = a^b; b = a^b; a = a^b;
-#define MPU_PRINT_BYTE( X ) (uart1_writeb((unsigned char)X));
-
-#define I2C_READ_SEND_ACK 1
 
 
 // data structures

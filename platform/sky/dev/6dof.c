@@ -13,15 +13,6 @@
 #include "dev/6dof.h"
 #include "dev/uart1.h"
 
-#define SWAP(a,b) a = a^b; b = a^b; a = a^b;
-
-#define DEBUG 0
-#if DEBUG
-#define PRINTF(...) printf(__VA_ARGS__)
-#else
-#define PRINTF(...)
-#endif
-
 // Initialize the sensor and return coefficients
 void adxl345_enable(void){
 	i2c_enable();
