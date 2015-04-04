@@ -1,5 +1,6 @@
 /*
- * This file defines the driver for ms5803
+ * This file defines the driver for 6dof
+ * 6dof contains two sensors: adxl345 (accelerometer) and itg3200 (gyro)
  *
  * ---------------------------------------------------------
  *
@@ -14,7 +15,7 @@
 		   PS -> VCC
 		   CS -> GND  : I2C address will be 0x77 
 
- * usage: 2 sensors with separate sample and init function
+ * usage: 2 sensors with separate sample and enable function
  */
 #ifndef _6DOF_H
 #define _6DOF_H
