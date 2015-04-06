@@ -1,5 +1,5 @@
 /*
- * This file defines the driver for mpu-6050
+ * This file defines the driver for 6dof
  *
  * ---------------------------------------------------------
  *
