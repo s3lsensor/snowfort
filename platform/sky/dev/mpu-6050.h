@@ -134,4 +134,8 @@ void print_mpu_sample_acc_gyro(mpu_data_acc_gyro_union *samples);
 void mpu_get_acc(mpu_data_union *sampled_data,mpu_data_acc_gyro_union *acc_sample);
 void mpu_get_gyro(mpu_data_union *sampled_data,mpu_data_acc_gyro_union *gyro_sample);
 
+
+// variable to control print
+extern volatile uint8_t print_MPU;
+
 #endif /*MPU_6050_H*/

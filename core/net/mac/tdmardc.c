@@ -168,21 +168,12 @@ static void TDMA_BS_send(void)
   // right now, rtimer_timer does not consider drifting. For long time experiment, it may have problem
   rtimer_set(&BSTimer,RTIMER_TIME(&BSTimer)+segment_period,0,TDMA_BS_send,NULL);
 
-  //update packet sequence number
-  seq_num = seq_num + 1;
+  
 
   if(packetbuf_attr(PACKETBUF_ATTR_PACKET_TYPE) == PACKETBUF_ATTR_PACKET_TYPE_CMD) // has command to send
   {
-    // Assume for BS, if the tdma_rdc_buf is not empty, then the payload should be command.
-    // Should be changed if BS can send other types of data.
-/*
-    packetbuf_copyfrom((void *)&tdma_rdc_buffer[0],sizeof(uint8_t)*tdma_rdc_buf_ptr);
-    packetbuf_set_attr(PACKETBUF_ATTR_PACKET_TYPE,PACKETBUF_ATTR_PACKET_TYPE_CMD);
-    tdma_rdc_buf_full_flg = 0;
-    tdma_rdc_buf_ptr = 0;
-    tdma_rdc_buf_send_ptr = 0;
-*/
-    PRINTF("send command %s %d\n",(char *)packetbuf_dataptr(),packetbuf_attr(PACKETBUF_ATTR_PACKET_TYPE));
+
+    printf("Remote shell command %s -- sent\n",(char *)packetbuf_dataptr());
 
   }
   else
@@ -194,6 +185,10 @@ static void TDMA_BS_send(void)
 
   BS_RX_start_time = radio_TX_time+BS_period;
 
+  //update packet sequence number
+  seq_num = seq_num + 1;
+  seq_num = ((seq_num == 10) ? 11: seq_num); //filter out 10
+
   packetbuf_set_attr(PACKETBUF_ATTR_MAC_SEQNO,seq_num);
 
 
@@ -204,13 +199,13 @@ static void TDMA_BS_send(void)
     return;
 
   //send packet -- pushed to radio layer
-  uint8_t i = 0;
-  uint8_t * pkt = packetbuf_hdrptr();
-  for(i = 0; i < packetbuf_totlen(); i++)
-  {
-    printf("%u,",pkt[i]);
-  }
-  printf("\n");
+  // uint8_t i = 0;
+  // uint8_t * pkt = packetbuf_hdrptr();
+  // for(i = 0; i < packetbuf_totlen(); i++)
+  // {
+  //   printf("%u,",pkt[i]);
+  // }
+  // printf("\n");
 
   if(NETSTACK_RADIO.send(packetbuf_hdrptr(),packetbuf_totlen()) != RADIO_TX_OK)
   {
@@ -222,7 +217,7 @@ static void TDMA_BS_send(void)
   }
 
   //clean flag
-  packetbuf_set_attr(PACKETBUF_ATTR_PACKET_TYPE,PACKETBUF_ATTR_PACKET_TYPE_DATA);
+  packetbuf_set_attr(PACKETBUF_ATTR_PACKET_TYPE,PACKETBUF_ATTR_PACKET_TYPE_TIMESTAMP);
 
 
 }
@@ -263,6 +258,7 @@ static void TDMA_SN_send(void)
 
   //update packet sequence number
   seq_num = seq_num + 1;
+  seq_num = ((seq_num == 10) ? 11 : seq_num);
 /*
   //wait if the tdma_rdc_buffer is accessing by other functions
   while(tdma_rdc_buf_in_using_flg);
@@ -294,14 +290,6 @@ static void TDMA_SN_send(void)
     uint8_t hdr_len = NETSTACK_FRAMER.create();
 
 
-    uint8_t i = 0;
-    uint8_t * pkt = packetbuf_hdrptr();
-    for(i = 0; i < 20; i++)
-    {
-      printf("%x,",pkt[i]);
-    }
-    printf("\n");
-
     if(NETSTACK_RADIO.send(packetbuf_hdrptr(),packetbuf_totlen()) != RADIO_TX_OK)
     {
       printf("TDMA RDC: SN fails to send packet\n");
@@ -314,7 +302,7 @@ static void TDMA_SN_send(void)
     //tdma_rdc_buf_ptr = 0;
     //tdma_rdc_buf_send_ptr = 0;
     //memset(tdma_rdc_buffer,0,MAX_PKT_PAYLOAD_SIZE);
-    tdma_rdc_buf_clear();
+    tdma_rdc_buf_clear(0);
   }
   else
   {
@@ -406,7 +394,7 @@ static void input(void)
     char command_string[128];
     strncpy(command_string,rx_pkt,rx_pkt_len);
     command_string[rx_pkt_len] = (uint8_t)'\0';
-    PRINTF("RX Command: %s %d\n",command_string,strlen(command_string));
+    printf("RX Command: %s %d\n",command_string,strlen(command_string));
 
     //process_post(&remote_shell_process,remote_command_event_message,command_string);
     remote_shell_input();

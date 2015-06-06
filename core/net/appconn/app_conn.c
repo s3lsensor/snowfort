@@ -37,7 +37,7 @@ static volatile uint8_t tdma_rdc_buf_send_ptr = 0;
 static volatile uint8_t tdma_rdc_buf_full_flg = 0;
 static volatile uint8_t tdma_rdc_buf_in_using_flg = 0;
 
-static uint8_t lock_counter = 0;
+//static volatile uint8_t lock_counter = 0;
 
 /*---------------------------------------------------------------------------*/
 void app_conn_open(const struct app_callbacks *u)
@@ -62,13 +62,17 @@ void app_conn_send(const void * ptr, const uint16_t data_len)
 {
 
   //add guard for tdma_rdc_buffer access
-  lock_counter = 0;
-  while(tdma_rdc_buf_in_using_flg && (lock_counter < 200))
+  uint8_t lock_counter = 0;
+  while(tdma_rdc_buf_in_using_flg && (lock_counter < 100))
   {
     lock_counter++;
   }
 
   // lock tdma_rdc_buffer and preventing access from other functions.
+  if (tdma_rdc_buf_in_using_flg == 1)
+  {
+    tdma_rdc_buf_in_using_flg = 0;
+  }
   tdma_rdc_buf_in_using_flg = 1;
 
 
@@ -101,19 +105,28 @@ void app_conn_send(const void * ptr, const uint16_t data_len)
 }
 
 /*---------------------------------------------------------------------------*/
-void tdma_rdc_buf_clear(void)
+void tdma_rdc_buf_clear(uint8_t reset_buffer)
 {
   //add guard for tdma_rdc_buffer access
-  lock_counter = 0;
-  while(tdma_rdc_buf_in_using_flg && (lock_counter < 200))
+  uint8_t lock_counter = 0;
+  while(tdma_rdc_buf_in_using_flg && (lock_counter < 100))
   {
     lock_counter++;
   }
 
   // lock tdma_rdc_buffer and preventing access from other functions.
+  if (tdma_rdc_buf_in_using_flg == 1)
+  {
+    tdma_rdc_buf_in_using_flg = 0;
+  }
   tdma_rdc_buf_in_using_flg = 1;
 
-  memset(tdma_rdc_buffer,0,MAX_PKT_PAYLOAD_SIZE);
+  if (reset_buffer == 1)
+  {
+    memset(tdma_rdc_buffer,0,MAX_PKT_PAYLOAD_SIZE);
+  }
+
+
   tdma_rdc_buf_ptr = 0;
   tdma_rdc_buf_send_ptr = 0;
   tdma_rdc_buf_full_flg = 0;
@@ -129,13 +142,17 @@ void tdma_rdc_buf_clear(void)
 void tdma_rdc_buf_copyto_packetbuf(void)
 {
   //wait if the tdma_rdc_buffer is accessing by other functions
-  lock_counter = 0;
-  while(tdma_rdc_buf_in_using_flg && (lock_counter < 200))
+  uint8_t lock_counter = 0;
+  while(tdma_rdc_buf_in_using_flg && (lock_counter < 100))
   {
     lock_counter++;
   }
 
   // lock tdma_rdc_buffer and preventing access from other functions.
+  if (tdma_rdc_buf_in_using_flg == 1)
+  {
+    tdma_rdc_buf_in_using_flg = 0;
+  }
   tdma_rdc_buf_in_using_flg = 1;
 
 
@@ -154,4 +171,6 @@ void tdma_rdc_buf_copyto_packetbuf(void)
 
   // release tdma_rdc_buffer
   tdma_rdc_buf_in_using_flg = 0;
+
+  //printf("%u %u %u\n",tdma_rdc_buf_ptr,tdma_rdc_buf_send_ptr,tdma_rdc_buf_full_flg);
 }

@@ -57,6 +57,7 @@
 #include "dev/sht11-sensor.h"
 #include "net/rime/timesynch.h"
 #include "remote-shell.h"
+#include "dev/mpu-6050.h"
 
 #include "node-id.h"
 
@@ -104,6 +105,11 @@ SHELL_COMMAND(sendp2pcmd_command,
 	      "sendp2pcmd", 
 	      "sendp2pcmd <command>: send command to specific remote nodes", 
 	      &shell_sendp2pcmd_process);
+PROCESS(shell_printMPU_process, "printm");
+SHELL_COMMAND(printMPU_command, 
+        "printm", 
+        "printm <command>: eanble/disable print MPU6050", 
+        &shell_printMPU_process);
 /*---------------------------------------------------------------------------*/
 #define MAX(a, b) ((a) > (b)? (a): (b))
 #define MIN(a, b) ((a) < (b)? (a): (b))
@@ -415,6 +421,8 @@ PROCESS_THREAD(shell_sendcmd_process, ev, data)
   PROCESS_END();
 }
 
+/*---------------------------------------------------------------------------*/
+
 PROCESS_THREAD(shell_sendp2pcmd_process, ev, data)
 {
 
@@ -450,6 +458,34 @@ PROCESS_THREAD(shell_sendp2pcmd_process, ev, data)
   PROCESS_END();
 }
 
+
+/*---------------------------------------------------------------------------*/
+PROCESS_THREAD(shell_printMPU_process, ev, data)
+{
+
+  uint8_t input_var;
+  const char *newptr;
+  PROCESS_BEGIN();
+
+  input_var = shell_strtolong(data, &newptr);
+  
+  /* If no transmission power was given on the command line, we print
+     out the current txpower. */
+  
+  if(newptr == data) {
+    printf("MPU status %d\n",print_MPU);
+  } else {
+    input_var = shell_strtolong(data, &newptr);
+    print_MPU = input_var;
+    printf("MPU status %d\n",print_MPU);
+  }
+
+
+  //shell_output(&txpower_command, &msg, sizeof(msg), "", 0);
+
+  PROCESS_END();
+}
+
 /*---------------------------------------------------------------------------*/
 void
 shell_sky_init(void)
@@ -462,6 +498,7 @@ shell_sky_init(void)
   shell_register_command(&sendcmd_command);
   shell_register_command(&sendp2pcmd_command);
   shell_register_command(&timeslot_command);
+  shell_register_command(&printMPU_command);
 
   //remote command list
   remote_cmd_list[0] = "reboot";
