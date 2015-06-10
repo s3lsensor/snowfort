@@ -6,8 +6,8 @@
  *
  * Author: Ronnie Bajwa
  */
-
-#include"dev/adc.h"
+#include "contiki.h"
+#include "dev/adc.h"
 
 static unsigned char adc_on_status = 0;
 
@@ -33,7 +33,10 @@ unsigned char adc_status(void)
 	return adc_on_status;
 }
 
-unsigned short adc_sample(void)
+unsigned short adc_sample(adc_data_union *sampled_data)
 {
-	return adc_arch_sample();
+	sampled_data->data = adc_arch_sample();
+	//SWAP(sampled_data->reg.adc_h,sampled_data->reg.adc_l);
+
+	return 1;
 }

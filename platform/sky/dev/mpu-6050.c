@@ -304,6 +304,11 @@ void mpu_get_gyro(mpu_data_union *sampled_data,mpu_data_acc_gyro_union *gyro_sam
 
 }
 
+void mpu_get_tp(mpu_data_union *sampled_data,mpu_data_tp_union *tp_sample)
+{
+	tp_sample->data = sampled_data->data.tp;
+}
+
 
 
 

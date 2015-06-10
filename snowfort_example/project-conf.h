@@ -32,7 +32,7 @@
 #endif
 
 //Zigbee available channel: 15,20,25,26
-#define RF_CONF_CHANNEL 25
+#define RF_CONF_CHANNEL 26
 
 //RF_Channel
 #ifndef RF_CONF_CHANNEL

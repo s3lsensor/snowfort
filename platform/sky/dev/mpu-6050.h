@@ -83,12 +83,19 @@ typedef struct
 
 }mpu_lh_acc_gyro;
 
+typedef struct 
+{
+    /* data */
+    int8_t t_h;
+    int8_t t_l;
+}mpu_lh_tp;
+
 typedef struct
 {
     int16_t accel_x;
     int16_t accel_y;
     int16_t accel_z;
-    int16_t temperature;
+    int16_t tp;
     int16_t gyro_x;
     int16_t gyro_y;
     int16_t gyro_z;
@@ -100,6 +107,7 @@ typedef struct
     int16_t y;
     int16_t z;
 }mpu_data_acc_gyro;
+
 
 typedef union
 {
@@ -113,9 +121,17 @@ typedef union
     mpu_data_acc_gyro data;
 }mpu_data_acc_gyro_union;
 
+typedef union
+{
+    mpu_lh_tp reg;
+    int16_t data;
+}mpu_data_tp_union;
+
 #define MPU_DATA_SIZE (sizeof(mpu_data)/sizeof(uint8_t))
 
 #define MPU_DATA_ACC_GYRO_SIZE (sizeof(mpu_data_acc_gyro)/sizeof(uint8_t))
+
+#define MPU_DATA_TP_SIZE (sizeof(int16_t)/sizeof(uint8_t))
 
 int read_mpu_reg(unsigned char mpu_reg_addr, unsigned char* buffer);
 int read_mpu_reg_burst(unsigned char mpu_reg_addr_start, unsigned num, unsigned char* buffer);
@@ -133,6 +149,9 @@ void print_mpu_sample_acc_gyro(mpu_data_acc_gyro_union *samples);
 
 void mpu_get_acc(mpu_data_union *sampled_data,mpu_data_acc_gyro_union *acc_sample);
 void mpu_get_gyro(mpu_data_union *sampled_data,mpu_data_acc_gyro_union *gyro_sample);
+
+void mpu_get_tp(mpu_data_union *sampled_data,mpu_data_tp_union *tp_sample);
+
 
 
 // variable to control print
