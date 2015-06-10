@@ -12,9 +12,10 @@
 void adc_arch_on(void)
 {
 	ADC12CTL0 = ADC12ON + SHT0_12 ;//+ REFON + REF2_5V;
-	//clock_delay(20000); //wait for reference to turn on (minimum 17 ms)
+	clock_delay(20000); //wait for reference to turn on (minimum 17 ms)
 
 	ADC12CTL1 = SHP;
+	clock_delay(20000);
 	//ADC12MCTL0 = INCH_11;//for sampling internal temperature sensor
 }
 
@@ -34,7 +35,9 @@ void adc_arch_off(void)
 {
 	//need to disable ENC first
 	ADC12CTL0 &= ~ENC;
-	while(ADC12CTL1 & ADC12BUSY);
+	unsigned int i = 0;
+
+	for(i = 0; (i < 1000) && (ADC12CTL1 & ADC12BUSY);i++);
 
 	//return to default register values
 	ADC12CTL0 = 0;
@@ -42,10 +45,15 @@ void adc_arch_off(void)
 	ADC12MCTL0=0;
 }
 
-unsigned short adc_arch_sample(void)
+unsigned int adc_arch_sample(void)
 {
 	ADC12CTL0 |=ENC + ADC12SC;
-	while(ADC12CTL1 & ADC12BUSY);
+	unsigned int i = 0;
+	for(i = 0; (i < 1000) && (ADC12CTL1 & ADC12BUSY);i++);
+	//while(ADC12CTL1 & ADC12BUSY);
 	//printf("%d\n",ADC12MEM0);
-	return ADC12MEM0;
+
+	return (unsigned int)ADC12MEM0;
 }
+
+
