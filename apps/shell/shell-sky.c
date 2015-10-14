@@ -37,6 +37,9 @@
  * \author
  *         Adam Dunkels <adam@sics.se>
  */
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
 
 #include "contiki.h"
 #include "shell-sky.h"
@@ -45,6 +48,7 @@
 
 #include "net/rime.h"
 #include "net/netstack.h"
+#include "net/mac/tdmardc.h"
 #include "dev/cc2420.h"
 #include "dev/leds.h"
 #include "dev/sht11.h"
@@ -52,11 +56,11 @@
 #include "dev/battery-sensor.h"
 #include "dev/sht11-sensor.h"
 #include "net/rime/timesynch.h"
+#include "remote-shell.h"
+#include "dev/mpu-6050.h"
 
 #include "node-id.h"
 
-#include <stdio.h>
-#include <string.h>
 
 /*---------------------------------------------------------------------------*/
 PROCESS(shell_nodeid_process, "nodeid");
@@ -64,6 +68,7 @@ SHELL_COMMAND(nodeid_command,
 	      "nodeid",
 	      "nodeid: set node ID",
 	      &shell_nodeid_process);
+/*
 PROCESS(shell_sense_process, "sense");
 SHELL_COMMAND(sense_command,
 	      "sense",
@@ -74,6 +79,7 @@ SHELL_COMMAND(senseconv_command,
 	      "senseconv",
 	      "senseconv: convert 'sense' data to human readable format",
 	      &shell_senseconv_process);
+*/
 PROCESS(shell_txpower_process, "txpower");
 SHELL_COMMAND(txpower_command,
 	      "txpower",
@@ -84,9 +90,31 @@ SHELL_COMMAND(rfchannel_command,
 	      "rfchannel",
 	      "rfchannel <channel>: change CC2420 radio channel (11 - 26)",
 	      &shell_rfchannel_process);
+PROCESS(shell_sendcmd_process, "sendcmd");
+SHELL_COMMAND(sendcmd_command,
+         "sendcmd",
+         "sendcmd <command>: send command to remote node",
+         &shell_sendcmd_process);
+PROCESS(shell_timeslot_process, "timeslot");
+SHELL_COMMAND(timeslot_command,
+         "timeslot",
+         "timeslot <command>: set time slot for TDMA",
+         &shell_timeslot_process);
+PROCESS(shell_sendp2pcmd_process, "sendp2pcmd");
+SHELL_COMMAND(sendp2pcmd_command, 
+	      "sendp2pcmd", 
+	      "sendp2pcmd <command>: send command to specific remote nodes", 
+	      &shell_sendp2pcmd_process);
+PROCESS(shell_printMPU_process, "printm");
+SHELL_COMMAND(printMPU_command, 
+        "printm", 
+        "printm <command>: eanble/disable print MPU6050", 
+        &shell_printMPU_process);
 /*---------------------------------------------------------------------------*/
 #define MAX(a, b) ((a) > (b)? (a): (b))
 #define MIN(a, b) ((a) < (b)? (a): (b))
+
+#if 0
 struct spectrum {
   int channel[16];
 };
@@ -124,7 +152,9 @@ do_rssi(void)
     return tot;
   }
 }
+
 /*---------------------------------------------------------------------------*/
+
 struct sense_msg {
   uint16_t len;
   uint16_t clock;
@@ -136,7 +166,46 @@ struct sense_msg {
   uint16_t rssi;
   uint16_t voltage;
 };
+#endif
 /*---------------------------------------------------------------------------*/
+#define REMOTE_CMD_NUM 6
+char *remote_cmd_list[REMOTE_CMD_NUM]; //list of available remote command
+uint8_t
+shell_sky_is_remote_cmd(const char * str)
+{
+  char * strptr = (char *)str;
+  char command[20] = {'\0'};
+  short counter = 0;
+  short command_len;
+  short i;
+
+  while((isalpha(*strptr)  == 1|| *strptr == ' ') && counter < 20)
+  {
+    if(isalpha(*strptr))
+    {
+      command[counter] = (*strptr);
+      ++strptr;
+      ++counter;
+    }
+    else if(*strptr == ' ')
+    {
+      ++strptr;
+    }
+  }
+  command[counter]='\0';
+  command_len = strlen(command);
+
+  for(i = 0; i < REMOTE_CMD_NUM; i++)
+  {
+    if(strncmp(command,remote_cmd_list[i],command_len) == 0)
+      return 1;
+  }
+
+  return 0;
+
+}
+/*---------------------------------------------------------------------------*/
+#if 0
 PROCESS_THREAD(shell_sense_process, ev, data)
 {
   struct sense_msg msg;
@@ -209,6 +278,7 @@ PROCESS_THREAD(shell_senseconv_process, ev, data)
   }
   PROCESS_END();
 }
+#endif
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(shell_txpower_process, ev, data)
 {
@@ -226,8 +296,10 @@ PROCESS_THREAD(shell_txpower_process, ev, data)
   
   if(newptr == data) {
     msg.txpower = cc2420_get_txpower();
+    printf("TX Power %d\n",msg.txpower);
   } else {
     cc2420_set_txpower(msg.txpower);
+    printf("New TX Power %d (expected) %d (HW)\n",msg.txpower,cc2420_get_txpower());
   }
 
   msg.len = 1;
@@ -243,6 +315,7 @@ PROCESS_THREAD(shell_rfchannel_process, ev, data)
     uint16_t len;
     uint16_t channel;
   } msg;
+  char buf[20];
   const char *newptr;
   PROCESS_BEGIN();
 
@@ -258,7 +331,9 @@ PROCESS_THREAD(shell_rfchannel_process, ev, data)
 
   msg.len = 1;
 
-  shell_output(&rfchannel_command, &msg, sizeof(msg), "", 0);
+  snprintf(buf,sizeof(buf),"%d\n",cc2420_get_channel());
+  shell_output_str(&rfchannel_command, "Channel: ", buf);
+  //shell_output(&rfchannel_command, &msg, sizeof(msg), "", 0);
 
   PROCESS_END();
 }
@@ -285,6 +360,7 @@ PROCESS_THREAD(shell_nodeid_process, ev, data)
     node_id_restore();
     leds_off(LEDS_RED + LEDS_BLUE);
     watchdog_start();
+    sf_tdma_set_mac_addr();
   }
 
   snprintf(buf, sizeof(buf), "%d", nodeid);
@@ -293,14 +369,144 @@ PROCESS_THREAD(shell_nodeid_process, ev, data)
   PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
+PROCESS_THREAD(shell_timeslot_process, ev, data)
+{
+
+  uint16_t time_slot;
+  char buf[20];
+  const char *newptr;
+
+  PROCESS_BEGIN();
+
+  time_slot = shell_strtolong(data,&newptr);
+
+  /* if no slot number was given on the command line, we print out
+   * the current time slot. Else change the time slot to new one.
+   */
+  if (newptr == data)
+  {
+    time_slot = sf_tdma_get_slot_num();
+  }
+  else
+  {
+    time_slot = shell_strtolong(data,&newptr);
+    NETSTACK_RDC.off(0);
+    sf_tdma_set_slot_num(time_slot);
+    NETSTACK_RDC.on();
+  }
+
+  snprintf(buf, sizeof(buf), "%d", time_slot);
+  shell_output_str(&timeslot_command, "Current time slot: ", buf);
+
+  PROCESS_END();
+}
+/*---------------------------------------------------------------------------*/
+PROCESS_THREAD(shell_sendcmd_process, ev, data)
+{
+
+  PROCESS_BEGIN();
+
+  //verify if the command is a valid remote command
+
+  if(shell_sky_is_remote_cmd(data) != 0)
+  {
+    printf("Send COMMAND \"%s\" to remote node\n",(char *)data);
+    remote_shell_send(data,strlen(data));
+  }
+  else
+  {
+    printf("\"%s\" is not a validate remote shell command\n",(char *)data);
+  }
+
+  PROCESS_END();
+}
+
+/*---------------------------------------------------------------------------*/
+
+PROCESS_THREAD(shell_sendp2pcmd_process, ev, data)
+{
+
+  PROCESS_BEGIN();
+
+  char isValid = 1;
+  
+  // skip past the node values.
+  char node_nums[60] = {'\0'};
+  int index = 0;
+  char * cmd = data;
+  while((isalpha(cmd[index]) == 0) && (cmd[index] != '\0')) {
+    if((isdigit(cmd[index])==0) && (cmd[index] != ' ')){
+      isValid = 0;
+      printf("Invalid node id.\n");
+      break;
+    }
+    node_nums[index] = cmd[index];
+    index++;
+  } 
+
+  //verify command is valid.
+  if((shell_sky_is_remote_cmd(cmd) != 0) && (isValid != 0))
+  {
+    printf("Send COMMAND \"%s\" to remote nodes %s\n",(char *)cmd, (char*)node_nums);
+    remote_shell_send(data,strlen(data));
+  }
+  else
+  {
+    printf("\"%s\" is not a validate remote shell command\n",(char *)data);
+  }
+
+  PROCESS_END();
+}
+
+
+/*---------------------------------------------------------------------------*/
+PROCESS_THREAD(shell_printMPU_process, ev, data)
+{
+
+  uint8_t input_var;
+  const char *newptr;
+  PROCESS_BEGIN();
+
+  input_var = shell_strtolong(data, &newptr);
+  
+  /* If no transmission power was given on the command line, we print
+     out the current txpower. */
+  
+  if(newptr == data) {
+    printf("MPU status %d\n",print_MPU);
+  } else {
+    input_var = shell_strtolong(data, &newptr);
+    print_MPU = input_var;
+    printf("MPU status %d\n",print_MPU);
+  }
+
+
+  //shell_output(&txpower_command, &msg, sizeof(msg), "", 0);
+
+  PROCESS_END();
+}
+
+/*---------------------------------------------------------------------------*/
 void
 shell_sky_init(void)
 {
   shell_register_command(&txpower_command);
   shell_register_command(&rfchannel_command);
-  shell_register_command(&sense_command);
-  shell_register_command(&senseconv_command);
+//  shell_register_command(&sense_command);
+//  shell_register_command(&senseconv_command);
   shell_register_command(&nodeid_command);
+  shell_register_command(&sendcmd_command);
+  shell_register_command(&sendp2pcmd_command);
+  shell_register_command(&timeslot_command);
+  shell_register_command(&printMPU_command);
+
+  //remote command list
+  remote_cmd_list[0] = "reboot";
+  remote_cmd_list[1] = "txpower";
+  remote_cmd_list[2] = "blink";
+  remote_cmd_list[3] = "rfchannel";
+  remote_cmd_list[4] = "nodeid";
+  remote_cmd_list[5] = "timeslot";
 
 }
 /*---------------------------------------------------------------------------*/

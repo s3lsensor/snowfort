@@ -27,6 +27,11 @@ ifndef HOST_OS
   ## e.g. CygWin, MingW, VisualC, Watcom, Interix
     HOST_OS := Windows
   else
+    ifneq (,$(findstring raspberrypi,$(shell uname -a)))
+      HOST_OS := Pi
+    else
+      HOST_OS := $(shell uname)
+    endif
     HOST_OS := $(shell uname)
   endif
 endif
@@ -56,6 +61,8 @@ CFLAGS += -DCONTIKI=1 -DCONTIKI_TARGET_$(TARGET_UPPERCASE)=1
 
 include $(CONTIKI)/core/net/rime/Makefile.rime
 include $(CONTIKI)/core/net/mac/Makefile.mac
+include $(CONTIKI)/core/net/appconn/Makefile.appconn
+
 SYSTEM  = process.c procinit.c autostart.c elfloader.c profile.c \
           timetable.c timetable-aggregate.c compower.c serial-line.c
 THREADS = mt.c
@@ -92,7 +99,7 @@ endif
 
 CONTIKI_SOURCEFILES += $(CONTIKIFILES)
 
-CONTIKIDIRS += ${addprefix $(CONTIKI)/core/,dev lib net net/mac net/rime \
+CONTIKIDIRS += ${addprefix $(CONTIKI)/core/,dev lib net net/mac net/rime net/appconn \
                  net/rpl sys cfs ctk lib/ctk loader . }
 
 oname = ${patsubst %.c,%.o,${patsubst %.S,%.o,$(1)}}

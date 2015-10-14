@@ -161,7 +161,7 @@ int main(int argc, char **argv)
   }
   fprintf(stderr, "connecting to %s (%s)", device, speedname);
 
-#ifndef __APPLE__
+#if !defined(__APPLE__) && !defined(PI)
   fd = open(device, O_RDWR | O_NOCTTY | O_NDELAY | O_DIRECT | O_SYNC );
 #else
   fd = open(device, O_RDWR | O_NOCTTY | O_NDELAY | O_SYNC );
