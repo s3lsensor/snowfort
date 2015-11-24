@@ -5,6 +5,11 @@ Tutorial
 -------------
 Please see the website [tutorial](http://web.stanford.edu/group/snowfort/tutorial.html)
 
+WiKi Page:
+-------------
+- How to compile the code? [Page](https://github.com/s3lsensor/snowfort/wiki)
+- How to use Raspberry Pi as the base station? [Page](https://github.com/s3lsensor/snowfort/wiki/Raspberry-Pi-Setup)
+
 Bug Reporting
 -------------
 
