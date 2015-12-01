@@ -3,7 +3,7 @@
 #include "contiki.h"
 #include "net/packetbuf.h"
 #include "net/netstack.h"
-#include "net/mac/tdmardc.h" // for flags to sync with tdma 
+#include "net/mac/tdmardc.h" // for flags to sync with tdma
 #include "sys/etimer.h"
 #include "appconn/app_conn.h"
 #include "node-id.h"
@@ -56,11 +56,17 @@ static void app_recv(void)
 	uint8_t rx_sn_id = sent_sn_addr->u8[0];
 	uint8_t pkt_seq = packetbuf_attr(PACKETBUF_ATTR_PACKET_ID);
 	uint8_t payload_len = packetbuf_datalen();
+
 /*
-	uart1_writeb(rx_sn_id);
-	uart1_writeb(pkt_seq);
-	uart1_writeb(payload_len);
+	If this node is base station, then print out received messages.
+
+	The current print function prints the output in ASCII code because
+	the execution time can be reduced significantly. If the execution
+	time is not a constraint, then printf should work as well.
+
+	Please see readUSB_MPU6050_BS.py
 */
+
 	if(node_id == 0)
 	{
 		//start byte
@@ -68,36 +74,29 @@ static void app_recv(void)
 		putchar(126);
 
 		// packet information
-		
+
 		packet_counter = packet_counter + 1;
 		packet_counter = ((packet_counter == 10) ? 11 : packet_counter);
-		//printf("%u,%u,%u,%u",rx_sn_id,packet_counter,pkt_seq,payload_len);
 
 		 putchar(rx_sn_id);
 		 putchar(packet_counter);
 		 putchar(pkt_seq);
 		 putchar(payload_len);
 		//putchar(0);
-		
+
 		// //printf("%u",rx_sn_id);
 		uint8_t i = 0;
-	
+
 		for(i = 0; i < (payload_len); i++)
 		{
 			//printf("%d,",((data[2*i+1]<<8)|data[2*i]));
 			putchar(data[i]);
 		}
-		
 
-	
+
+
 	}
 
-/*
-	for(i = 0; i < payload_len; i++)
-	{
-		uart1_writeb(data[i]);
-	}
-*/
 
 
 	uart1_writeb('\n');
@@ -112,15 +111,10 @@ static const struct app_callbacks nullApp_callback= {app_recv};
 /*---------------------------------------------------------------*/
 static void sample_fun(void)
 {
-	//uart1_writeb('0');
+
 	ctimer_reset(&ct);
 	ctimer_restart(&reset_timer);
-	//uint8_t MPU_status1 = 0;
-	//mpu_data_union data_sample;
-	//mpu_data_acc_gyro_union data_sample;
 
-	//uart1_writeb('1');
-	//MPU_status = mpu_sample_all(&sample_data);
 
 	ADC_status = adxl_sample(&sample);
 
@@ -128,8 +122,8 @@ static void sample_fun(void)
 		app_conn_send((uint8_t*)&sample,ADXL_DATA_SIZE);
 
 	PRINTF("%u,%u,%u,%u\n",sample.x.data,sample.y.data,sample.z.data,sample.vref.data);
-	
-	
+
+
 }
 
 static void reset_sample_timer(void)
@@ -153,7 +147,7 @@ PROCESS_THREAD(null_app_process, ev, data)
 	shell_reboot_init();
 	shell_blink_init();
 	shell_sky_init();
-	
+
 #endif
 
 	//static uint8_t MPU_status3 = 0;

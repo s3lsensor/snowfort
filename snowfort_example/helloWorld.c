@@ -3,7 +3,7 @@
 #include "contiki.h"
 #include "net/packetbuf.h"
 #include "net/netstack.h"
-#include "net/mac/tdmardc.h" // for flags to sync with tdma 
+#include "net/mac/tdmardc.h" // for flags to sync with tdma
 #include "sys/etimer.h"
 #include "appconn/app_conn.h"
 #include "node-id.h"
@@ -29,9 +29,7 @@ PROCESS_THREAD(null_app_process,ev,data)
 	uint8_t i;
 	for(i = 0; i < 256; i++)
 	{
-		//printf("%u,",i);
-		uart1_writeb(i);
-		uart1_writeb('\n');
+		printf("Hello World %d\n",i);
 	}
 
 	PROCESS_END();
