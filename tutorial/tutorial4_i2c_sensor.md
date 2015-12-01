@@ -7,7 +7,7 @@ The MPU-6050 is a sensor which contains an accelerometer and a gyroscope in a si
 
 * Follow the layout in the figure below to connect the sensor with the mote
 
-![Test Image](https://raw.githubusercontent.com/VeronicaYamee/GitHub/master/images/layout.jpg)
+![Test Image](https://github.com/s3lsensor/snowfort/blob/master/tutorial/images/layout.jpg)
 
 * Connect the sensor with the computer (see section 2)
 * Go to the directory `/home/user/snowfort/snowfort_example` in your terminal
@@ -22,7 +22,7 @@ The timer on the mote uses 1024 ticks to represent 1 second. Here, instead of de
 * Log into your mote (see section 4)
 * You should see the output messages like the figure that follows:
 
-![Test Image](https://raw.githubusercontent.com/VeronicaYamee/GitHub/master/images/example_output.png)
+![Test Image](https://github.com/s3lsensor/snowfort/blob/master/tutorial/images/example_output.png)
 
 
 **1.1. How to change the Full Scale Range**
@@ -33,7 +33,7 @@ As you can see on the sensor <a href="http://cdn.sparkfun.com/datasheets/Sensors
 
 _AFS\_SEL_ selects the full scale range of the gyroscope outputs according to the following table:
 
-![Test Image](https://raw.githubusercontent.com/VeronicaYamee/GitHub/master/images/gyrosensitivity.png)
+![Test Image](https://github.com/s3lsensor/snowfort/blob/master/tutorial/images/gyrosensitivity.png)
 
 According to the table above,
 
@@ -59,7 +59,7 @@ The second line sets bit 3 to zero and the third line sets bit 4 to one. Thus, y
 
 _AFS\_SEL_ selects the full scale range of the accelerometer outputs according to the following table:
 
-![Test Image](https://raw.githubusercontent.com/VeronicaYamee/GitHub/master/images/acc_sensitivity.png)
+![Test Image](https://github.com/s3lsensor/snowfort/blob/master/tutorial/images/acc_sensitivity.png)
 
 Following the same logic as the gyroscope,
 
@@ -85,7 +85,7 @@ The second line sets bit 3 to zero and the third line sets bit 4 to one. Thus, y
 
 * To connect the sensor with the computer, plug the USB cable to the mote and the computer like the figure below:
 
-![Test Image](https://raw.githubusercontent.com/VeronicaYamee/GitHub/master/images/mpu.png)
+![Test Image](https://github.com/s3lsensor/snowfort/blob/master/tutorial/images/mpu.png)
 
 
 **3. Compile**

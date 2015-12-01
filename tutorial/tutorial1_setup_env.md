@@ -22,11 +22,11 @@ Instant Contiki is an Ubuntu Linux virtual machine that runs in VMWare player an
 - Log in using the password "user" once you see Figure 2
 
 
-![test image](https://raw.githubusercontent.com/VeronicaYamee/GitHub/master/images/VMware%20Player.png)
+![test image](https://github.com/s3lsensor/snowfort/blob/master/tutorial/images/VMware%20Player.png)
 
 **Figure 1**
 
-![test image](https://raw.githubusercontent.com/VeronicaYamee/GitHub/master/images/password.png)
+![test image](https://github.com/s3lsensor/snowfort/blob/master/tutorial/images/password.png)
 **Figure 2**
 
 **4. Starting Cooja**
@@ -43,12 +43,12 @@ Cooja is the Contiki network simulator. Cooja allows large and small networks of
 
 			ant run
 
-![test image](https://raw.githubusercontent.com/VeronicaYamee/GitHub/master/images/cooja.png)
+![test image](https://github.com/s3lsensor/snowfort/blob/master/tutorial/images/cooja.png)
                                             **Figure 3**
 
  * After Cooja compiles itself, it will start with a blue empty window, shown in the figure below. Now that Cooja is up and running you can try it out with an example simulation.
 
-![test image](https://raw.githubusercontent.com/VeronicaYamee/GitHub/master/images/cooja2.png)
+![test image](https://github.com/s3lsensor/snowfort/blob/master/tutorial/images/cooja2.png)
 
 **5. Running Contiki on hardware**
 

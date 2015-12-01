@@ -8,11 +8,11 @@ The ADXL335 is a low power, complete 3-axis accelerometer with analog outputs. T
 
 * Follow the layout in the figure below and connect the sensor with the mote:
 
-![Test Image](https://raw.githubusercontent.com/VeronicaYamee/GitHub/master/images/layout2.png)
+![Test Image](https://github.com/s3lsensor/snowfort/blob/master/tutorial/images/layout2.png)
 
 * Connect the sensor with the computer as shown below:
 
-![Test Image](https://raw.githubusercontent.com/VeronicaYamee/GitHub/master/images/Sensor%20analogico.jpg)
+![Test Image](https://github.com/s3lsensor/snowfort/blob/master/tutorial/images/Sensor%20analogico.jpg)
 
 * Go to the directory `/home/user/snowfort/snowfort_example` in the terminal
 * Open the file `ADXL335_example.c` and look for the line with `#define SAMPLE_RATE 20` so you can adjust the frequency
@@ -21,7 +21,7 @@ The ADXL335 is a low power, complete 3-axis accelerometer with analog outputs. T
 * Log into your mote
 * You should see the output messages like the figure below:
 
-![test image](https://raw.githubusercontent.com/VeronicaYamee/GitHub/master/images/adxl%20output.png)
+![test image](https://github.com/s3lsensor/snowfort/blob/master/tutorial/images/adxl%20output.png)
 
 
 **2. How to interpret data**
